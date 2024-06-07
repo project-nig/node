@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve nig_node
+After=network.target
+
+[Service]
+User=pierre
+Group=www-data
+WorkingDirectory=/home/pierre/nig_node
+Environment="PATH=/home/pierre/nig_node/env2/bin"
+ExecStart=/home/pierre/nig_node/env2/bin/gunicorn --workers 1 --bind unix:nig_node.sock -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target

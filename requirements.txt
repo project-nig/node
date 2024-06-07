@@ -1,0 +1,6 @@
+pycryptodome
+flask
+requests
+tox
+gunicorn
+sly
