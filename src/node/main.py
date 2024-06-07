@@ -119,6 +119,7 @@ PoH_memory=ProofOfHistory(PoW_memory=PoW_memory)
 
 @app.before_request
 def check_for_maintenance():
+    '''Decorator for Maintenance'''
     if maintenance_mode.get_mode() is True and request.path != url_for('maintenance') and request.path != url_for('maintenance_on') and request.path != url_for('maintenance_off') and request.path != url_for('network_maintenance_on') and request.path != url_for('network_maintenance_off') and request.path != url_for('validate_block') and request.path != url_for('start') and request.path != url_for('block_saving_leader_node'):   
         return redirect(url_for('maintenance'))
        
@@ -1422,7 +1423,7 @@ def Process_block(*args, **kwargs):
             block.clear_block_transactions_from_mempool()
             received_block_2_slash=None
         else:
-            #the Block is not valid
+            #the Block is not valid 
             received_block_2_slash=block.new_block.block_header.current_PoH_hash
 
         block.check_vote_and_backlog(master_state_readiness,
