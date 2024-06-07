@@ -126,6 +126,7 @@ def check_for_maintenance():
 
 @app.route("/start", methods=['GET'])
 def start():
+    '''Start the node'''
     logging.info("start request")
     network.join_network()
     PoW_memory.start()
