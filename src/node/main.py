@@ -141,6 +141,7 @@ def main_request():
 
 @app.route("/block", methods=['POST'])
 def validate_block():
+    '''Submit a block in the blockchain'''
     content = request.json
     #fix for boolean
     content=clean_request(content)
