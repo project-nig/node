@@ -363,7 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 #Node Storage
-STORAGE\
-/STORAGE
-/STORAGE/master_state_temp
-/STORAGE/master_state_temp/
+STORAGE/
