@@ -25,7 +25,7 @@ Rename the folder beta_node to nodeX where X corresponds to the number of the no
   MOVE beta_node nodeX
 ```
 
-Go to the project directory node1 with administrator privilige (right click on Command Prompt in windows)
+Go to the project directory nodeX with administrator privilige (right click on Command Prompt in windows)
 
 ```bash
   cd nodeX
@@ -60,11 +60,10 @@ Start the node
 ```bash
   env\scripts\activate
   set FLASK_APP=src/node/main.py
-  flask run
   flask run --host=127.0.0.X 
   where X corresponds to the number of the node (ex:1)
 ```
-The server is running on http://127.0.0.X:8000/block
+The default blockchain is available on http://127.0.0.X:8000/block
 
 Launch 2 others Node
 ```bash
