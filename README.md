@@ -1,8 +1,8 @@
 
-# Node of NIG network
+# Process to run Nodes of NIG network
 
-Process to intall locally the webserver for running 3 Nodes of the NIG network
-
+Process to intall and run locally 3 Nodes of the NIG network
+Technical details can be found here https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub
 
 ## Authors
 
@@ -19,16 +19,16 @@ Clone the project
   git clone https://github.com/project-nig/beta_node.git
 ```
 
-Rename the folder beta_node to nodeX where X corresponds to the number of the node (ex:1)
+Rename the folder beta_node to nodeX where X corresponds to the number of the node (ex:1n then 2 and finally 3)
 
 ```bash
-  MOVE beta_node node1
+  MOVE beta_node nodeX
 ```
 
 Go to the project directory node1 with administrator privilige (right click on Command Prompt in windows)
 
 ```bash
-  cd node1
+  cd nodeX
 ```
 
 Create a Virtual Environment and activate it
@@ -44,7 +44,7 @@ Install dependencies
   pip install --upgrade pip
   pip install -r requirements.txt
 ```
-Change the parameter in the file node1\src\common\values.py
+Change the parameter in the file nodeX\src\common\values.py
 
 ```bash
   change the below parameter where X corresponds to the number of the node (ex:1)
@@ -64,11 +64,11 @@ Start the node
   flask run --host=127.0.0.X 
   where X corresponds to the number of the node (ex:1)
 ```
-The server is running on http://127.0.0.1:8000/block
+The server is running on http://127.0.0.X:8000/block
 
 Launch 2 others Node
 ```bash
-  Start all the tasks from cloning the projet until the start of the server
+  Start all the tasks from cloning the projet until the start of the node
   Replace X all the times with 2 for 2nd Node and then 3 for the third node
 ```
 
