@@ -368,4 +368,4 @@ files/KNOWN_NODES_DIR.txt
 files/LEADER_NODE_SCHEDULE_DIR.txt
 files/MASTER_STATE_DIR.txt
 files/MEMPOOL_DIR.txt
-test.txt
+files/test.txt
