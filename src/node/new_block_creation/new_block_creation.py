@@ -40,6 +40,7 @@ class ProofOfWork:
         self.known_nodes_memory = KnownNodesMemory()
         self.leader_node_schedule_memory=LeaderNodeScheduleMemory()
         self.mempool = MemPool()
+        self.testing_flag=False
 
     def start(self):
         logging.info("Starting Proof of Work")
@@ -84,8 +85,9 @@ class ProofOfWork:
         else:self.blockchain = blockchain
 
 
-    def launch_new_block_creation(self):
+    def launch_new_block_creation(self, *args, **kwargs):
         logging.info("Launch of new block creation")
+        self.testing_flag=kwargs.get('testing_flag',False)
         #Launch Leader node Rotation
 
         current_leader_node_public_key_hash=self.leader_node_schedule_memory.current_leader_node_public_key_hash
@@ -226,20 +228,23 @@ class ProofOfWork:
                 interface_coinbase_transaction = self.get_coinbase_transaction(interface_transaction_fees_dic[interface_transaction_fees_public_key_hash],
                                                                                INTERFACE_BLOCK_REWARD_PERCENTAGE,
                                                                                interface_transaction_fees_public_key_hash,
-                                                                               "interface")
+                                                                               "interface",
+                                                                               self.testing_flag)
                 transactions.append(interface_coinbase_transaction)
             #STEP 2 Node
             for node_transaction_fees_public_key_hash in node_transaction_fees_dic.keys():
                 node_coinbase_transaction = self.get_coinbase_transaction(node_transaction_fees_dic[node_transaction_fees_public_key_hash],
                                                                                NODE_BLOCK_REWARD_PERCENTAGE,
                                                                                node_transaction_fees_public_key_hash,
-                                                                               "node")
+                                                                               "node",
+                                                                               self.testing_flag)
                 transactions.append(node_coinbase_transaction)
             #STEP 3 Miner
             miner_coinbase_transaction = self.get_coinbase_transaction(miner_transaction_fees,
                                                                        MINER_BLOCK_REWARD_PERCENTAGE,
                                                                        miner_public_key_hash,
-                                                                       "miner")
+                                                                       "miner",
+                                                                       self.testing_flag)
             transactions.append(miner_coinbase_transaction)
 
             #STEP 4 Creation of the block
@@ -341,16 +346,22 @@ class ProofOfWork:
         return interface_transaction_fees_dic,node_transaction_fees_dic,miner_transaction_fees
 
     @staticmethod
-    def get_coinbase_transaction(transaction_fees: float, block_reward_percentage: float, public_key_hash: str, type: str) -> dict:
+    def get_coinbase_transaction(transaction_fees: float, block_reward_percentage: float, public_key_hash: str, type: str , testing_flag:bool) -> dict:
         transaction_output = TransactionOutput(
             amount=normal_round(transaction_fees + BLOCK_REWARD*(block_reward_percentage/100),ROUND_VALUE_DIGIT),
             list_public_key_hash=[public_key_hash],
             coinbase_transaction=True
         )
+        if testing_flag is True:
+            timestamp_value='timestamp'
+            transaction_hash_value=calculate_hash(str(transaction_output.to_dict()))
+        else:
+            timestamp_value =datetime.timestamp(datetime.utcnow())
+            transaction_hash_value=calculate_hash(str(random.randint(10000000, 9999999999999999999999))+str(transaction_output.to_dict()))
         return {"inputs": [],
                 "outputs": [transaction_output.to_dict()],
-                "transaction_hash":calculate_hash(str(random.randint(10000000, 9999999999999999999999))+str(transaction_output.to_dict())),
-                "timestamp": datetime.timestamp(datetime.utcnow())}
+                "transaction_hash":transaction_hash_value,
+                "timestamp": timestamp_value}
 
     def get_vote_transaction(self) -> dict:
         #SmartContract use to vote on the block to insert it on the BlockChain
