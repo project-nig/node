@@ -71,6 +71,30 @@ Launch 2 others Node
   Replace X all the times with 2 for 2nd Node and then 3 for the third node
 ```
 
+## Performing Development
+
+Clone the latest Branch with a number greater than 22 (ex:23.x).
+Perform your development locally and commit your change on the branch which will be published once approved.
+!! Never clone the master Branch.
+
+## Running Integration tests
+
+Install Pytest => https://docs.pytest.org/
+Launch your network by running 3 nodes locally (cf. previous Process to run Nodes of NIG network).
+Open a new command prompt an go to the folder of the 3rd Node.
+```bash
+  \node3>
+```
+Launch the virtual environment.
+```bash
+  env\scripts\activate
+```
+Launch the integration test scripts.
+```bash
+  tox -e integration
+```
+If everything goes well, you should have a report validating your development. If not, the errors will be explained.
+
 ## Feedback
 
 If you have any feedback, please reach out to us at cryptomonnaie.nig@gmail.com
