@@ -84,6 +84,9 @@ class Node:
         return self.get(endpoint="maintenance_off")
 
     def get_smart_contract_api(self, account: str) -> requests.Response:
-        return self.post(endpoint=f"smart_contract_api/{account}", data=block)
+        return self.get(endpoint=f"smart_contract_api/{account}")
+
+    def smart_contract(self, smart_contract_data: dict) -> requests.Response:
+        return self.post("smart_contract", smart_contract_data)
 
  

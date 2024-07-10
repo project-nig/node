@@ -42,6 +42,8 @@ class Transaction:
         signature = pkcs1_15.new(owner.private_key).sign(hash_object)
         #logging.info(f"===== transaction_dict:{transaction_dict}")
         #logging.info(f"===== signature:{binascii.hexlify(signature)}")
+        #print(f"===== transaction_dict:{transaction_dict}")
+        #print(f"===== signature:{binascii.hexlify(signature)}")
         return signature
 
     def sign(self, owner):

@@ -80,6 +80,14 @@ class BlockPoH:
         self.PoH_registry_input_data=PoH_registry_input_data
         self.PoH_registry_intermediary=PoH_registry_intermediary
 
+    def __eq__(self, other):
+        try:
+            assert self.PoH_registry_input_data == other.PoH_registry_input_data
+            assert self.PoH_registry_intermediary == other.PoH_registry_intermediary
+            return True
+        except AssertionError:
+            return False
+
     @property
     def to_dict(self) -> dict:
         return {

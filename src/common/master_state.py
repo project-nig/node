@@ -437,6 +437,7 @@ class MasterState:
                                     #marketplace_place_step4_seller can be None in that case (ex:if step = 1)
                                     if marketplace_place_step4_seller is None or marketplace_place_step4_seller=='':associated_account_dic_step4_list=[marketplace_place_step4_buyer]
                                     else:associated_account_dic_step4_list=[marketplace_place_step4_buyer,marketplace_place_step4_seller]
+                                logging.info(f"INFO ### associated_account_dic_step4_list:{associated_account_dic_step4_list}")
                                 step=0
                                 for associated_account_dic_step4 in associated_account_dic_step4_list:
                                     step+=1

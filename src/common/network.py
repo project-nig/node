@@ -32,7 +32,7 @@ class Network:
         initial_known_nodes_list=self.known_nodes_memory.return_known_nodes()
         for FIRST_KNOWN_NODE_HOSTNAME in self.FIRST_KNOWN_NODE_HOSTNAME_LIST:
             initial_known_node = Node(hostname=FIRST_KNOWN_NODE_HOSTNAME)
-            if self.node.dict != initial_known_node.dict:
+            if self.node.dict != initial_known_node.dict and initial_known_node.dict not in initial_known_nodes_list:
                 initial_known_nodes_list.append(initial_known_node.dict)
         self.known_nodes_memory.store_known_nodes(initial_known_nodes_list)
 
