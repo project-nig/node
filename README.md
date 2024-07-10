@@ -74,13 +74,17 @@ Launch 2 others Node
 ## Performing Development
 
 Clone the latest Branch with a number greater than 22 (ex:23.x).
+
 Perform your development locally and commit your change on the branch which will be published once approved.
+
 !! Never clone the master Branch.
 
 ## Running Integration tests
 
 Install Pytest => https://docs.pytest.org/
+
 Launch your network by running 3 nodes locally (cf. previous Process to run Nodes of NIG network).
+
 Open a new command prompt an go to the folder of the 3rd Node.
 ```bash
   \node3>
