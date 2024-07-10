@@ -21,8 +21,9 @@ class TransactionOutput:
         if account_temp is True or account_temp=="True" or account_temp=="true" or account_temp=="reputation_creation":
             #SmartContract transaction
             public_key_hash_str=''
+            logging.info(f"list_public_key_hash:{list_public_key_hash}")
             for public_key_hash in list_public_key_hash:
-                public_key_hash_str+=" OP_SC "+public_key_hash
+                if public_key_hash is not None:public_key_hash_str+=" OP_SC "+public_key_hash
             self.locking_script = f"OP_DUP OP_HASH160 {marketplace_owner.public_key_hash} OP_EQUAL_VERIFY OP_CHECKSIG{public_key_hash_str}"
             if account_temp=="reputation_creation":self.locking_script+=" OP_RE"
 

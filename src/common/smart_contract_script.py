@@ -282,26 +282,14 @@ memory_list.add([marketplace,'marketplace',['first_mp_request_name','current_mp_
 
 
 marketplace_script1="""
-memory_obj_2_load=['marketplace']
-try:
-  locals().pop('mp_request_step1')
-except:
-  pass
-mp_request_step1_name=marketplace.get_mp_request_name()
-mp_request_step1_name_init=str(mp_request_step1_name)
-mp_request_step1=MarketplaceRequest()
-mp_request_step1.previous_mp_request_name=marketplace.get_current_mp_request_name()
-locals()[mp_request_step1_name]=mp_request_step1
-marketplace.add_mp_request_name(mp_request_step1_name_init)
-mp_request_step1.step1(buyer_public_key_hash,buyer_public_key_hex,requested_amount)
-mp_request_step1.account=sender
-mp_request_step1.mp_request_name=mp_request_step1_name
-memory_list.add([mp_request_step1,mp_request_step1_name_init,['account','step','timestamp','requested_amount',
-                                                      'requested_currency','requested_deposit','buyer_public_key_hash',
-                                                      'buyer_public_key_hex','requested_nig','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account',
-                                                      'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef']])
-
-123456
+mp_request_step2_done=MarketplaceRequest()
+mp_request_step2_done.step1("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
+mp_request_step2_done.account=sender
+memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
+mp_request_step2_done.get_requested_deposit()
 
 """
 

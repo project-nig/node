@@ -6,6 +6,7 @@ import random
 from common.node import Node
 from common.values import LEADER_NODE_SCHEDULE_NB_SLOT
 from common.smart_contract import SmartContract,load_smart_contract_from_master_state
+from common.io_blockchain import BlockchainMemory
 
 
 class LeaderNodeScheduleMemory:
@@ -97,15 +98,19 @@ class LeaderNodeScheduleMemory:
 
     def create_leader_node_schedule(self,known_nodes_of_known_node):
         logging.info(f"===========Creating new leader node schedule ")
+        #count the number of block in the default blockchain
+        blockchain_memory=BlockchainMemory()
+        LEADER_NODE_SCHEDULE_SLOT_START=len(blockchain_memory.get_all_blockchain_from_memory())
         leader_node_schedule=[]
+        epoc_number=int(LEADER_NODE_SCHEDULE_SLOT_START/LEADER_NODE_SCHEDULE_NB_SLOT)+1
         for i in range(0,2):
-            epoc_dic={'Epoch':i+1,
-                      'PreviousEpoch':i,
-                      'NextEpoch':i+2,
-                      'FirstSlot':i*LEADER_NODE_SCHEDULE_NB_SLOT,
-                      'LastSlot':(i+1)*LEADER_NODE_SCHEDULE_NB_SLOT-1,
+            epoc_dic={'Epoch':i+epoc_number,
+                      'PreviousEpoch':i+epoc_number-1,
+                      'NextEpoch':epoc_number+1,
+                      'FirstSlot':(epoc_number+i)*LEADER_NODE_SCHEDULE_NB_SLOT,
+                      'LastSlot':(epoc_number+i+1)*LEADER_NODE_SCHEDULE_NB_SLOT-1,
                       'LeaderNodeList':[]}
-            epoc_dic=self.create_LeaderNodeList(epoc_dic,known_nodes_of_known_node,i)
+            epoc_dic=self.create_LeaderNodeList(epoc_dic,known_nodes_of_known_node,i+int(LEADER_NODE_SCHEDULE_SLOT_START/LEADER_NODE_SCHEDULE_NB_SLOT)+1)
             leader_node_schedule.append(epoc_dic)
         logging.info(f"===========leader_node_schedule: {leader_node_schedule} ")
         if leader_node_schedule!=[]:self.store_new_leader_node_schedule(leader_node_schedule)

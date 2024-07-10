@@ -144,7 +144,7 @@ def validate_block():
     content=clean_request(content)
     block_multiprocessing=BlockMultiProcessing()
     block_multiprocessing.launch(content)
-    return "Transaction success", 200
+    return "Transaction success1", 200
 
 @app.route("/block_saving_leader_node", methods=['POST'])
 def block_saving_leader_node():
@@ -211,11 +211,24 @@ def block_saving_leader_node():
     #let's release to allow the block receiving
     master_state_threading.receiving_reset()
 
-    return "Transaction success", 200
+    return "Transaction success2", 200
 
 
 @app.route("/transactions", methods=['POST'])
 def validate_transaction():
+    return validate_transaction_process()
+
+@app.route("/transactions_test", methods=['POST'])
+def validate_transactions_test():
+    #this function is used during test mode to avoid running as a background task like in /transactions
+    #and to return a response
+    response=validate_transaction_process(test_flag=True)
+    logging.info(f'response content:{response.content}')
+    logging.info(f'response status_code:{response.status_code}')
+    return response.content,response.status_code
+
+def validate_transaction_process(*args, **kwargs):
+    test_flag=kwargs.get('test_flag',False)
     logging.info("New transaction validation request")
     content = request.json
     content=clean_request(content)
@@ -224,11 +237,13 @@ def validate_transaction():
     try:
         transaction = Transaction(blockchain_base, MY_HOSTNAME)
         transaction.receive(transaction=content["transaction"])
-        if transaction.validate_output_not_empty() == True:transaction.broadcast_to_leader_node()
+        if transaction.validate_output_not_empty() == True:
+            if test_flag is False:transaction.broadcast_to_leader_node()
+            else:return transaction.broadcast_to_leader_node(test_flag=True)
         else:logging.info("###ERROR: transaction output is empty")
     except TransactionException as transaction_exception:
         return f'{transaction_exception}', 400
-    return "Transaction success", 200
+    return "Transaction success3", 200
 
 
 @app.route("/transactions_to_leader_node", methods=['POST'])
@@ -241,7 +256,18 @@ def transactions_to_leader_node():
     transaction_multiprocessing=TransactionMultiProcessing()
     transaction_multiprocessing.launch(content['transaction'],False)
     
-    return "Transaction success", 200
+    return "Transaction success4", 200
+
+@app.route("/transactions_to_leader_node_test", methods=['POST'])
+def transactions_to_leader_node_test():
+    logging.info("New transaction to leader node request test")
+    content = request.json
+    #logging.info(f"content: {content}")
+    logging.info(f"Transaction: {content['transaction']}")
+    response=Process_transaction(transaction_data=content['transaction'])
+    logging.info(f'response:{response}')
+    return response
+
 
 def leader_node_advance_purge_backlog():
     logging.info(f"### leader_node_advance_purge_backlog")
@@ -294,7 +320,7 @@ def transactions_to_leader_node_advance():
     content = request.json
     transaction=content["transaction"]
     save_transactions_to_leader_node_advance(transaction)
-    return "Transaction success", 200
+    return "Transaction success5", 200
 
 def save_transactions_to_leader_node_advance(transaction):
     try:
@@ -307,6 +333,7 @@ def save_transactions_to_leader_node_advance(transaction):
         transaction_data = json.dumps(transaction).encode("utf-8")
         with open(transaction_filename, "wb") as file_obj:
             file_obj.write(transaction_data)
+        return "Transaction success7", 200
         
     except TransactionException as transaction_exception:
         return f'{transaction_exception}', 400
@@ -572,6 +599,8 @@ def restart():
     )
     return response
 
+    return response
+
 @app.route("/restart_request", methods=['POST'])
 def restart_request():
     logging.info("Node restart request")
@@ -641,11 +670,11 @@ def encryption_test():
     from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
     import binascii, json
     transaction_data = {
-            "name": "Banque Postale James Bond",
-            "iban":"FR03 2457 1245 1864 3267 9H65 345",
-            "bic": "PSSTGBDDFTZ",
-            "email": "james.bond@gmail.com",
-            "phone": "0123456789",
+            "name": "Banque Postale Lionel DAVID",
+            "iban":"FR03 2004 1010 1709 5633 8F02 896",
+            "bic": "PSSTFRPPGRE",
+            "email": "lion.david@gmail.com",
+            "phone": "0686872549",
             "country" : "France" ,
         }
     data = json.dumps(transaction_data, indent=2)
@@ -989,7 +1018,6 @@ def get_smart_contract():
     content = request.json
     #fix for boolean
     content=clean_request(content)
-    #logging.info(f"###smart_contract content:{content}")
     smart_contract_type=content['smart_contract_type']
     smart_contract_public_key_hash=content['smart_contract_public_key_hash']
     sender_public_key_hash=content['sender_public_key_hash']
@@ -1035,6 +1063,200 @@ def get_smart_contract():
     return jsonify(smart_contract_dict)
 
 
+
+
+@app.route("/smart_contract_detail/<value>", methods=['GET'])
+def get_smart_contract_detail(value):
+    logging.info(f"test smart_contract step:{value}")
+    #smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+    smart_contract_amount=None
+    smart_contract_owner=marketplace_owner
+    receiver_public_key_hash=smart_contract_owner.public_key_hash
+
+    seller_owner=camille_owner
+    seller_wallet=camille_wallet
+    buyer_owner=daniel_owner
+    buyer_public_key_hash=buyer_owner.public_key_hash
+    unlocking_public_key_hash=smart_contract_owner.public_key_hash
+    transaction_wallet=smart_contract_wallet
+
+    ####STEP 1
+    if int(value)==1:
+        sender_public_key_hash=buyer_owner.public_key_hash
+        
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+        logging.info(f"marketplace_owner.public_key_hash:{marketplace_owner.public_key_hash}")
+        utxo_dict=get_utxo(marketplace_owner.public_key_hash)
+        logging.info(f"utxo_dict:{utxo_dict}")
+        payload=f'''buyer_public_key_hash="{buyer_owner.public_key_hash}"
+buyer_public_key_hex="{buyer_owner.public_key_hex}"
+requested_amount=10
+'''+marketplace_script1
+
+
+     ####STEP 2
+    if int(value)==2:
+        #STEP 2-1 - retrieval of request information to make signature
+        payload=marketplace_script2_1
+        sender_public_key_hash=camille_owner.public_key_hash
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+        smart_contract=SmartContract(smart_contract_owner.public_key_hash,
+                                        smart_contract_sender=sender_public_key_hash,
+                                        smart_contract_type="api",
+                                        payload=payload,
+                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
+        smart_contract.process()
+        mp_details=smart_contract.result
+        
+        #STEP 2-2 - encryption of account
+        
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+        sender_public_key_hash=camille_owner.public_key_hash
+        buyer_public_key_hex=buyer_owner.public_key_hex
+        transaction_account=TransactionAccount("Banque Postale camille","FR03 2004 1010 1709 5633 8F02 896","PSSTFRPPGRE","lion.david@gmail.com","0686872549","France",seller_owner.public_key_hash)
+        encrypted_account = transaction_account.encrypt(buyer_public_key_hex,seller_owner.private_key)
+
+        #STEP 2-3 - signature generation
+        mp_details.append(seller_owner.public_key_hex)
+        logging.info(f"@@@@@@step2 mp_details:{mp_details}")
+        transaction_bytes = json.dumps(mp_details, indent=2).encode('utf-8')
+        hash_object = SHA256.new(transaction_bytes)
+        #signature = pkcs1_15.new(RSA.importKey(seller_owner.private_key)).sign(hash_object)
+        signature = pkcs1_15.new(seller_owner.private_key).sign(hash_object)
+        mp_request_signature=binascii.hexlify(signature).decode("utf-8")
+
+        smart_contract_amount=9.9
+        utxo_dict=get_utxo(seller_owner.public_key_hash,smart_contract_only=False)
+        transaction_wallet=seller_wallet
+        unlocking_public_key_hash=seller_owner.public_key_hash
+        payload=f'''seller_public_key_hash="{seller_owner.public_key_hash}"
+seller_public_key_hex="{seller_owner.public_key_hex}"
+requested_nig=10
+encrypted_account="{encrypted_account}"
+mp_request_signature="{mp_request_signature}"
+'''+marketplace_script2_2
+
+    ####STEP 3
+    if int(value)==3:
+        #STEP 3-1 - retrieval of bank account information
+        payload=marketplace_script3_1
+        sender_public_key_hash=buyer_owner.public_key_hash
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+        smart_contract=SmartContract(smart_contract_owner.public_key_hash,
+                                        smart_contract_sender=sender_public_key_hash,
+                                        smart_contract_type="api",
+                                        payload=payload,
+                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
+
+        smart_contract.process()
+        account=smart_contract.result
+        account_encrypted_part1=str(account).split(" ")[0]
+        account_encrypted_part2=str(account).split(" ")[1]
+        decrypted_account=decrypt_account(account_encrypted_part1,account_encrypted_part2,buyer_owner.private_key)
+        logging.info(f"@@@@@@ decrypted_account step:{decrypted_account.to_dict()}")
+
+        #STEP 3-2 - retrieval of request information to make signature
+        payload=marketplace_script3_2
+        utxo_dict=get_utxo(marketplace_owner.public_key_hash)
+        sender_public_key_hash=buyer_owner.public_key_hash
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+        smart_contract=SmartContract(smart_contract_owner.public_key_hash,
+                                        smart_contract_sender=sender_public_key_hash,
+                                        smart_contract_type="api",
+                                        payload=payload,
+                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
+        smart_contract.process()
+        mp_details=smart_contract.result
+
+        #STEP 3-3 - signature generation
+        logging.info(f"@@@@@@step3 mp_details:{mp_details}")
+        transaction_bytes = json.dumps(mp_details, indent=2).encode('utf-8')
+        hash_object = SHA256.new(transaction_bytes)
+        #signature = pkcs1_15.new(RSA.importKey(buyer_owner.private_key)).sign(hash_object)
+        signature = pkcs1_15.new(buyer_owner.private_key).sign(hash_object)
+        mp_request_signature=binascii.hexlify(signature).decode("utf-8")
+
+        payload=f'''mp_request_signature="{mp_request_signature}"
+'''+marketplace_script3_3
+
+
+    if int(value)==4:
+        #STEP 4-0 - transfer of Nig to smart_contract_owner to freeze the request
+        input_list=[]
+        output_list=[]
+        utxo_dict=get_utxo(marketplace_owner.public_key_hash,smart_contract_only=False)
+        for utxo in utxo_dict['utxos']:
+            input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=smart_contract_owner.public_key_hash))
+            output_list.append(TransactionOutput(public_key_hash=buyer_public_key_hash, 
+                                                 amount=utxo['amount'],
+                                                 interface_public_key_hash=interface_public_key_hash))
+            smart_contract_wallet.process_transaction(inputs=input_list, outputs=output_list)
+            break
+
+    if int(value)==5:
+        #STEP 4-1 - retrieval of request information to make signature
+        payload=marketplace_script4_1
+        sender_public_key_hash=camille_owner.public_key_hash
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_owner.public_key_hash)
+        smart_contract=SmartContract(smart_contract_owner.public_key_hash,
+                                        smart_contract_sender=sender_public_key_hash,
+                                        smart_contract_type="api",
+                                        payload=payload,
+                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
+        smart_contract.process()
+        mp_details=smart_contract.result
+        
+        #STEP 4-2 - signature generation
+        utxo_dict=get_utxo(marketplace_owner.public_key_hash)
+        transaction_bytes = json.dumps(mp_details, indent=2).encode('utf-8')
+        hash_object = SHA256.new(transaction_bytes)
+        #signature = pkcs1_15.new(RSA.importKey(seller_owner.private_key)).sign(hash_object)
+        signature = pkcs1_15.new(seller_owner.private_key).sign(hash_object)
+        mp_request_signature=binascii.hexlify(signature).decode("utf-8")
+
+        receiver_public_key_hash=buyer_public_key_hash
+
+        
+        payload=f'''mp_request_signature="{mp_request_signature}"
+'''+marketplace_script4_2
+    
+   
+    input_list=[]
+    output_list=[]
+    for utxo in utxo_dict['utxos']:
+        if smart_contract_amount is None:smart_contract_amount=utxo['amount']
+        smart_contract=SmartContract(smart_contract_owner.public_key_hash,
+                                        smart_contract_sender=sender_public_key_hash,
+                                        smart_contract_type="source",
+                                        payload=payload,
+                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
+
+        smart_contract.process()
+        input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
+        output_list.append(TransactionOutput(public_key_hash=receiver_public_key_hash, 
+                                                amount=utxo['amount'],
+                                                interface_public_key_hash=interface_public_key_hash,
+                                                smart_contract_account=smart_contract.smart_contract_account,
+                                                smart_contract_sender=smart_contract.smart_contract_sender,
+                                                smart_contract_new=smart_contract.smart_contract_new,
+                                                smart_contract_flag=True,
+                                                smart_contract_gas=smart_contract.gas,
+                                                smart_contract_memory=smart_contract.smart_contract_memory,
+                                                smart_contract_memory_size=smart_contract.smart_contract_memory_size,
+                                                smart_contract_type=smart_contract.smart_contract_type,
+                                                smart_contract_payload=smart_contract.payload,
+                                                smart_contract_result=smart_contract.result,
+                                                smart_contract_previous_transaction=smart_contract.smart_contract_previous_transaction,
+                                                smart_contract_transaction_hash=smart_contract.smart_contract_transaction_hash))
+        transaction_wallet.process_transaction(inputs=input_list, outputs=output_list)
+        break
+    
+    return "Restart success", 200
 
 
 class TransactionMultiProcessing:
@@ -1105,7 +1327,7 @@ def Process_transaction(*args, **kwargs):
 
         if purge_flag is False and PoH_memory.wip_flag is False:
             logging.info("Saving of transaction in advance by leader node")
-            save_transactions_to_leader_node_advance(transaction_data)
+            return save_transactions_to_leader_node_advance(transaction_data)
         else:
             try:
                 transaction = Transaction(blockchain_base, MY_HOSTNAME)
@@ -1147,6 +1369,9 @@ def Process_transaction(*args, **kwargs):
                             transaction.is_smart_contract_valid=False
                             logging.info(f"ERROR with update_master_state of SmartContract  Exception: {e}")
                             logging.exception(e)
+                    else:
+                        #Transaction is not valid
+                        return f'{transaction_exception}', 400
 
                     if transaction.is_smart_contract_valid is True:
                         transaction.store()
@@ -1157,10 +1382,14 @@ def Process_transaction(*args, **kwargs):
                     #let's release MasterState
                     master_state_readiness.release()
                     #logging.info(f"###Transaction is released: {transaction.transaction_data}")
+
+                
       
             except TransactionException as transaction_exception:
                 return f'{transaction_exception}', 400
 
+    
+   
        
 
 
