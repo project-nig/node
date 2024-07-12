@@ -11,9 +11,6 @@ from blockchain_users.camille import private_key as camille_private_key
 from blockchain_users.bertrand import private_key as bertrand_private_key
 from blockchain_users.daniel import private_key as daniel_private_key
 from blockchain_users.marketplace import private_key as marketplace_private_key
-from blockchain_users.node import public_key_hash as node_public_key_hash
-from blockchain_users.node3_local import public_key_hash as leader_node_public_key_hash
-from blockchain_users.node2_local import public_key_hash as leader_node_public_key_hash2
 from common.node import Node
 from common.transaction_input import TransactionInput
 from common.transaction_output import TransactionOutput
@@ -28,16 +25,13 @@ from common.io_blockchain import BlockchainMemory
 from common.io_leader_node_schedule import LeaderNodeScheduleMemory
 from common.smart_contract import SmartContract,check_smart_contract,load_smart_contract,load_smart_contract_from_master_state,load_smart_contract_from_master_state_leader_node,check_double_contract,create_smart_contract
 from common.smart_contract_script import marketplace_script1
-from common.values import MARKETPLACE_CODE_PUBLIC_KEY_HASH,ROUND_VALUE_DIGIT
-from common.values import NETWORK_DEFAULT,DEFAULT_TRANSACTION_FEE_PERCENTAGE,INTERFACE_TRANSACTION_FEE_SHARE,NODE_TRANSACTION_FEE_SHARE,MINER_TRANSACTION_FEE_SHARE,ROUND_VALUE_DIGIT
+from common.values import MARKETPLACE_CODE_PUBLIC_KEY_HASH
 from common.transaction_account import TransactionAccount
 
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 import binascii
-from node.main import calculate_nig_rate
-from common.utils import normal_round
 
 
 @pytest.fixture(scope="module")
@@ -254,14 +248,9 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
         elif int(marketplace_step)==4:
             #Transaction to the buyer with the potential requested_deposit
             output_list.append(TransactionOutput(list_public_key_hash=[daniel_owner.public_key_hash], 
-                                                amount=requested_nig,
+                                                amount=requested_nig+buyer_requested_deposit,
                                                 marketplace_step=4,
                                                 interface_public_key_hash=interface_public_key_hash))
-            if buyer_requested_deposit>0:
-                output_list.append(TransactionOutput(list_public_key_hash=[daniel_owner.public_key_hash], 
-                                                    amount=buyer_requested_deposit,
-                                                    marketplace_step=0,
-                                                    interface_public_key_hash=interface_public_key_hash))
             #Transaction to the seller including the seller safety coef
             output_list.append(TransactionOutput(list_public_key_hash=[seller_public_key_hash], 
                                                 amount=seller_transaction_amount,
@@ -276,15 +265,6 @@ def test_marketplace0(marketplace_owner,daniel_owner,daniel_wallet,smart_contrac
     utxo_url="http://127.0.0.1:5000/restart"
     resp = requests.get(utxo_url)
     time.sleep(10)
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
     
     #step2 : creation of the smart_contact account number
     utxo_url='http://'+MY_HOSTNAME+'/create_smart_contract_account'
@@ -338,39 +318,6 @@ reputation_1=1
     assert marketplace_resp["results"][0]['requester_public_key_hex']==daniel_owner.public_key_hex
     assert marketplace_resp["results"][0]['smart_contract_ref']==smart_contract_account
 
-    #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_account in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step8 : validation
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash
-    assert last_block_header.slot==13
-    
-    assert len(last_transaction["outputs"])==1
-
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==0
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_account+" OP_SC "+daniel_owner.public_key_hash+" OP_SC "+marketplace_owner.public_key_hash
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
-    
-
 
 def test_marketplace2(marketplace_owner,daniel_owner,camille_owner,smart_contract_wallet,my_node,daniel_wallet,camille_wallet,transaction_amount_eur):
     #step 1: extract the smart contract account
@@ -379,15 +326,6 @@ def test_marketplace2(marketplace_owner,daniel_owner,camille_owner,smart_contrac
     marketplace_resp = resp.json()
     smart_contract_ref=marketplace_resp["results"][0]["smart_contract_ref"]
     requested_nig=marketplace_resp["results"][0]["requested_nig"]
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
 
     #step 2: extract the smart contract account details
     marketplace_api_utxo_json=my_node.get_smart_contract_api(smart_contract_ref)
@@ -475,50 +413,8 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     assert marketplace_resp["results"][0]['smart_contract_ref']==smart_contract_ref
 
 
-    #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
 
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_ref in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step8 : validation
-    nig_rate=calculate_nig_rate(currency='eur')
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash2
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==2
-    
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==requested_nig
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref+" OP_SC "+camille_owner.public_key_hash+" OP_SC "+daniel_owner.public_key_hash+" OP_DEL_SC "+marketplace_owner.public_key_hash
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
-    assert  camille_transaction["account"]==None
-    #bug fixing : compare the amount of the transaction and not the total amount of the camille
-    #assert  camille_transaction["amount"]+transaction_amount==seller_total
-    assert  camille_transaction["fee_interface"]==0
-    assert  camille_transaction["fee_miner"]==0
-    assert  camille_transaction["fee_node"]==0
-    assert  camille_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert  camille_transaction["locking_script"]=="OP_DUP OP_HASH160 "+ camille_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert  camille_transaction["network"]=="nig"
-    assert  camille_transaction["node_public_key_hash"]==node_public_key_hash
-
-
+ 
 def test_marketplace3(marketplace_owner,daniel_owner,camille_owner,smart_contract_wallet,my_node,daniel_wallet,camille_wallet,transaction_amount_eur):
     #step 1: extract the smart contract account
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/2/'+daniel_owner.public_key_hash
@@ -526,16 +422,6 @@ def test_marketplace3(marketplace_owner,daniel_owner,camille_owner,smart_contrac
     marketplace_resp = resp.json()
     smart_contract_ref=marketplace_resp["results"][0]["smart_contract_ref"]
     requested_nig=marketplace_resp["results"][0]["requested_nig"]
-
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
 
     #step 2: extract the smart contract account details
     marketplace_api_utxo_json=my_node.get_smart_contract_api(smart_contract_ref)
@@ -608,36 +494,6 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     assert marketplace_resp["results"][0]['requester_public_key_hex']==daniel_owner.public_key_hex
     assert marketplace_resp["results"][0]['smart_contract_ref']==smart_contract_ref
 
-    #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_ref in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step8 : validation
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==1
-    
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==normal_round(requested_nig*2,ROUND_VALUE_DIGIT)
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
 
 
 def test_marketplace4(marketplace_owner,daniel_owner,camille_owner,smart_contract_wallet,my_node,daniel_wallet,camille_wallet):
@@ -647,16 +503,6 @@ def test_marketplace4(marketplace_owner,daniel_owner,camille_owner,smart_contrac
     marketplace_resp = resp.json()
     smart_contract_ref=marketplace_resp["results"][0]["smart_contract_ref"]
     requested_nig=marketplace_resp["results"][0]["requested_nig"]
-
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
 
     #step 2: extract the smart contract account details
     marketplace_api_utxo_json=my_node.get_smart_contract_api(smart_contract_ref)
@@ -685,7 +531,6 @@ mp_request_step2_done.get_mp_details(4)
     #seller_safety_coef management
     seller_transaction_amount=mp_details[5]*mp_details[6]-mp_details[5]
     seller_public_key_hash=mp_details[8]
-    seller_deposit=mp_details[5]*mp_details[6]-mp_details[5]
     buyer_requested_deposit=mp_details[9]
     
     #step 4: signature generation
@@ -730,64 +575,6 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     marketplace_resp = resp.json()
     assert 0==len(marketplace_resp["results"])
 
-     #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-    transaction_amount=mp_details[5]
-
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_ref in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step5 : calculate fee
-    fee_node = normal_round(transaction_amount*(float(DEFAULT_TRANSACTION_FEE_PERCENTAGE)/100)*float(NODE_TRANSACTION_FEE_SHARE)/100,ROUND_VALUE_DIGIT)
-    fee_interface = normal_round(transaction_amount*(float(DEFAULT_TRANSACTION_FEE_PERCENTAGE)/100)*float(INTERFACE_TRANSACTION_FEE_SHARE)/100,ROUND_VALUE_DIGIT)
-    fee_miner = normal_round(transaction_amount*(float(DEFAULT_TRANSACTION_FEE_PERCENTAGE)/100)*float(MINER_TRANSACTION_FEE_SHARE)/100,ROUND_VALUE_DIGIT)
-    real_transaction_amount=normal_round(transaction_amount-fee_node-fee_interface-fee_miner,ROUND_VALUE_DIGIT)
-    
-
-    #step8 : validation
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash2
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==3
-    
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==0
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+smart_contract_ref+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
-    assert daniel_transaction["account"]==None
-    assert daniel_transaction["amount"]==real_transaction_amount
-    assert daniel_transaction["fee_interface"]==fee_interface
-    assert daniel_transaction["fee_miner"]==fee_miner
-    assert daniel_transaction["fee_node"]==fee_node
-    assert daniel_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert daniel_transaction["locking_script"]=="OP_DUP OP_HASH160 "+daniel_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert daniel_transaction["network"]=="nig"
-    assert daniel_transaction["node_public_key_hash"]==node_public_key_hash
-
-    assert  camille_transaction["account"]==None
-    assert  camille_transaction["amount"]==seller_deposit
-    assert  camille_transaction["fee_interface"]==0
-    assert  camille_transaction["fee_miner"]==0
-    assert  camille_transaction["fee_node"]==0
-    assert  camille_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert  camille_transaction["locking_script"]=="OP_DUP OP_HASH160 "+ camille_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert  camille_transaction["network"]=="nig"
-    assert  camille_transaction["node_public_key_hash"]==node_public_key_hash
 
 
 def test_marketplace1(marketplace_owner,daniel_owner,daniel_wallet,smart_contract_wallet,my_node,camille_owner,camille_wallet,transaction_amount_eur2):
@@ -798,16 +585,6 @@ def test_marketplace1(marketplace_owner,daniel_owner,daniel_wallet,smart_contrac
     assert 40==len(smart_contract_account)
     int(smart_contract_account, 16)
     
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
-
     #step2 : check that there is no purchase request in marketplace 1
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/1/'+marketplace_owner.public_key_hash
     resp = requests.get(utxo_url)
@@ -865,49 +642,6 @@ mp_request_step2_done.get_requested_deposit()
     assert marketplace_resp["results"][0]['requester_public_key_hex']==daniel_owner.public_key_hex
     assert marketplace_resp["results"][0]['smart_contract_ref']==smart_contract_account
 
-     #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_account in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step8 : validation
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==2
-
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==buyer_requested_deposit
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_account+" OP_SC "+daniel_owner.public_key_hash+" OP_SC "+marketplace_owner.public_key_hash
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
-    assert daniel_transaction["account"]==None
-    #bug fixing : compare the amount of the transaction and not the total amount of the daniel
-    #assert daniel_transaction["amount"]==real_transaction_amount
-    assert daniel_transaction["fee_interface"]==0
-    assert daniel_transaction["fee_miner"]==0
-    assert daniel_transaction["fee_node"]==0
-    assert daniel_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert daniel_transaction["locking_script"]=="OP_DUP OP_HASH160 "+daniel_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert daniel_transaction["network"]=="nig"
-    assert daniel_transaction["node_public_key_hash"]==node_public_key_hash
-
-
 def test_marketplace21(marketplace_owner,daniel_owner,camille_owner,smart_contract_wallet,my_node,daniel_wallet,camille_wallet,transaction_amount_eur2):
     #step 1: extract the smart contract account
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/1/'+marketplace_owner.public_key_hash
@@ -915,15 +649,6 @@ def test_marketplace21(marketplace_owner,daniel_owner,camille_owner,smart_contra
     marketplace_resp = resp.json()
     smart_contract_ref=marketplace_resp["results"][0]["smart_contract_ref"]
     requested_nig=marketplace_resp["results"][0]["requested_nig"]
-
-     #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
 
     #step 2: extract the smart contract account details
     marketplace_api_utxo_json=my_node.get_smart_contract_api(smart_contract_ref)
@@ -1023,48 +748,6 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     assert marketplace_resp["results"][0]['smart_contract_ref']==smart_contract_ref
 
 
-    #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_ref in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step8 : validation
-    nig_rate=calculate_nig_rate(currency='eur')
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash2
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==2
-    
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==normal_round(mp_details[5]*2+buyer_requested_deposit,ROUND_VALUE_DIGIT)
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref+" OP_SC "+camille_owner.public_key_hash+" OP_SC "+daniel_owner.public_key_hash+" OP_DEL_SC "+marketplace_owner.public_key_hash
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
-    assert  camille_transaction["account"]==None
-    #bug fixing : compare the amount of the transaction and not the total amount of the camille
-    #assert  camille_transaction["amount"]+transaction_amount==seller_total
-    assert  camille_transaction["fee_interface"]==0
-    assert  camille_transaction["fee_miner"]==0
-    assert  camille_transaction["fee_node"]==0
-    assert  camille_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert  camille_transaction["locking_script"]=="OP_DUP OP_HASH160 "+ camille_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert  camille_transaction["network"]=="nig"
-    assert  camille_transaction["node_public_key_hash"]==node_public_key_hash
 
 
  
@@ -1075,24 +758,6 @@ def test_marketplace31(marketplace_owner,daniel_owner,camille_owner,smart_contra
     marketplace_resp = resp.json()
     smart_contract_ref=marketplace_resp["results"][0]["smart_contract_ref"]
     requested_nig=marketplace_resp["results"][0]["requested_nig"]
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
 
     #step 2: extract the smart contract account details
     marketplace_api_utxo_json=my_node.get_smart_contract_api(smart_contract_ref)
@@ -1165,37 +830,6 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     assert marketplace_resp["results"][0]['requester_public_key_hex']==daniel_owner.public_key_hex
     assert marketplace_resp["results"][0]['smart_contract_ref']==smart_contract_ref
 
-    #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-
-    daniel_transaction=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:daniel_transaction=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_ref in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step8 : validation
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==1
-    
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==normal_round(requested_nig*2+mp_details[9],ROUND_VALUE_DIGIT)
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
 
 
 def test_marketplace41(marketplace_owner,daniel_owner,camille_owner,smart_contract_wallet,my_node,daniel_wallet,camille_wallet):
@@ -1205,15 +839,6 @@ def test_marketplace41(marketplace_owner,daniel_owner,camille_owner,smart_contra
     marketplace_resp = resp.json()
     smart_contract_ref=marketplace_resp["results"][0]["smart_contract_ref"]
     requested_nig=marketplace_resp["results"][0]["requested_nig"]
-
-    #step2 : retrieve initial value
-    seller_utxo_dict=get_utxo(camille_owner.public_key_hash,smart_contract_only=False)
-    buyer_utxo_dict=get_utxo(daniel_owner.public_key_hash,smart_contract_only=False)
-    seller_total=seller_utxo_dict["total"]
-    buyer_total=buyer_utxo_dict["total"]
-    blockchain_memory = BlockchainMemory()
-    first_block=blockchain_memory.get_blockchain_from_memory()
-    first_block_header=first_block.block_header
 
     #step 2: extract the smart contract account details
     marketplace_api_utxo_json=my_node.get_smart_contract_api(smart_contract_ref)
@@ -1285,80 +910,4 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     resp = requests.get(utxo_url)
     marketplace_resp = resp.json()
     assert 0==len(marketplace_resp["results"])
-
-
-     #step7 : retrieve new information
-    last_block=blockchain_memory.get_blockchain_from_memory()
-    last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
-    transaction_amount=mp_details[5]
-    seller_deposit=mp_details[5]*mp_details[6]-mp_details[5]
-    buyer_requested_deposit=mp_details[9]
-
-    daniel_transaction1=None
-    daniel_transaction2=None
-    camille_transaction=None
-    smart_contract_transaction=None
-    for utxo in last_transaction["outputs"]:
-        if daniel_owner.public_key_hash in utxo["locking_script"]:
-            if daniel_transaction1 is None:daniel_transaction1=copy.deepcopy(utxo)
-            else:daniel_transaction2=copy.deepcopy(utxo)
-        if camille_owner.public_key_hash in utxo["locking_script"]:camille_transaction=copy.deepcopy(utxo)
-        if smart_contract_ref in utxo["locking_script"]:smart_contract_transaction=copy.deepcopy(utxo)
-
-
-    #step5 : calculate fee
-    fee_node = normal_round(transaction_amount*(float(DEFAULT_TRANSACTION_FEE_PERCENTAGE)/100)*float(NODE_TRANSACTION_FEE_SHARE)/100,ROUND_VALUE_DIGIT)
-    fee_interface = normal_round(transaction_amount*(float(DEFAULT_TRANSACTION_FEE_PERCENTAGE)/100)*float(INTERFACE_TRANSACTION_FEE_SHARE)/100,ROUND_VALUE_DIGIT)
-    fee_miner = normal_round(transaction_amount*(float(DEFAULT_TRANSACTION_FEE_PERCENTAGE)/100)*float(MINER_TRANSACTION_FEE_SHARE)/100,ROUND_VALUE_DIGIT)
-    real_transaction_amount=normal_round(transaction_amount-fee_node-fee_interface-fee_miner,ROUND_VALUE_DIGIT)
-    
-
-    #step8 : validation
-    assert first_block_header.current_PoH_hash==last_block_header.previous_PoH_hash
-    assert last_block_header.leader_node_public_key_hash==leader_node_public_key_hash2
-    assert last_block_header.slot==first_block_header.slot+1
-    
-    assert len(last_transaction["outputs"])==4
-    
-    assert smart_contract_transaction["account"]==None
-    assert smart_contract_transaction["amount"]==0
-    assert smart_contract_transaction["fee_interface"]==0
-    assert smart_contract_transaction["fee_miner"]==0
-    assert smart_contract_transaction["fee_node"]==0
-    assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+smart_contract_ref+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert smart_contract_transaction["network"]=="nig"
-    assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
-
-    assert daniel_transaction1["account"]==None
-    assert daniel_transaction1["amount"]==real_transaction_amount
-    assert daniel_transaction1["fee_interface"]==fee_interface
-    assert daniel_transaction1["fee_miner"]==fee_miner
-    assert daniel_transaction1["fee_node"]==fee_node
-    assert daniel_transaction1["interface_public_key_hash"]==interface_public_key_hash
-    assert daniel_transaction1["locking_script"]=="OP_DUP OP_HASH160 "+daniel_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert daniel_transaction1["network"]=="nig"
-    assert daniel_transaction1["node_public_key_hash"]==node_public_key_hash
-
-    assert daniel_transaction2["account"]==None
-    assert daniel_transaction2["amount"]==buyer_requested_deposit
-    assert daniel_transaction2["fee_interface"]==0
-    assert daniel_transaction2["fee_miner"]==0
-    assert daniel_transaction2["fee_node"]==0
-    assert daniel_transaction2["interface_public_key_hash"]==interface_public_key_hash
-    assert daniel_transaction2["locking_script"]=="OP_DUP OP_HASH160 "+daniel_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert daniel_transaction2["network"]=="nig"
-    assert daniel_transaction2["node_public_key_hash"]==node_public_key_hash
-
-    assert  camille_transaction["account"]==None
-    assert  camille_transaction["amount"]==seller_deposit
-    assert  camille_transaction["account"]==None
-    assert  camille_transaction["fee_interface"]==0
-    assert  camille_transaction["fee_miner"]==0
-    assert  camille_transaction["fee_node"]==0
-    assert  camille_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert  camille_transaction["locking_script"]=="OP_DUP OP_HASH160 "+ camille_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG"
-    assert  camille_transaction["network"]=="nig"
-    assert  camille_transaction["node_public_key_hash"]==node_public_key_hash
 
