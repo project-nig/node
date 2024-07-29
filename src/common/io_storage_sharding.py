@@ -2,8 +2,6 @@ import logging
 import os
 import json
 
-#from common.master_state_readiness import MasterStateReadiness
-#master_state_readiness=MasterStateReadiness()
 from common.master_state_readiness import master_state_readiness
 
 class StorageSharding:

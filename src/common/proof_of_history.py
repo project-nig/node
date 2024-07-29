@@ -102,7 +102,7 @@ class ProofOfHistory:
                 break
 
     def wip(self):
-        #this function is purging the backlog once a new block is received or 3 sec before termination
+        '''this function is purging the backlog once a new block is received or 3 sec before termination'''
         from common.master_state_threading import master_state_threading
         check_now=datetime.timestamp(datetime.utcnow())
         check_before_end_PoH=check_now-self.previous_PoH_timestamp>self.PoH_DURATION_SEC-3
@@ -130,7 +130,7 @@ class ProofOfHistory:
                 
 
     def check_termination(self):
-        #this function is checking if the PoH is ended
+        '''this function is checking if the PoH is ended'''
         check_now=datetime.timestamp(datetime.utcnow())
         check=check_now-self.previous_PoH_timestamp>self.PoH_DURATION_SEC
         #logging.info(f"##########===> PoHloop termination check2 {check} check_now:{check_now} previous_PoH_timestamp:{self.previous_PoH_timestamp} check_now:{check_now-self.previous_PoH_timestamp}")
@@ -301,107 +301,3 @@ class ProofOfHistory:
             except AssertionError:
                 logging.info(f" $$$$$ ERROR  PoH_input_data_counter between: {PoH_registry[i][4]} and {PoH_registry[i+1][4]}")
                 self.check3_flag=False
-        
-#script for testing PoH
-
-#PoH_REGISTRY_INTERMEDIARY_DIR = NODE_FILES_ROOT+r'\PoH_REGISTRY_INTERMEDIARY.txt'
-#PoH_REGISTRY_INPUT_DATA_DIR = NODE_FILES_ROOT+r'\PoH_REGISTRY_INPUT_DATA.txt'
-if 5==6:
-    logging.info(f" start")
-    for i in range(10):
-        start = time.time()
-        test=ProofOfHistory()
-        test.launch_PoH()
-        for i in range(0,40000):
-            test.input("step "+str(i))
-            if test.end_loop_flag is True:break
-            #time.sleep(0.01)
-
-        while test.end_loop_flag is False:
-            pass
-    
-        #test.stop()
-        end = time.time()
-        logging.info(f"Creation PoH operation:{end-start} hash {test.next_PoH_hash}")
-    logging.info(f"Creation PoH operation:{end-start} hash {test.next_PoH_hash}")
-    f1 = open(PoH_REGISTRY_INPUT_DATA_DIR, 'w')
-    f1.write(json.dumps(test.registry_input_data))
-    f1.close() 
-    
-    f2 = open(PoH_REGISTRY_INTERMEDIARY_DIR, 'w')
-    f2.write(json.dumps(test.registry_intermediary))
-    f2.close() 
-
-if 5==6:
-    logging.info(f" start")
-    start = time.time()
-    test=ProofOfHistory()
-    test.launch_PoH()
-    for i in range(0,10):
-        test.input("step "+str(i))
-        #time.sleep(0.01)
-
-    while test.end_loop_flag is False:
-        pass
-    
-    #test.stop()
-    end = time.time()
-    logging.info(f"Creation PoH operation:{end-start} hash {test.next_PoH_hash}")
-
-    f1 = open(PoH_REGISTRY_INPUT_DATA_DIR, 'w')
-    f1.write(json.dumps(test.registry_input_data))
-    f1.close() 
-    #time.sleep(2)
-
-    f2 = open(PoH_REGISTRY_INTERMEDIARY_DIR, 'w')
-    f2.write(json.dumps(test.registry_intermediary))
-    f2.close() 
-    #time.sleep(2)
-
-if 5==6:
-
-    with open(PoH_REGISTRY_INPUT_DATA_DIR) as f1:
-            registry_input_data = json.load(f1)
-
-    with open(PoH_REGISTRY_INTERMEDIARY_DIR) as f2:
-            registry_intermediary = json.load(f2)
-    
-    start = time.time()
-    test2=ProofOfHistory()
-    #logging.info(f"registry_input_data {test.registry_input_data}")
-    check=test2.validate(registry_input_data,registry_intermediary)
-    if check==False:logging.info(f"Validation without success !!")
-    else:logging.info(f"Validation with success")
-    #logging.info(f"registry_intermediary {test.registry_intermediary}")
-    test2.stop()
-
-    end = time.time()
-    logging.info(f"Validation PoH operation:{end-start} sec")
-    
-if 5==6:
-    logging.info(f" start")
-    start = time.time()
-    test=ProofOfHistory()
-    test.launch_PoH()
-    for i in range(0,1000000):
-        test.input("step "+str(i))
-        #time.sleep(0.01)
-    end = time.time()
-    logging.info(f"Creation PoH operation:{end-start} sec")
-    test.stop()
-
-    registry_input_data=test.registry_input_data
-    registry_intermediary=test.registry_intermediary
-    
-    start = time.time()
-    test2=ProofOfHistory()
-    #logging.info(f"registry_input_data {test.registry_input_data}")
-    check=test2.validate(registry_input_data,registry_intermediary)
-    if check==False:logging.info(f"Validation without success !!")
-    else:logging.info(f"Validation with success")
-    #logging.info(f"registry_intermediary {test.registry_intermediary}")
-    test2.stop()
-
-    end = time.time()
-    logging.info(f"Validation PoH operation:{end-start} sec")
-

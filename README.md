@@ -71,13 +71,21 @@ Launch 2 others Node
   Replace X all the times with 2 for 2nd Node and then 3 for the third node
 ```
 
+## Documentation
+
+All the technical documentation can be found in the docs folder. You will find the document for the 3 main modules:
+```bash
+	common in common.html
+	node in node.html
+	wallet in wallet.html
+```
+
 ## Performing Development
 
-Clone the latest Branch with a number greater than 22 (ex:23.x).
+Clone the master Branch.
 
-Perform your development locally and commit your change on the branch which will be published once approved.
+Perform your development locally and commit your change on the master branch which will be published once approved.
 
-!! Never clone the master Branch.
 
 ## Running Integration tests
 

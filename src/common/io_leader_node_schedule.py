@@ -11,7 +11,6 @@ from common.io_blockchain import BlockchainMemory
 
 class LeaderNodeScheduleMemory:
     def __init__(self):
-        #self.known_nodes_file = os.environ["KNOWN_NODES_DIR"]
         from common.values import LEADER_NODE_SCHEDULE_DIR
         self.leader_node_schedule_file=LEADER_NODE_SCHEDULE_DIR
 

@@ -12,7 +12,6 @@ from common.io_storage_sharding import StorageSharding
 class BlockchainMemory:
 
     def __init__(self,*args, **kwargs):
-        #self.file_name = os.environ["BLOCKCHAIN_DIR"]
         from common.values import BLOCKCHAIN_DIR,NEW_BLOCKCHAIN_DIR,NEW_BLOCKCHAIN_DEEPTH,NEW_BLOCKCHAIN_DIR_BACKLOG,STORAGE_DIR,NEW_BLOCKCHAIN_DIR_SLASHED,NEW_BLOCKCHAIN_SLASHED_DEEPTH
         self.file_name = BLOCKCHAIN_DIR
         self.master_state=MasterState()
@@ -49,7 +48,7 @@ class BlockchainMemory:
             return block_object
 
     def get_best_block_pointer_in_backlog(self):
-        #this function is identifying the best last block in the Backlog
+        '''this function is identifying the best last block in the Backlog'''
         from common.consensus_blockchain import consensus_blockchain
         if consensus_blockchain.best_block is not None:return consensus_blockchain.best_block
         else:return None
