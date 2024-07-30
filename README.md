@@ -1,4 +1,6 @@
-# What is NIG network ?
+# What is NIG ?
+The NIG project aims to remunerate the money lying dormant in current accounts through the regular use of a cryptocurrency discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in french).
+
 
 ## Process to run Nodes of NIG network
 
@@ -73,7 +75,7 @@ Launch 2 others Node
 
 ## Documentation
 ### Overview
-An overiew if technical details can be found here https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub
+An overiew of the [technical details](https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub) is available.
 
 ### Visual Diagrams
 Several viusal diagrams are available to better understand the interactions between the Class, Object, Method, etc
