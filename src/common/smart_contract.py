@@ -58,6 +58,30 @@ def check_double_contract(transaction):
     return check_double_contract_flag
 
 class SmartContract:
+    """
+    A class used to manage the SmartContract execution
+
+    ...
+
+    Attributes
+    ----------
+    smart_contract_account : str
+
+        * the hash string of the smart_contract to manage
+    
+    smart_contract_type : str
+
+        * api : for read only
+
+        * source : for writing the smart_contrat on the blockchain
+
+    Methods
+    -------
+    process() :
+
+        * launch the execution of the smart_contrat based on smart_contract_type
+    
+    """
     def __init__(self,smart_contract_account,*args, **kwargs):
         self.smart_contract_sender=kwargs.get('smart_contract_sender',0)
         self.gas=kwargs.get('smart_contract_gas',0)
