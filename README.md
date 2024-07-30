@@ -1,5 +1,5 @@
 # What is NIG ?
-The NIG project aims to remunerate the money lying dormant in current accounts through the regular use of a cryptocurrency discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in french).
+The NIG project aims to remunerate the money lying dormant in current accounts through the regular use of a cryptocurrency discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
 
 ## Process to run Nodes of NIG network
@@ -75,17 +75,21 @@ Launch 2 others Node
 
 ## Documentation
 ### Overview
-An overiew of the [technical details](https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub) is available.
+An overiew of the [technical details](https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub) is available (in French).
 
 ### Visual Diagrams
 Several viusal diagrams are available to better understand the interactions between the Class, Object, Method, etc
 >How the [NIG Network](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=10_Network#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1YCxaD_aJYUuVm_GbWdbpG3JfiKawxqzH%26export%3Ddownload) is initialized
 
->How a [transaction](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=20_Transaction#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D10RUXVQOz87zV22Xx90fcjsxpcc8i8BDU%26export%3Ddownload) is made on the NIG network
+>How a [transaction](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=20_Transaction#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D10RUXVQOz87zV22Xx90fcjsxpcc8i8BDU%26export%3Ddownload) is made on the NIG network.
 
->How a [SmartContrat](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=30_SmartContract#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1YR6M7MIu7n4pt269-hX9uLMw77VWmCm8%26export%3Ddownload) works
+>How a [SmartContrat](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=30_SmartContract#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1YR6M7MIu7n4pt269-hX9uLMw77VWmCm8%26export%3Ddownload) works.
 
->How the [consensus](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=40_Consensus#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1PAuhT8yiuq6xpoJQFgIaSYyvfa_OMV_1%26export%3Ddownload) is made between the nodes
+>How a [block](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=40_Consensus#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1PAuhT8yiuq6xpoJQFgIaSYyvfa_OMV_1%26export%3Ddownload) is created.
+
+>How the [consensus](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=50_Consensus#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1uwMwq3o3VKVH7_VKYrz4V1l2TDzQvPfs%26export%3Ddownload) is made between the nodes
+
+>How the [reputation](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=60_reputation#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1KvKRZDreXp_firoid9yPMhXi8v00C7ai%26export%3Ddownload) is managed (in French).
 
 All the technical documentation can be found in the docs folder. Once you have cloned locally the files, clicking on each file will open a web interface to navigate through the code. You will find the document for the 3 main modules :
 ```bash
