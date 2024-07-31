@@ -10,6 +10,10 @@ from common.io_blockchain import BlockchainMemory
 
 
 class ProofOfHistory:
+    """
+    Class to manage the Proof O fHistory (PoH) of the blockchain to ensure a consistency in terms of
+    timing and content between the different blocks.
+    """
     def __init__(self,*args, **kwargs):
         from common.values import PoH_DURATION_SEC
         self.PoW_memory = kwargs.get('PoW_memory',None)

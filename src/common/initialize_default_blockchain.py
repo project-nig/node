@@ -28,6 +28,9 @@ marketplace_wallet = Owner(private_key=marketplace_private_key)
 
 
 def initialize_default_blockchain(blockchain_memory: BlockchainMemory):
+    """
+    A function to initialize the default blockchain when launching the blockchain from the 1st Node
+    """
     print("Initializing default blockchain")
     from node.main import MY_NODE
     if MY_NODE.startswith('local'):

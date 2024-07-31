@@ -14,6 +14,10 @@ from common.master_state import MasterState
 
 
 class BlockHeader:
+    """
+    Class to manage the header information of the block. It has a 1 to 1 relationship with Block class.
+    It's instanced at Block creation.
+    """
     def __init__(self, previous_block_hash: str, current_PoH_hash: str, current_PoH_timestamp:str, previous_PoH_hash: str,timestamp: float, noonce: int, merkle_root: str, slot: int, leader_node_public_key_hash:str):
         self.previous_block_hash = previous_block_hash
         self.current_PoH_hash = current_PoH_hash
@@ -76,6 +80,10 @@ class BlockHeader:
         return json.dumps(self.to_dict)
 
 class BlockPoH:
+    """
+    Class to manage the Proof of History (PoH) of the block. It has a 1 to 1 relationship with Block class.
+    It's instanced at Block creation.
+    """
     def __init__(self, PoH_registry_input_data:str, PoH_registry_intermediary:str):
         self.PoH_registry_input_data=PoH_registry_input_data
         self.PoH_registry_intermediary=PoH_registry_intermediary
@@ -100,6 +108,10 @@ class BlockPoH:
 
 
 class Block:
+    """
+    Class to manage the transactions of the block. 
+    It has a 1 to 1 relationship with BlockHeader and BlockPoH class.
+    """
     def __init__(
             self,
             transactions: [dict],

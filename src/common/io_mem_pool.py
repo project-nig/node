@@ -5,8 +5,10 @@ import os
 
 
 class MemPool:
+    """
+    Class to manage the storage of the transactions received by the LeaderNode.
+    """
     def __init__(self):
-        #self.file_name = os.environ["MEMPOOL_DIR"]
         from common.values import MEMPOOL_DIR
         self.mempool_file_name = MEMPOOL_DIR
 

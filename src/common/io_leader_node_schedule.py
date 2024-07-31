@@ -10,6 +10,9 @@ from common.io_blockchain import BlockchainMemory
 
 
 class LeaderNodeScheduleMemory:
+    """
+    Class to manage the rotation of leader node (the LeaderNodeSchedule).
+    """
     def __init__(self):
         from common.values import LEADER_NODE_SCHEDULE_DIR
         self.leader_node_schedule_file=LEADER_NODE_SCHEDULE_DIR

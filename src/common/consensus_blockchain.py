@@ -5,6 +5,10 @@ import os
 import logging
 
 class ConcensusBlockChain:
+    """
+    Class to manage the vote and slash from the node of the blocks to identity
+    the best blockchain.
+    """
     def __init__(self):
         from common.values import NEW_BLOCKCHAIN_DIR_BACKLOG,STORAGE_DIR
         self.block_list=None
@@ -178,6 +182,9 @@ block_vote.vote_ratio()
         self.__setup__()
     
 class ConcensusBlock:
+    """
+    Class to encapsulate the real Block object into the ConcensusBlockChain object. 
+    """
     def __init__(self,block):
         self.previous_concensus_block=None
         self.current_concensus_block=block

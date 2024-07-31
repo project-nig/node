@@ -11,6 +11,11 @@ from common.io_storage_sharding import StorageSharding
 
 
 class MasterState:
+    """
+    Class to manage the state of each NIG account including SmartContract. 
+    Each state of account is stored in an unique file.
+    It's faster than reading all the transactions associated to an account in the blockchain.
+    """
     def __init__(self,*args, **kwargs):
         from common.values import MASTER_STATE_DIR,MASTER_STATE_DEEPTH,MASTER_STATE_DIR_TEMP
         self.current_master_state={}

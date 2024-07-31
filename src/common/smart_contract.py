@@ -59,7 +59,7 @@ def check_double_contract(transaction):
 
 class SmartContract:
     """
-    A class used to manage the SmartContract execution
+    Class used to manage the SmartContract execution
 
     ...
 

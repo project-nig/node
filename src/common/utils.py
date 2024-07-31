@@ -3,6 +3,9 @@ import logging
 
 
 def calculate_hash(data, hash_function: str = "sha256") -> str:
+    """
+    Calculate the hash of a string
+    """
     data = bytearray(data, "utf-8")
     if hash_function == "sha256":
         h = SHA256.new()
@@ -28,20 +31,27 @@ def normal_round(num, ndigits=0):
 
 
 def convert_str_2_bool(string):
-    #convert the string value in boolean
+    """
+    Convert the string value in boolean
+    """
     if string=="True":bool=True
     elif string=="False":bool=False
     else:bool=None
     return bool
 
 def clean_request(d: dict) -> dict:
-    #this function is replacing the following value in Flask request
-    # true => True
-    # false => False
-    # none => None
+    """
+    Hack replacing the following value in Flask request:
+    true => True, 
+    false => False, 
+    none => None, 
+    """
     return dict_replace_value(d)
 
 def dict_replace_value(d: dict) -> dict:
+    """
+    Function used by clean_request function
+    """
     x = {}
     for k, v in d.items():
         if v=="true":v=True
@@ -56,6 +66,9 @@ def dict_replace_value(d: dict) -> dict:
 
 
 def list_replace_value(l: list) -> list:
+    """
+    Function used by dict_replace_value function
+    """
     x = []
     for e in l:
         if e=="true":v=True
@@ -71,7 +84,10 @@ def list_replace_value(l: list) -> list:
 
 
 def check_marketplace_raw(outputs,step, *args, **kwargs):
-    #Flag used by check_smart_contract_consistency to avoid checking one input for all MarketPlace 1 request
+    """
+    Flag used by check_smart_contract_consistency 
+    to avoid checking one input for all MarketPlace 1 request
+    """
     check_user_flag=kwargs.get('check_user_flag',True)
     
     marketplace_place_step_flag=False
@@ -104,6 +120,9 @@ def check_marketplace_raw(outputs,step, *args, **kwargs):
     return marketplace_place_step_flag
 
 def extract_marketplace_account(outputs):
+    """
+    Retrieve the smart_contract_account out of marketplace request
+    """
     marketplace_place_account=None
     try:
         for i in range(0,len(outputs)):
@@ -115,19 +134,30 @@ def extract_marketplace_account(outputs):
 
 
 def check_marketplace_step1(outputs, *args, **kwargs):
+    """
+    Check if the output of a transaction is a MarketPlace 1 request
+    """
     return check_marketplace_raw(outputs,1, *args, **kwargs)
 
 def check_marketplace_step(step,outputs):
+    """
+    Check if the output of a transaction is a MarketPlace in a specific number request
+    """
     return check_marketplace_raw(outputs,step)
 
 def check_marketplace_step2(outputs):
+    """
+    Check if the output of a transaction is a MarketPlace 2 request
+    """
     return check_marketplace_raw(outputs,2)
 
 
 def check_smart_contract_consistency(transaction):
-    #this function ensure the consistency of the SmartContract:
-    #only 1 input, only 1 output except for marketplace_step 2 which can have several inputs
-    #transaction_hash of input of new transaxction = UTXO of SmartContrat
+    """
+    To ensure the consistency of the SmartContract:
+    only 1 input, only 1 output except for marketplace_step 2 which can have several inputs
+    ,transaction_hash of input of new transaxction = UTXO of SmartContrat
+    """
     smart_contract_flag=False
     smart_contract_error_list=[]
     inputs=transaction['inputs']
@@ -163,6 +193,9 @@ def check_smart_contract_consistency(transaction):
 
 
 def retrieve_buyer_seller(outputs):
+    """
+    Retrieve the buyer_public_key_hash and seller_public_key_hash of the output of a transaction
+    """
     buyer=None
     seller=None
     try:
@@ -183,9 +216,9 @@ def retrieve_buyer_seller(outputs):
 
 
 def check_contest_refresh_score(transaction):
-    #this function is checking if the transaction
-    #needs to trigger a refresh of the score
-    #it return the list of account to refresh
+    """to check if the transaction needs to trigger a refresh of the score.
+    return the list of account to refresh.
+    """
     logging.info(f"###INFO check_contest_refresh_score")
     refresh_score_list=[]
     #CHECK 1 Marketplace Step 4
@@ -230,7 +263,9 @@ def check_contest_refresh_score(transaction):
     
 
 def check_marketplace_reputation_refresh(outputs):
-    #this function is checking if the reputation of some accounts needs to be refreshed
+    """
+    to check if the reputation of some accounts needs to be refreshed
+    """
     reputation_refresh_flag=False
     buyer_public_key_hash=None
     seller_public_key_hash=None

@@ -5,6 +5,10 @@ import logging
 
 
 class TransactionAccount:
+    """
+    Class to manage the encrypted bank account details provided 
+    by the seller to the buyer when buying NIG on the marketplace.
+    """
     def __init__(self, name: str, iban: str, bic: str, email: str, phone: str, country: str, public_key_hash: str, *args, **kwargs):
         self.name = name
         self.iban = iban

@@ -13,6 +13,10 @@ import logging
 
 
 class Transaction:
+    """
+    Class to manage the content (input & output) of the transactions 
+    but also to generate the signature.
+    """
     def __init__(self, inputs: [TransactionInput], outputs: [TransactionOutput],*args, **kwargs):
         smart_contract_timestamp = kwargs.get('smart_contract_timestamp',None)
         if smart_contract_timestamp is None:self.timestamp = datetime.timestamp(datetime.utcnow())

@@ -1,7 +1,7 @@
-#the purpose of this object is to manage the Maintenace of the serveur
-
-
 class Maintenance:
+    """
+    Class to manage the current Maintenance mode of the Node.
+    """
     def __init__(self,*args, **kwargs):
         self.maintenance_mode=False
 

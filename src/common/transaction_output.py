@@ -9,6 +9,9 @@ from blockchain_users.node import public_key_hash as node_public_key_hash
 
 
 class TransactionOutput:
+    """
+    Class to display the output content of a transaction managed by Transaction class.
+    """
     def __init__(self, list_public_key_hash: bytes, amount: float, *args, **kwargs):
         self.amount = normal_round(amount,ROUND_VALUE_DIGIT)
         from node.main import marketplace_owner

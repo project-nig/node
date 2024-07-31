@@ -12,6 +12,9 @@ from wallet.wallet import Owner
 
 
 class Network:
+    """
+    Class to connect the node to the NIG network when starting the node
+    """
     
     def __init__(self, node: Node, init_known_nodes_file: bool = True):
         from common.values import FIRST_KNOWN_NODE_HOSTNAME_LIST

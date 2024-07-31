@@ -6,6 +6,10 @@ from common.utils import calculate_hash
 
 
 class Owner:
+    """
+    Class to generate all the needed keys (private and public including hash and hex) or 
+    to generate the hash and hex of the public key based a provided private key
+    """
     def __init__(self, private_key: str = "", *args, **kwargs):
         if private_key:
             self.private_key = RSA.importKey(private_key)

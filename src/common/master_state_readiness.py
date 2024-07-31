@@ -3,8 +3,9 @@
 import time
 
 class MasterStateReadiness:
-    '''Object to ensure that MasterState is not udpate at the same time by 2 tasks
-    '''
+    """
+    Class to ensure that MasterState is not udpated at the same time by 2 tasks
+    """
     def __init__(self,*args, **kwargs):
         self.readiness_flag=True
         self.start_time = None
@@ -12,10 +13,11 @@ class MasterStateReadiness:
 
 
     def block(self):
-        '''to ensure that MasterState is not udpated at the same time by 2 tasks
-        Return true if MasterState is free
-        Otherwise False
-        '''
+        """
+        Ensure that MasterState is not udpated at the same time by 2 tasks.
+        Return True if MasterState is free
+        otherwise False.
+        """
         if self.start_flag is True:check_time=(time.time()-self.start_time)>5
         else:check_time=False
         if self.readiness_flag is True:
@@ -36,8 +38,9 @@ class MasterStateReadiness:
             return False
 
     def release(self):
-        '''Reset to avoid blocking MasterState
-        '''
+        """
+        Reset to avoid blocking MasterState
+        """
         self.start_flag = False
         self.readiness_flag=True
         

@@ -2,6 +2,9 @@ import requests
 import json
 
 class Node:
+    """
+    Class to manage the connectivity of the Node via HTTP request
+    """
     def __init__(self, hostname: str):
         self.hostname = hostname
         self.base_url = f"http://{hostname}/"

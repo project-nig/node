@@ -6,6 +6,9 @@ from common.node import Node
 
 
 class KnownNodesMemory:
+    """
+    Class to manage and store all the other Nodes known by the Node
+    """
     def __init__(self):
         #self.known_nodes_file = os.environ["KNOWN_NODES_DIR"]
         from common.values import KNOWN_NODES_DIR

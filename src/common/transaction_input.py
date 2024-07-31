@@ -4,6 +4,9 @@ from common.values import NETWORK_DEFAULT
 
 
 class TransactionInput:
+    """
+    Class to display the input content of a transaction managed by Transaction class.
+    """
     def __init__(self, transaction_hash: str, output_index: int, unlocking_script: str = "", unlocking_public_key_hash: str = "", *args, **kwargs):
         self.transaction_hash = transaction_hash
         self.output_index = output_index

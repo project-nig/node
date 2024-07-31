@@ -10,6 +10,11 @@ from common.io_storage_sharding import StorageSharding
 
 
 class BlockchainMemory:
+    """
+    Class to manage the storage of the blockchain in the files of the Node via the class StorageSharding. 
+    There are 3 storages: the blockchain which is validated by ConcensusBlockChain, the backlog of blocks waiting to be validated,
+    the blocks which are slashed.
+    """
 
     def __init__(self,*args, **kwargs):
         from common.values import BLOCKCHAIN_DIR,NEW_BLOCKCHAIN_DIR,NEW_BLOCKCHAIN_DEEPTH,NEW_BLOCKCHAIN_DIR_BACKLOG,STORAGE_DIR,NEW_BLOCKCHAIN_DIR_SLASHED,NEW_BLOCKCHAIN_SLASHED_DEEPTH

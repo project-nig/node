@@ -5,6 +5,12 @@ import json
 from common.master_state_readiness import master_state_readiness
 
 class StorageSharding:
+    """
+    Class to manage the strategy of storage of the files.
+    Depending on the deepth value, the file are stored in folder and subfolder. 
+    Ex with a deepth of 2, the file ABxxx 
+    will be stored in the Folder A and then the subfolder AB, etc.
+    """
     def __init__(self,storage_directory,deepth):
         from common.values import STORAGE_DIR
         self.storage_directory = STORAGE_DIR+storage_directory
