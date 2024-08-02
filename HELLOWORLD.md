@@ -6,7 +6,7 @@ The purpose of this process is to introduce the creation of a smart contract, to
 ## Step 0 : setup the network
 Start with 3 nodes. The code of this example will be performed on the 3rd node => "127.0.0.3:5000"
 
-## Step 1 : initialize default objects
+## Step 1: initialize default objects
 
 Process to intall and run locally 3 Nodes of the NIG network
 * Create a <b>Node object</b> with the default hostname (127.0.0.3:5000).
@@ -34,7 +34,7 @@ Process to intall and run locally 3 Nodes of the NIG network
 ```bash
   smart_contract_account="hello_world"
 ```
-## Step 2 : get the default payload for a marketplace request
+## Step 2: get the default payload for a marketplace request
 * This payload will be used to query an existing contract and get the default payload for a marketplace request 
 ```bash
   payload="""
@@ -95,8 +95,99 @@ reputation_1=1
 ```bash
   payload=marketplace_request_default_code+parameters
 ```
+## Step 4: retrieve the utxo of the marketplace
+* The endpoint/url <i>"utxo"</i> of a node with <i>address of the marketplace</i> as a parameter needs to be queried in order to get the available <i>utxo</i> of the marketplace.
+```bash
+  public_key_hash=marketplace_owner.public_key_hash
+  utxo_url='http://'+MY_HOSTNAME+'/utxo/'+public_key_hash
+  resp = requests.get(utxo_url)
+  utxo_dict = resp.json()
+```
+## Step 5: launch the creation of a purchase request
+* Several parameters are needed for configuring the transactions.
+	* <i>sender_public_key_hash</i> = the address (public key hash) of the account which is purchasing.
+	* <i>unlocking_public_key_hash</i> = the address (public key hash) of the account which is purchasing which is used to unlock the transaction/utxo.
+	*  <i>list_public_key_hash</i> = list of the addresses all the accounts which can interact with that smart contract : the smart contract itself, the buyer and the marketplace.
+	* <i>account_temp</i> = True default value for a purchase request.
+	* <i>marketplace_step</i> = 0 default value for a purchase request.
+	* <i>input_list</i> = [] default list of the inputs of the transaction.
+	* <i>output_list</i> = [] default list of the outputs of the transaction.
+```bash
+  sender_public_key_hash=daniel_owner.public_key_hash
+  unlocking_public_key_hash=daniel_owner.public_key_hash
+  list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
+  account_temp=True
+  marketplace_step=0
+  input_list=[]
+  output_list=[]
+```
+* Loop over the available <i>utxo</i> of the marketplace. We will use only the first one.
+```bash
+  for utxo in utxo_dict['utxos']:
+```
+* The amount of the utxo is retrived. The smart contract is configured using <i>SmartContract</i> class.
+	* <i>smart_contract_account</i> = the address (public key hash) of the smart contract.
+	* <i>smart_contract_sender</i> = the address (public key hash) of the account which is generating the smart contract.
+	* <i>payload</i> = the payload used to generate the smart contract.
+	* <i>smart_contract_new</i> = True as we're creating a new contract.
+```bash
+  amount=utxo['amount']
+  smart_contract=SmartContract(smart_contract_account,
+                               smart_contract_sender=sender_public_key_hash,
+                               smart_contract_type="source",
+                               payload=payload,
+                               smart_contract_new=True)
+```
+* Let's process the smart contract to ensure that it's working fine.
+```bash
+  smart_contract.process()
+```
+* Let's populate the inputs of the transaction.
+```bash
+  input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
+```
+* Let's populate the outputs of the transaction thanks to the smart contract object previously generated.
+```bash
+  output_list.append(TransactionOutput(list_public_key_hash=list_public_key_hash, 
+                                                amount=amount,
+                                                interface_public_key_hash=interface_public_key_hash,
+                                                smart_contract_account=smart_contract.smart_contract_account,
+                                                smart_contract_sender=smart_contract.smart_contract_sender,
+                                                smart_contract_new=smart_contract.smart_contract_new,
+                                                smart_contract_flag=True,
+                                                account_temp=account_temp,
+                                                marketplace_step=marketplace_step,
+                                                marketplace_transaction_flag=True,
+                                                smart_contract_gas=smart_contract.gas,
+                                                smart_contract_memory=smart_contract.smart_contract_memory,
+                                                smart_contract_memory_size=smart_contract.smart_contract_memory_size,
+                                                smart_contract_type=smart_contract.smart_contract_type,
+                                                smart_contract_payload=smart_contract.payload,
+                                                smart_contract_result=smart_contract.result,
+                                                smart_contract_previous_transaction=smart_contract.smart_contract_previous_transaction,
+                                                smart_contract_transaction_hash=smart_contract.smart_contract_transaction_hash))
+```
+* Let's process the transaction by using the function.<i>process_transaction</i> of the wallet of Daniel.
+```bash
+  daniel_wallet.process_transaction(inputs=input_list, outputs=output_list)
+```
+* We're using only one utxo of marketplace, so let's break the loop.
+```bash
+  break
+```
+## Step 6: Check the results
+* The purchase request should be available with the below url:
+```bash
+  http://127.0.0.3:5000/marketplace_step/1/test
+```
+* The code of the purchase request can be found directly in the blockchain by using this url:
+```bash
+  http://127.0.0.3:5000/block
+```
+## Congratulations, you did it !
+
 ## Code
-A complete and functional python script of this [HELLO WORLD example](src/common/HELLOWORLD.py) is available.
+A complete and functional python script of this [HELLO WORLD example](src/common/HELLOWORLD.py) is available. This code can be tested directly by accessing the URL <i>helloworld</i> of a node (ex: http://127.0.0.3:5000/helloworld)
 ## Feedback
 
 If you have any feedback, please reach out to us at cryptomonnaie.nig@gmail.com

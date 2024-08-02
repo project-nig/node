@@ -69,8 +69,6 @@ reputation_1=1
     #step 5: launch the creation of a purchase request
     sender_public_key_hash=daniel_owner.public_key_hash
     unlocking_public_key_hash=daniel_owner.public_key_hash
-    transaction_wallet=daniel_wallet
-    smart_contract_new=True
     list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
     account_temp=True
     marketplace_step=0
@@ -85,7 +83,7 @@ reputation_1=1
                                         smart_contract_sender=sender_public_key_hash,
                                         smart_contract_type="source",
                                         payload=payload,
-                                        smart_contract_new=smart_contract_new)
+                                        smart_contract_new=True)
 
         smart_contract.process()
         
@@ -110,7 +108,7 @@ reputation_1=1
                                                 smart_contract_previous_transaction=smart_contract.smart_contract_previous_transaction,
                                                 smart_contract_transaction_hash=smart_contract.smart_contract_transaction_hash))
         
-        transaction_wallet.process_transaction(inputs=input_list, outputs=output_list)
+        daniel_wallet.process_transaction(inputs=input_list, outputs=output_list)
         break
     
     #step 6: check that there is one purchase request in marketplace 1 and its content
