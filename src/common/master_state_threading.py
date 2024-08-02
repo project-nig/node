@@ -21,22 +21,25 @@ class MasterStateThreading:
         return self.receiving_status
 
     def receiving_block(self):
-        '''ensure that a block will be not created 
+        """
+        ensure that a block will be not created 
         during the receiving of Block
-        '''
+        """
         self.receiving_readiness_flag=False
         self.receiving_start_time = time.time()
 
     def receiving_akn(self):
-        '''aaknowledge the block receiving 
+        """
+        acknowledge the block receiving 
         and to launch the purge of the backlog 
         and the block creation
-        '''
+        """
         self.receiving_status=True
 
     def receiving_reset(self):
-        '''avoid blocking MasterStateThreading
-        '''
+        """
+        avoid blocking MasterStateThreading
+        """
         self.receiving_readiness_flag=True
         self.receiving_status=False
         self.receiving_start_time = None

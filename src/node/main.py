@@ -119,12 +119,27 @@ PoH_memory=ProofOfHistory(PoW_memory=PoW_memory)
 
 @app.before_request
 def check_for_maintenance():
+    """
+    decorator to manage the maintenance mode trigger by function maintenance_on() and maintenance_off().
+    """
     if maintenance_mode.get_mode() is True and request.path != url_for('maintenance') and request.path != url_for('maintenance_on') and request.path != url_for('maintenance_off') and request.path != url_for('network_maintenance_on') and request.path != url_for('network_maintenance_off') and request.path != url_for('validate_block') and request.path != url_for('start') and request.path != url_for('block_saving_leader_node'):   
         return redirect(url_for('maintenance'))
        
+def main():
+    """
+    initialize the node ready to start with function start()
+    """
+    #global network
+    #my_node = Node(MY_HOSTNAME)
+    #network = Network(my_node)
+    #network.join_network()
+    app.run()
 
 @app.route("/start", methods=['GET'])
 def start():
+    """
+    start the node.
+    """
     logging.info("start request")
     network.join_network()
     PoW_memory.start()
@@ -133,89 +148,19 @@ def start():
 
 @app.route("/", methods=['GET'])
 def main_request():
+    """
+    default routing without action.
+    """
     logging.info("main page request")
     return "Restart success", 200
 
 
-@app.route("/block", methods=['POST'])
-def validate_block():
-    content = request.json
-    #fix for boolean
-    content=clean_request(content)
-    block_multiprocessing=BlockMultiProcessing()
-    block_multiprocessing.launch(content)
-    return "Transaction success", 200
-
-@app.route("/block_saving_leader_node", methods=['POST'])
-def block_saving_leader_node():
-    content = request.json
-    #fix for boolean
-    content=clean_request(content)
-    block_pointer=content['block']['header']['previous_PoH_hash']
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory(block_pointer=block_pointer)
-    try:
-        while master_state_readiness.block() is False:
-            #let's wait until MasterState is release by another thread
-            pass
-        
-        block = NewBlock(blockchain_base, MY_HOSTNAME)
-        block.receive(new_block=content["block"], sender=content["sender"])
-        block.add_in_backlog(master_state_readiness)
-        block.validate(master_state_readiness)
-
-        if block.is_valid is False:
-            #no need to wait for the BlockVote. A branch needs to be created in the consensus_blockchain
-            block_to_reject_now_by_leader_node=block.new_block.block_header.current_PoH_hash
-        else:block_to_reject_now_by_leader_node=None
-        
-        #refresh of the consensus blockchain
-        from common.consensus_blockchain import consensus_blockchain
-        consensus_blockchain.refresh(block_to_reject_now_by_leader_node=block_to_reject_now_by_leader_node)
-
-        latest_received_block=block.new_block.block_header.current_PoH_hash
-        if block.is_valid is True:
-            #the Block is valid
-            #leader_node_advance_purge_backlog()
-            block.clear_block_transactions_from_mempool()
-            received_block_2_slash=None
-
-            #let's refresh the score of the contest if needed
-            if 5==6:
-                block.refresh_score_list
-                for participant_public_key_hash in block.refresh_score_list:
-                    if backlog_score_processing.check_request(participant_public_key_hash) is False:
-                        participant_refresh_score_processing=ParticipantRefreshScoreProcessing()
-                        participant_refresh_score_processing.launch(participant_public_key_hash)
-
-        else:
-            #the Block is not valid
-            received_block_2_slash=block.new_block.block_header.current_PoH_hash
-        block.check_vote_and_backlog(master_state_readiness,
-                                     leader_node_flag=True,
-                                     latest_received_block=latest_received_block,
-                                     received_block_2_slash=received_block_2_slash,
-                                     new_block_2_exclude=latest_received_block)
-        
-    #except (NewBlockException, TransactionException) as new_block_exception:
-    #    return f'{new_block_exception}', 400
-
-    except Exception as e:
-        #issue with new block creation / Miner
-        logging.info(f"###ERROR block_saving_leader_node issue: {e}")
-        logging.exception(e)
-
-    #let's release MasterState
-    master_state_readiness.release()
-
-    #let's release to allow the block receiving
-    master_state_threading.receiving_reset()
-
-    return "Transaction success", 200
-
 
 @app.route("/transactions", methods=['POST'])
 def validate_transaction():
+    """
+    receive a transaction by non leader node and routes it to leader node.
+    """
     logging.info("New transaction validation request")
     content = request.json
     content=clean_request(content)
@@ -231,8 +176,14 @@ def validate_transaction():
     return "Transaction success", 200
 
 
+
 @app.route("/transactions_to_leader_node", methods=['POST'])
 def transactions_to_leader_node():
+    """
+    validate and save in a temporay master state called TempBlockPoH a transaction received by leader node only.
+    FYI, the transactions are stored in the blockchain and final master state during block receiving 
+    by function validate_block or block_saving_leader_node.
+    """
     logging.info("New transaction to leader node request")
     content = request.json
     #logging.info(f"content: {content}")
@@ -243,801 +194,10 @@ def transactions_to_leader_node():
     
     return "Transaction success", 200
 
-def leader_node_advance_purge_backlog():
-    logging.info(f"### leader_node_advance_purge_backlog")
-    #this function aims to purge the potential backlog of transaction during leader note rotation
-    backlog_list=[]
-    import os
-    if not os.path.exists(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE):
-        #the directory is not existing, let's create it
-        os.makedirs(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE)
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    
-    directory = os.fsencode(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE)
-    #files = filter(os.path.isfile, os.listdir(directory))
-    #files = [os.path.join(directory, f) for f in files] # add path to each file
-    #files.sort(key=lambda x: os.path.getmtime(x))
-    #for file in files:
-    for file in os.listdir(directory):
-         filename = os.fsdecode(file)
-         #the filename is the transaction hash
-         if blockchain_base.get_transaction(filename)=={}:
-             logging.info(f"==> transaction in advance UNKNOWN !!!!! :{filename}")
-             #The transaction is unkown in the blockchain, weed to add it
-             transaction_filename=STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE+f"/{filename.lower()}".replace("'","")
-             with open(transaction_filename, "rb") as file_obj:
-                transaction_str = file_obj.read()
-                transaction_data = json.loads(transaction_str)
-                backlog_list.append(transaction_data)
-         else:
-            logging.info(f"==> transaction in advance known: {filename}")
-    
-    #sorting of Backlog by timestamp
-    backlog_list_sorted=sorted(backlog_list, key=itemgetter('timestamp'))
-    for backlog_transaction in backlog_list_sorted:
-        Process_transaction(purge_flag=True,transaction_data=backlog_transaction)
-    
-    #let's clean all the file of the folder
-    import os, glob
- 
-    dir = STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE
-    filelist = glob.glob(os.path.join(dir, "*"))
-    for f in filelist:
-        os.remove(f)
-
-             
-
-@app.route("/transactions_to_leader_node_advance", methods=['POST'])
-def transactions_to_leader_node_advance():
-    logging.info("New transaction to leader node request in advance")
-    content = request.json
-    transaction=content["transaction"]
-    save_transactions_to_leader_node_advance(transaction)
-    return "Transaction success", 200
-
-def save_transactions_to_leader_node_advance(transaction):
-    try:
-        transaction_hash=transaction['transaction_hash']
-        if not os.path.exists(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE):
-            #the directory is not existing, let's create it
-            os.makedirs(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE)
-            
-        transaction_filename=STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE+f"/{transaction_hash.lower()}".replace("'","")
-        transaction_data = json.dumps(transaction).encode("utf-8")
-        with open(transaction_filename, "wb") as file_obj:
-            file_obj.write(transaction_data)
-        
-    except TransactionException as transaction_exception:
-        return f'{transaction_exception}', 400
-
-@app.route("/block", methods=['GET'])
-def get_blocks():
-    logging.info("Block request")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_all_blockchain_from_memory()
-    return jsonify(blockchain_base.to_dict)
-
-@app.route("/leader_node_schedule", methods=['GET'])
-def get_leader_node_schedule():
-    logging.info("Get Leader Node Schedule")
-    leader_node_schedule=LeaderNodeScheduleMemory()
-    return jsonify(leader_node_schedule.leader_node_schedule_json)
-
-@app.route("/leader_node_schedule_next", methods=['GET'])
-def get_leader_node_schedule_next():
-    logging.info("Get Next Leader Node Schedule")
-    #Launch Leader node Rotation
-    PoW_memory.leader_node_schedule_memory.next_leader_node_schedule(PoW_memory.known_nodes_memory.known_nodes)
-    PoW_memory.broadcast_leader_node_schedule()
-    return "Next Leader Node Schedule", 200
-
-@app.route("/maintenance")
-def maintenance():
-    response = app.response_class(
-        response=json.dumps("Sorry, off for maintenance!"),
-        status=503,
-        mimetype='application/json'
-    )
-    return response
-
-@app.route("/maintenance_on", methods=['GET'])
-def maintenance_on():
-    #active the maintenance of the Node only
-    maintenance_mode.switch_on()
-    response = app.response_class(
-        response=json.dumps("Maintenance On"),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
-
-@app.route("/maintenance_off", methods=['GET'])
-def maintenance_off():
-    #deactive the maintenance of the Node only
-    maintenance_mode.switch_off()
-    response = app.response_class(
-        response=json.dumps("Maintenance Off"),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
-
-@app.route("/network_maintenance_on", methods=['GET'])
-def network_maintenance_on():
-    #active the maintenance of all the network
-    logging.info("===Network Maintenance On request")
-    network_maintenance("on")
-    response = app.response_class(
-            response=json.dumps("Network Maintenance On success"),
-            status=200,
-            mimetype='application/json'
-        )
-    return response
-
-@app.route("/network_maintenance_off", methods=['GET'])
-def network_maintenance_off():
-    #deactive the maintenance of all the network
-    logging.info("===Network Maintenance Off request")
-    network_maintenance("off")
-    response = app.response_class(
-            response=json.dumps("Network Maintenance Off success"),
-            status=200,
-            mimetype='application/json'
-        )
-    return response
-
-def network_maintenance(mode):
-    known_nodes_memory=KnownNodesMemory()
-    known_nodes_memory.known_nodes
-    node_list = known_nodes_memory.known_nodes
-    new_node_list=[]
-    for node in node_list:
-        new_node_list.append(node)
-    my_node = Node(MY_HOSTNAME)
-    for node in new_node_list:
-        if node!= my_node:
-            try:
-                if mode=="off":node.network_maintenance_off()
-                if mode=="on":node.network_maintenance_on()
-            except Exception as e:
-                logging.info(f"**** ISSUE network_maintenance {mode}: {node.dict}")
-                logging.exception(e)
-
-    if mode=="off":maintenance_mode.switch_off()
-    if mode=="on":maintenance_mode.switch_on()
-    
-
-@app.route("/utxo/<user>", methods=['GET'])
-def get_user_utxos(user):
-    logging.info(f"User utxo request {user}")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_user_utxos(user))
-
-@app.route("/smart_contract_api/<account>/<smart_contract_transaction_hash>", methods=['GET'])
-def get_smart_contract_api2(account,smart_contract_transaction_hash):
-    logging.info(f"smart_contract_api account:{account} ")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_smart_contract_api(account,smart_contract_transaction_hash=smart_contract_transaction_hash))
-
-@app.route("/smart_contract_api/<account>", methods=['GET'])
-def get_smart_contract_api(account):
-    logging.info(f"smart_contract_api account:{account} ")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_smart_contract_api(account))
-
-@app.route("/smart_contract_api_leader_node/<account>/<smart_contract_transaction_hash>", methods=['GET'])
-def get_smart_contract_api_leader_node(account,smart_contract_transaction_hash):
-    logging.info(f"smart_contract_api_leader_node account:{account} ")
-    return jsonify(load_smart_contract_from_master_state_leader_node(account,smart_contract_transaction_hash=smart_contract_transaction_hash))
-
-@app.route("/leader_node_smart_contract_api/<account>", methods=['GET'])
-def get_leader_node_smart_contract_api(account):
-    logging.info(f"leader_node_smart_contract_api account:{account} ")
-    smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(account)
-    return jsonify({'smart_contract_transaction_hash':smart_contract_transaction_hash})   
-
-@app.route("/utxo_balance/<user>", methods=['GET'])
-def get_user_utxo_balance(user):
-    logging.info(f"User utxo spent request {user}")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_user_utxos_balance(user))
-
-@app.route("/all_utxo/<user>", methods=['GET'])
-def get_user_all_utxos(user):
-    logging.info(f"User all utxo request {user}")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_user_all_utxos(user))
-
-@app.route("/utxo_raw/<user>", methods=['GET'])
-def get_user_utxos_raw(user):
-    logging.info(f"User utxo request {user}")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_user_utxos_raw(user))
-
-@app.route("/utxo_account_temp/<user>", methods=['GET'])
-def get_user_utxos_account_temp(user):
-    logging.info(f"User utxo request for account temp {user}")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_user_utxos_account_temp(user))
-
-@app.route("/utxo_account_temp/<user>/<payment_ref>", methods=['GET'])
-def get_user_utxos_account_temp_payment_ref(user,payment_ref):
-    logging.info(f"User utxo request for account temp {user}")
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_user_utxos_account_temp(user,payment_ref=payment_ref))
-
-@app.route("/user_creation", methods=['GET'])
-def get_user_creation():
-    logging.info(f"user creation request")
-    user_dict={}
-    owner = Owner()
-    print(f"private key: {owner.private_key.export_key(format='DER')}")
-    print(f"public key hash: {owner.public_key_hash}")
-    print(f"public key hex: {owner.public_key_hex}")
-    return "Transaction success", 200
-
-@app.route("/transactions/<transaction_hash>", methods=['GET'])
-def get_transaction(transaction_hash):
-    logging.info(f"Transaction request {transaction_hash}")
-    blockchain_memory = BlockchainMemory()
-    blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    return jsonify(blockchain_base.get_transaction(transaction_hash))
-
-
-@app.route("/new_node_advertisement", methods=['POST'])
-def new_node_advertisement():
-    logging.info("New node advertisement request")
-    content = request.json
-    hostname = content["hostname"]
-    known_nodes_memory = KnownNodesMemory()
-    try:
-        new_node = Node(hostname)
-        known_nodes_memory.store_new_node(new_node)
-    except TransactionException as transaction_exception:
-        return f'{transaction_exception}', 400
-    return "New node advertisement success", 200
-
-@app.route("/new_leader_node_schedule_advertisement", methods=['POST'])
-def new_leader_node_schedule_advertisement():
-    logging.info("New leader node schedule advertisement request")
-    content = request.json
-    leader_node_schedule_raw = content["leader_node_schedule"]
-    leader_node_schedule_memory = LeaderNodeScheduleMemory()
-    try:
-        logging.info(f"leader_node_schedule_raw {leader_node_schedule_raw}")
-        leader_node_schedule_json = json.loads(leader_node_schedule_raw)
-        leader_node_schedule_memory.store_new_leader_node_schedule_json(leader_node_schedule_json)
-    except TransactionException as transaction_exception:
-        return f'{transaction_exception}', 400
-    return "New node advertisement success", 200
-
-
-@app.route("/known_node_request", methods=['GET'])
-def known_node_request():
-    logging.info("Known node request")
-    return jsonify(network.return_known_nodes())
-
-
-@app.route("/restart", methods=['GET'])
-def restart():
-    logging.info("===Network restart request")
-    known_nodes_memory=KnownNodesMemory()
-    known_nodes_memory.known_nodes
-    node_list = known_nodes_memory.known_nodes
-    new_node_list=[]
-    for node in node_list:
-        new_node_list.append(node)
-
-    logging.info(f"===new_node_list:{new_node_list}")
-    my_node = Node(MY_HOSTNAME)
-    #network = Network(my_node)
-    mempool = MemPool()
-    mempool.clear_transactions_from_memory()
-
-    master_state_threading.receiving_reset()
-    master_state_readiness.release()
-
-    from common.consensus_blockchain import consensus_blockchain
-    consensus_blockchain.refresh()
-    
-    
-    #full reset of the network
-    shutil.rmtree(STORAGE_DIR)
-    os.makedirs(STORAGE_DIR)
-    #ask all the node to rejoin the reseted network
-    for node in new_node_list:
-        logging.info(f"node: {node} my_node:{my_node}")
-        if node!= my_node:
-            node.restart_request()
-
-    network.known_nodes_memory = KnownNodesMemory()
-    network.join_network(reset_network=True)
-    for node in new_node_list:
-        logging.info(f"node: {node} my_node:{my_node}")
-        if node!= my_node:
-            node.restart_join()
-
-    response = app.response_class(
-        response=json.dumps("Network Restart success"),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
-
-@app.route("/restart_request", methods=['POST'])
-def restart_request():
-    logging.info("Node restart request")
-    my_node = Node(MY_HOSTNAME)
-    #network = Network(my_node)
-    mempool = MemPool()
-    mempool.clear_transactions_from_memory()
-    master_state_threading.receiving_reset()
-    master_state_readiness.release()
-    node_list = network.return_known_nodes()
-
-    from common.consensus_blockchain import consensus_blockchain
-    consensus_blockchain.refresh()
-    #full reset of the netowrk
-    shutil.rmtree(STORAGE_DIR)
-    os.makedirs(STORAGE_DIR)
-    return "Node Restart success", 200
-
-@app.route("/PoH_reset", methods=['GET'])
-def PoH_reset():
-    logging.info("PoH_reset")
-    PoH_memory.PoH_start_flag=False
-    return "PoH_reset success", 200
-
-
-@app.route("/restart_join", methods=['POST'])
-def restart_join():
-    logging.info("Node restart join")
-    network.known_nodes_memory = KnownNodesMemory()
-    network.join_network()
-    return "Node Restart success", 200
-
-def main():
-    #global network
-    #my_node = Node(MY_HOSTNAME)
-    #network = Network(my_node)
-    #network.join_network()
-    app.run()
-
-
-@app.route("/sell_followup_step4_pin/<user>/<payment_ref>", methods=['GET'])
-def sell_followup_step4_pin(user,payment_ref):
-    logging.info(f"sell_followup_step4_pin user:{user} payment_ref:{payment_ref}")
-    pin_encrypted=None
-    blockchain_memory = BlockchainMemory()
-    try:
-        blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    except Exception as e:
-        logging.info(f"exception: {e}")
-    
-    pin_encrypted=blockchain_base.get_followup_step4_pin(user,payment_ref)
-
-
-    if pin_encrypted is not None:
-        response={'pin_encrypted':pin_encrypted}
-        return jsonify(response)
-    else:
-        logging.info(f"not pin found for payment_ref: {payment_ref}")
-        response={'pin_encrypted':'not found'}
-        return jsonify(response)
-    return "Restart success", 200
-
-@app.route("/encryption_test", methods=['GET'])
-def encryption_test():
-    logging.info("encryption_test")
-    from Crypto.PublicKey import RSA
-    from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
-    import binascii, json
-    transaction_data = {
-            "name": "Banque Postale James Bond",
-            "iban":"FR03 2457 1245 1864 3267 9H65 345",
-            "bic": "PSSTGBDDFTZ",
-            "email": "james.bond@gmail.com",
-            "phone": "0123456789",
-            "country" : "France" ,
-        }
-    data = json.dumps(transaction_data, indent=2)
-    
-    #logging.info(f"data: {data}")
-    #step 1 encryption
-    key = RSA.importKey(binascii.unhexlify(camille_public_key_hex))
-    cipher = Cipher_PKCS1_v1_5.new(key)
-    data_encrypted=cipher.encrypt(data.encode())
-    logging.info(f"data_encrypted: {data_encrypted}")
-
-    #data2 = json.dumps(data_encrypted.decode("utf8"))
-    data2 = json.dumps(data_encrypted.hex())
-    logging.info(f"data2: {data2}")
-    
-
-    data3=bytes.fromhex(json.loads(data2))
-    logging.info(f"data3: {data3}")
-
-    
-
-    #step 2 decryption
-    key = RSA.importKey(camille_private_key)
-    decipher = Cipher_PKCS1_v1_5.new(key)
-    #data_decrypted=decipher.decrypt(str.encode(str(data_encrypted,'utf-8', 'ignore')), None).decode()
-    data_decrypted=decipher.decrypt(bytes.fromhex(json.loads(data2)), None).decode()
-    #logging.info(f"data_decrypted: {data_decrypted}")
-
-    transaction_data_decrypted = json.loads(data_decrypted)
-    test=transaction_data_decrypted['iban']
-    logging.info(f"transaction_data_decrypted: {test}")
-
-    
-    return "Restart success", 200
-    
-@app.route("/new_owner", methods=['GET'])
-def new_owner():
-    logging.info("generate new Owner")
-    test_owner=Owner()
-    logging.info(f"private_key: {test_owner.private_key.exportKey(format='DER')}")
-    logging.info(f"public_key_hex: {test_owner.public_key_hex}")
-    logging.info(f"public_key_hash: {test_owner.public_key_hash}")
-    return "Restart success", 200
-
-@app.route("/marketplace_step/<marketplace_step>/<user_public_key_hash>",defaults={'amount': None}, methods=['GET'])
-@app.route("/marketplace_step/<marketplace_step>/<user_public_key_hash>/<amount>", methods=['GET'])
-def get_marketplace_step(marketplace_step,user_public_key_hash,amount):
-    logging.info(f"User marketplace_step request {marketplace_step} {user_public_key_hash}")
-    try:
-        blockchain_memory = BlockchainMemory()
-        blockchain_base = blockchain_memory.get_all_blockchain_from_memory()
-        return jsonify(blockchain_base.get_marketplace_step(marketplace_step,user_public_key_hash,amount=amount))
-    except Exception as e:
-        logging.info(f"exception: {e}")
-        return jsonify([])
-
-
-@app.route("/check_notification/<user_public_key_hash>/<notification_timestamp_dict_raw>", methods=['GET'])
-def get_check_notification(user_public_key_hash,notification_timestamp_dict_raw):
-    notification_timestamp_dict=json.loads(notification_timestamp_dict_raw)
-    notification_dict={}
-    for marketplace_step in notification_timestamp_dict.keys():
-        marketplace_step_counter=0
-        logging.info(f"marketplace_step for user: {marketplace_step}")
-        archive_flag=False
-        archive_timestamp=False
-        if int(marketplace_step)>=4:
-            archive_flag=True
-            archive_timestamp=float(notification_timestamp_dict[marketplace_step])
-        try:
-            blockchain_memory = BlockchainMemory()
-            blockchain_base = blockchain_memory.get_all_blockchain_from_memory()
-            marketplace_step_raw=blockchain_base.get_marketplace_step(marketplace_step,user_public_key_hash,archive_flag=archive_flag,archive_timestamp=archive_timestamp)['results']
-            for elem in marketplace_step_raw:
-                if int(elem["timestamp_nig"])>int(float(notification_timestamp_dict[marketplace_step])) and elem["readonly_flag"] is False :marketplace_step_counter+=1
-            notification_dict[marketplace_step]=marketplace_step_counter
-        except Exception as e:
-            logging.info(f"exception: {e}")
-            notification_dict[marketplace_step]=0
-    logging.info(f"==>notification_dict:{notification_dict}")
-    logging.info(f"check_notification for user: {user_public_key_hash} notification_timestamp:{notification_timestamp_dict}")
-    return jsonify(notification_dict)
-
-    
-
-@app.route("/marketplace_genesis", methods=['GET'])
-def get_marketplace_genesis():
-    logging.info(f"get_marketplace_genesis")
-    blockchain_memory = BlockchainMemory()
-    try:
-        #blockchain_base = blockchain_memory.get_blockchain_from_memory(block_pointer="marketplace_genesis")
-        blockchain_base = blockchain_memory.get_blockchain_from_memory()
-    except Exception as e:
-        logging.info(f"exception: {e}")
-    return jsonify(blockchain_base.get_marketplace_genesis())
-
-@app.route("/nig_value_projection/<nig_amount>", methods=['GET'])
-def get_nig_value_projection(nig_amount):
-    range_list1=[190,365,730,1095,1825]
-    range_list2=["6 mois","1 an  ","2 ans ","3 ans ","5 ans "]
-    return get_nig_value_projection_raw(nig_amount,range_list1,range_list2)
-
-
-@app.route("/nig_value_projection_year/<nig_amount>", methods=['GET'])
-def get_nig_value_projection_year(nig_amount):
-    range_list1=[30,60,90,180,270,365]
-    range_list2=["1 mois","2 mois","3 mois","6 mois","9 mois","1 an"]
-    return get_nig_value_projection_raw(nig_amount,range_list1,range_list2)
-
-@app.route("/nig_value_projection_future/<nig_amount>", methods=['GET'])
-def get_nig_value_projection_future(nig_amount):
-    range_list1=[365,730,1095,1825,2555,3650]
-    range_list2=["1 an  ","2 ans ","3 ans ","5 ans ","7 ans ","10 ans "]
-    return get_nig_value_projection_raw(nig_amount,range_list1,range_list2)
-
-def get_nig_value_projection_raw(nig_amount,range_list1,range_list2):
-    logging.info(f"get_nig_value")
-    from common.values import EUR_NIG_VALUE_START_TIMESTAMP,EUR_NIG_VALUE_START_CONVERSION_RATE,EUR_NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE,EUR_NIG_VALUE_START_INCREASE_HALVING_DAYS
-    current_timestamp=datetime.timestamp(datetime.utcnow())
-    t1=datetime.utcnow()
-    
-    result=[]
-    for i in range(len(range_list1)):
-        t2=t1+datetime_delta.timedelta(days=range_list1[i])
-        #delta=t2-t1
-        delta=t2-datetime.fromtimestamp(float(EUR_NIG_VALUE_START_TIMESTAMP))
-        delta_days=delta.days
-        flag=True
-        nig_value=float(EUR_NIG_VALUE_START_CONVERSION_RATE)
-        nig_increase=1
-        INCREASE_DAILY_PERCENTAGE=float(EUR_NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE)
-        HALVING_DAYS=float(EUR_NIG_VALUE_START_INCREASE_HALVING_DAYS)
-        while flag is True:
-            if delta_days<HALVING_DAYS:
-                nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,delta_days)
-                nig_rate=nig_value*nig_increase
-                nig_value=float(nig_amount)*nig_rate
-            
-                nig_increase_percentage=(nig_increase-1)*100
-                nig_increase_percentage_string="{:.2f}".format(nig_increase_percentage)
-                nig_value_string="{:.2f}".format(nig_value)
-                nig_rate_string="{:.2f}".format(nig_rate)
-                flag=False
-            else:
-                nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,HALVING_DAYS)
-                delta_days-=HALVING_DAYS
-                INCREASE_DAILY_PERCENTAGE=INCREASE_DAILY_PERCENTAGE/2
-
-        result.append(str(int(nig_value)))
-
-        logging.info(f" {range_list2[i]} => nig_value: {nig_value_string}€ increase: {nig_increase_percentage_string}% nig_rate : {nig_rate_string} NIG last increase: {INCREASE_DAILY_PERCENTAGE}")
-    
-    return jsonify(result)
-
-@app.route("/nig_rate_eur", methods=['GET'])
-def get_nig_rate():
-    nig_rate=calculate_nig_rate(currency='eur')
-    nig_rate_string="{:.2f}".format(nig_rate)
-    logging.info(f" nig_rate : {nig_rate_string} € for 1 NIG")
-    return jsonify(nig_rate)
-
-def calculate_nig_rate(*args, **kwargs):
-    #logging.info(f"get_nig_rate_eur")
-    timestamp=kwargs.get('timestamp',None)
-    currency=kwargs.get('currency','eur').upper()
-    variable_module = __import__("common")
-    NIG_VALUE_START_TIMESTAMP=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_TIMESTAMP")
-    NIG_VALUE_START_CONVERSION_RATE=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_CONVERSION_RATE")
-    NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE")
-    NIG_VALUE_START_INCREASE_HALVING_DAYS=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_INCREASE_HALVING_DAYS")
-    if timestamp is not None:date_now=datetime.fromtimestamp(timestamp)
-    else:date_now=datetime.utcnow()
-
-    delta=date_now-datetime.fromtimestamp(float(NIG_VALUE_START_TIMESTAMP))
-    #delta=date_now-(datetime.utcnow()-datetime_delta.timedelta(189))
-    delta_days=delta.days
-    #logging.info(f" delta_days: {delta_days}")
-    flag=True
-    nig_rate_initial=float(NIG_VALUE_START_CONVERSION_RATE)
-    nig_increase=1
-    INCREASE_DAILY_PERCENTAGE=float(NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE)
-    HALVING_DAYS=float(NIG_VALUE_START_INCREASE_HALVING_DAYS)
-    while flag is True:
-        if delta_days<HALVING_DAYS:
-            nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,delta_days)
-            nig_rate=nig_rate_initial*nig_increase
-            flag=False
-        else:
-            nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,HALVING_DAYS)
-            delta_days-=HALVING_DAYS
-            INCREASE_DAILY_PERCENTAGE=INCREASE_DAILY_PERCENTAGE/2    
-    #logging.info(f"nig_rate: {nig_rate}")
-    return nig_rate
-
-
-@app.route("/transaction_creation", methods=['GET'])
-def transaction_creation():
-    #test for making a transaction via API
-    #Camille => Bertand  
-
-    from blockchain_users.albert import private_key as albert_private_key
-    from blockchain_users.bertrand import private_key as bertrand_private_key
-    from blockchain_users.camille import private_key as camille_private_key
-    from blockchain_users.albert import public_key_hash as albert_public_key_hash
-    from blockchain_users.bertrand import public_key_hash as bertrand_public_key_hash
-    from blockchain_users.camille import public_key_hash as camille_public_key_hash
-    from common.transaction import Transaction
-    from common.transaction_input import TransactionInput
-    from common.transaction_output import TransactionOutput
-    from wallet.wallet import Owner, Wallet, Transaction
-    import requests
-    albert_owner=Owner(private_key=albert_private_key)
-    bertrand_owner=Owner(private_key=bertrand_private_key)
-    camille_owner=Owner(private_key=camille_private_key)
-    albert_wallet = Wallet(albert_owner,Node(MY_HOSTNAME))
-    bertrand_wallet = Wallet(bertrand_owner,Node(MY_HOSTNAME))
-    camille_wallet = Wallet(camille_owner,Node(MY_HOSTNAME))
-
-    #sender_wallet=bertrand_wallet
-    #receiver_wallet=camille_wallet
-
-    sender_owner=camille_owner
-    receiver_owner=bertrand_owner
-    sender_wallet=camille_wallet
-    receiver_wallet=bertrand_wallet
-    transaction_amount=2
-
-    #let's retrieve the utxo
-    utxo_url='http://'+MY_HOSTNAME+'/utxo/'+sender_owner.public_key_hash
-    resp = requests.get(utxo_url)
-    utxo_dict = resp.json()
-
-    if transaction_amount>utxo_dict['total']:
-        #transaction amount is exceeding wallet total
-        logging.info(f"transaction amount {transaction_amount} is exceeding wallet total {utxo_dict['total']} for sender {sender_owner.public_key_hash} ")
-    else:
-        #wallet total is exceeding transaction amount
-        remaing_transaction_amount=transaction_amount
-        input_list=[]
-        output_list=[]
-        for utxo in utxo_dict['utxos']:
-            if utxo['amount']>=remaing_transaction_amount:
-                #only one utxo is sufficient
-                input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=sender_owner.public_key_hash))
-                #input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash'))
-                #check=TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash')
-                #logging.info(f"====check check.to_json() {check.to_json()}")
-                
-                
-                output_list.append(TransactionOutput(public_key_hash=receiver_owner.public_key_hash, amount=remaing_transaction_amount,interface_public_key_hash=interface_public_key_hash,))
-                if utxo['amount']-remaing_transaction_amount>0:
-                    output_list.append(TransactionOutput(public_key_hash=sender_owner.public_key_hash, amount=(utxo['amount']-remaing_transaction_amount),interface_public_key_hash=interface_public_key_hash,))
-                sender_wallet.process_transaction(inputs=input_list, outputs=output_list)
-                break
-            else:
-                #more than one utxo will be needed
-                input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=sender_owner.public_key_hash))
-                #input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash'))
-                #check=TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash')
-                #logging.info(f"====check check.to_json() {check.to_json()}")
-
-                output_list.append(TransactionOutput(public_key_hash=receiver_owner.public_key_hash, amount=utxo['amount'],interface_public_key_hash=interface_public_key_hash,))
-                
-                remaing_transaction_amount-=utxo['amount']
-                sender_wallet.process_transaction(inputs=input_list, outputs=output_list)
-                input_list=[]
-                output_list=[]
-
-    return "Restart success", 200
-
-####SMART CONTRACT
-from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
-import binascii
-
-from blockchain_users.marketplace import private_key as marketplace_private_key
-smart_contract_owner=Owner(private_key=marketplace_private_key)
-smart_contract_wallet = Wallet(smart_contract_owner,Node(MY_HOSTNAME))
-
-
-#from common.transaction import Transaction
-from common.transaction_input import TransactionInput
-from common.transaction_output import TransactionOutput
-#from wallet.wallet import Owner, Wallet, Transaction
-from wallet.wallet import Owner, Wallet
-from common.transaction_account import decrypt_account
-
-
-from blockchain_users.bertrand import private_key as bertrand_private_key
-bertrand_owner=Owner(private_key=bertrand_private_key)
-bertrand_wallet = Wallet(bertrand_owner,Node(MY_HOSTNAME))
-
-from blockchain_users.camille import private_key as camille_private_key
-camille_owner=Owner(private_key=camille_private_key)
-camille_wallet = Wallet(camille_owner,Node(MY_HOSTNAME))
-
-def get_utxo(public_key_hash, *args, **kwargs):
-    smart_contract_only=kwargs.get('smart_contract_only',True)
-    utxo_url='http://'+MY_HOSTNAME+'/utxo/'+public_key_hash
-    resp = requests.get(utxo_url)
-    utxo_dict_init = resp.json()
-    utxo_list=copy.deepcopy(utxo_dict_init['utxos'])
-    for utxo in utxo_list:
-        try:
-            utxo['smart_contract_flag']
-            if smart_contract_only is False:
-                #we remove all the smart_contract, let's remove this value
-                #this is used to transfer the nig out of the smart_contract
-                utxo_dict_init['utxos'].remove(utxo)
-        except:
-            if smart_contract_only is True:
-                #we keep only the smart_contract, let's remove this value
-                utxo_dict_init['utxos'].remove(utxo)
-    return utxo_dict_init
-
-
-from common.smart_contract_script import *
-
-@app.route("/create_smart_contract_account", methods=['GET'])
-def get_create_smart_contract_account():
-    from common.owner import Owner
-    owner = Owner()
-    return jsonify(owner.public_key_hash)
-
-@app.route("/smart_contract_creation", methods=['POST'])
-def get_smart_contract_creation():
-    content = request.json
-    #fix for boolean
-    content=clean_request(content)
-    smart_contract_public_key_hash=content['smart_contract_public_key_hash']
-    sender_public_key_hash=content['sender_public_key_hash']
-    payload=content['payload']
-    #logging.info(f"====smart_contract_public_key_hash:{smart_contract_public_key_hash}")
-    smart_contract_dict=create_smart_contract(smart_contract_public_key_hash,sender_public_key_hash,payload)
-    #logging.info(f"####smart_contract_dict:{smart_contract_dict}")
-    return jsonify(smart_contract_dict)
-
-@app.route("/smart_contract", methods=['POST'])
-def get_smart_contract():
-    content = request.json
-    #fix for boolean
-    content=clean_request(content)
-    #logging.info(f"###smart_contract content:{content}")
-    smart_contract_type=content['smart_contract_type']
-    smart_contract_public_key_hash=content['smart_contract_public_key_hash']
-    sender_public_key_hash=content['sender_public_key_hash']
-    try:smart_contract_transaction_hash=content['smart_contract_transaction_hash']
-    except:smart_contract_transaction_hash=None
-    try:smart_contract_previous_transaction=content['smart_contract_previous_transaction']
-    except:smart_contract_previous_transaction=None
-    try:smart_contract_new=content['smart_contract_new']
-    except:smart_contract_new=False
-    payload=content['payload']
-    
-    smart_contract_dict={}
-    if smart_contract_public_key_hash=="marketplace":
-        smart_contract_public_key_hash=smart_contract_owner.public_key_hash
-    smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_public_key_hash)
-    if smart_contract_transaction_hash is None:
-        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_public_key_hash)
-    logging.info(f"########### CHECK smart_contract_transaction_hash: {smart_contract_transaction_hash}")
-    smart_contract=SmartContract(smart_contract_public_key_hash,
-                                 smart_contract_sender=sender_public_key_hash,
-                                 smart_contract_type=smart_contract_type,
-                                 payload=payload,
-                                 smart_contract_previous_transaction=smart_contract_transaction_hash,
-                                 smart_contract_transaction_hash=smart_contract_transaction_hash,
-                                 smart_contract_new=smart_contract_new)
-
-    smart_contract.process()
-    if smart_contract.error_flag is False:
-        smart_contract_dict['smart_contract_account']=smart_contract.smart_contract_account
-        smart_contract_dict['smart_contract_sender']=smart_contract.smart_contract_sender
-        smart_contract_dict['smart_contract_new']=smart_contract.smart_contract_new
-        smart_contract_dict['smart_contract_flag']=True
-        smart_contract_dict['smart_contract_gas']=smart_contract.gas
-        smart_contract_dict['smart_contract_memory']=smart_contract.smart_contract_memory
-        smart_contract_dict['smart_contract_memory_size']=smart_contract.smart_contract_memory_size
-        smart_contract_dict['smart_contract_type']=smart_contract.smart_contract_type
-        smart_contract_dict['smart_contract_payload']=smart_contract.payload
-        smart_contract_dict['smart_contract_result']=smart_contract.result
-        smart_contract_dict['smart_contract_previous_transaction']=smart_contract.smart_contract_previous_transaction
-        smart_contract_dict['smart_contract_transaction_hash']=smart_contract.smart_contract_transaction_hash
-    smart_contract_dict['smart_contract_error_flag']=smart_contract.error_flag
-    smart_contract_dict['smart_contract_error_code']=str(smart_contract.error_code)
-    return jsonify(smart_contract_dict)
-
-
-
-
 class TransactionMultiProcessing:
+    """
+    Class to process several transactions in parallel triggered by function transactions_to_leader_node.
+    """
     def __init__(self,*args, **kwargs):
         self.e = threading.Event()
 
@@ -1059,6 +219,10 @@ class TransactionMultiProcessing:
 
 
 def Process_transaction(*args, **kwargs):
+    """
+    sub function of Class TransactionMultiProcessing 
+    to process in parallel the transactions received by the leader node.
+    """
     purge_flag = kwargs.get('purge_flag',False)
     transaction_data = kwargs.get('transaction_data',True)
     new_transaction_flag = kwargs.get('new_transaction_flag',False)
@@ -1164,7 +328,175 @@ def Process_transaction(*args, **kwargs):
        
 
 
+
+def leader_node_advance_purge_backlog():
+    """
+    purge the potential backlog of transaction during leader note rotation.
+    """
+    logging.info(f"### leader_node_advance_purge_backlog")
+    backlog_list=[]
+    import os
+    if not os.path.exists(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE):
+        #the directory is not existing, let's create it
+        os.makedirs(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE)
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    
+    directory = os.fsencode(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE)
+    #files = filter(os.path.isfile, os.listdir(directory))
+    #files = [os.path.join(directory, f) for f in files] # add path to each file
+    #files.sort(key=lambda x: os.path.getmtime(x))
+    #for file in files:
+    for file in os.listdir(directory):
+         filename = os.fsdecode(file)
+         #the filename is the transaction hash
+         if blockchain_base.get_transaction(filename)=={}:
+             logging.info(f"==> transaction in advance UNKNOWN !!!!! :{filename}")
+             #The transaction is unkown in the blockchain, weed to add it
+             transaction_filename=STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE+f"/{filename.lower()}".replace("'","")
+             with open(transaction_filename, "rb") as file_obj:
+                transaction_str = file_obj.read()
+                transaction_data = json.loads(transaction_str)
+                backlog_list.append(transaction_data)
+         else:
+            logging.info(f"==> transaction in advance known: {filename}")
+    
+    #sorting of Backlog by timestamp
+    backlog_list_sorted=sorted(backlog_list, key=itemgetter('timestamp'))
+    for backlog_transaction in backlog_list_sorted:
+        Process_transaction(purge_flag=True,transaction_data=backlog_transaction)
+    
+    #let's clean all the file of the folder
+    import os, glob
+ 
+    dir = STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE
+    filelist = glob.glob(os.path.join(dir, "*"))
+    for f in filelist:
+        os.remove(f)
+
+             
+
+@app.route("/transactions_to_leader_node_advance", methods=['POST'])
+def transactions_to_leader_node_advance():
+    """
+    save a transaction by leader node waiting to be processed before being leader.
+    (this function is not used).
+    """
+    logging.info("New transaction to leader node request in advance")
+    content = request.json
+    transaction=content["transaction"]
+    save_transactions_to_leader_node_advance(transaction)
+    return "Transaction success", 200
+
+def save_transactions_to_leader_node_advance(transaction):
+    """
+    sub function of transactions_to_leader_node_advance().
+    (this function is not used).
+    """
+    try:
+        transaction_hash=transaction['transaction_hash']
+        if not os.path.exists(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE):
+            #the directory is not existing, let's create it
+            os.makedirs(STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE)
+            
+        transaction_filename=STORAGE_DIR+LEADER_NODE_TRANSACTIONS_ADVANCE+f"/{transaction_hash.lower()}".replace("'","")
+        transaction_data = json.dumps(transaction).encode("utf-8")
+        with open(transaction_filename, "wb") as file_obj:
+            file_obj.write(transaction_data)
+        
+    except TransactionException as transaction_exception:
+        return f'{transaction_exception}', 400
+
+
+
+@app.route("/block_saving_leader_node", methods=['POST'])
+def block_saving_leader_node():
+    """
+    validate and save a received block in the blockchain and master state by a node which is leader.
+    """
+    content = request.json
+    #fix for boolean
+    content=clean_request(content)
+    block_pointer=content['block']['header']['previous_PoH_hash']
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory(block_pointer=block_pointer)
+    try:
+        while master_state_readiness.block() is False:
+            #let's wait until MasterState is release by another thread
+            pass
+        
+        block = NewBlock(blockchain_base, MY_HOSTNAME)
+        block.receive(new_block=content["block"], sender=content["sender"])
+        block.add_in_backlog(master_state_readiness)
+        block.validate(master_state_readiness)
+
+        if block.is_valid is False:
+            #no need to wait for the BlockVote. A branch needs to be created in the consensus_blockchain
+            block_to_reject_now_by_leader_node=block.new_block.block_header.current_PoH_hash
+        else:block_to_reject_now_by_leader_node=None
+        
+        #refresh of the consensus blockchain
+        from common.consensus_blockchain import consensus_blockchain
+        consensus_blockchain.refresh(block_to_reject_now_by_leader_node=block_to_reject_now_by_leader_node)
+
+        latest_received_block=block.new_block.block_header.current_PoH_hash
+        if block.is_valid is True:
+            #the Block is valid
+            #leader_node_advance_purge_backlog()
+            block.clear_block_transactions_from_mempool()
+            received_block_2_slash=None
+
+            #let's refresh the score of the contest if needed
+            if 5==6:
+                block.refresh_score_list
+                for participant_public_key_hash in block.refresh_score_list:
+                    if backlog_score_processing.check_request(participant_public_key_hash) is False:
+                        participant_refresh_score_processing=ParticipantRefreshScoreProcessing()
+                        participant_refresh_score_processing.launch(participant_public_key_hash)
+
+        else:
+            #the Block is not valid
+            received_block_2_slash=block.new_block.block_header.current_PoH_hash
+        block.check_vote_and_backlog(master_state_readiness,
+                                     leader_node_flag=True,
+                                     latest_received_block=latest_received_block,
+                                     received_block_2_slash=received_block_2_slash,
+                                     new_block_2_exclude=latest_received_block)
+        
+    #except (NewBlockException, TransactionException) as new_block_exception:
+    #    return f'{new_block_exception}', 400
+
+    except Exception as e:
+        #issue with new block creation / Miner
+        logging.info(f"###ERROR block_saving_leader_node issue: {e}")
+        logging.exception(e)
+
+    #let's release MasterState
+    master_state_readiness.release()
+
+    #let's release to allow the block receiving
+    master_state_threading.receiving_reset()
+
+    return "Transaction success", 200
+
+
+@app.route("/block", methods=['POST'])
+def validate_block():
+    """
+    validate and save a received block in the blockchain and master state by a node which is NOT leader.
+    """
+    content = request.json
+    #fix for boolean
+    content=clean_request(content)
+    block_multiprocessing=BlockMultiProcessing()
+    block_multiprocessing.launch(content)
+    return "Transaction success", 200
+
+
 class BlockMultiProcessing:
+    """
+    Class to process several blocks in parallel triggered by function validate_block.
+    """
     def __init__(self,*args, **kwargs):
         self.e = threading.Event()
 
@@ -1185,6 +517,10 @@ class BlockMultiProcessing:
 
 
 def Process_block(*args, **kwargs):
+    """
+    sub function of Class BlockMultiProcessing 
+    to process in parallel the blocks received by a node which is not leader.
+    """
     block_data = kwargs.get('block_data',True)
     block_pointer=block_data['block']['header']['previous_PoH_hash']
     block_PoH=block_data['block']['header']['current_PoH_hash']
@@ -1262,8 +598,734 @@ def Process_block(*args, **kwargs):
     master_state_readiness.release()
     
 
+
+
+
+@app.route("/block", methods=['GET'])
+def get_blocks():
+    """
+    get the content of the blockchain.
+    """
+    logging.info("Block request")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_all_blockchain_from_memory()
+    return jsonify(blockchain_base.to_dict)
+
+@app.route("/leader_node_schedule", methods=['GET'])
+def get_leader_node_schedule():
+    """
+    get the leader node schedule (rotation of leader node).
+    """
+    logging.info("Get Leader Node Schedule")
+    leader_node_schedule=LeaderNodeScheduleMemory()
+    return jsonify(leader_node_schedule.leader_node_schedule_json)
+
+@app.route("/leader_node_schedule_next", methods=['GET'])
+def get_leader_node_schedule_next():
+    """
+    rotate the leader node schedule (rotation of leader node) to the next leader node.
+    """
+    logging.info("Get Next Leader Node Schedule")
+    #Launch Leader node Rotation
+    PoW_memory.leader_node_schedule_memory.next_leader_node_schedule(PoW_memory.known_nodes_memory.known_nodes)
+    PoW_memory.broadcast_leader_node_schedule()
+    return "Next Leader Node Schedule", 200
+
+
+@app.route("/maintenance_on", methods=['GET'])
+def maintenance_on():
+    """
+    activate the maintenance mode of the node only.
+    """
+    maintenance_mode.switch_on()
+    response = app.response_class(
+        response=json.dumps("Maintenance On"),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+@app.route("/maintenance_off", methods=['GET'])
+def maintenance_off():
+    """
+    deactivate the maintenance mode of the node only.
+    """
+    maintenance_mode.switch_off()
+    response = app.response_class(
+        response=json.dumps("Maintenance Off"),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+@app.route("/network_maintenance_on", methods=['GET'])
+def network_maintenance_on():
+    """
+    activate the maintenance mode of all the network of nodes.
+    """
+    logging.info("===Network Maintenance On request")
+    network_maintenance("on")
+    response = app.response_class(
+            response=json.dumps("Network Maintenance On success"),
+            status=200,
+            mimetype='application/json'
+        )
+    return response
+
+@app.route("/network_maintenance_off", methods=['GET'])
+def network_maintenance_off():
+    """
+    deactivate the maintenance mode of all the network of nodes.
+    """
+    logging.info("===Network Maintenance Off request")
+    network_maintenance("off")
+    response = app.response_class(
+            response=json.dumps("Network Maintenance Off success"),
+            status=200,
+            mimetype='application/json'
+        )
+    return response
+
+def network_maintenance(mode):
+    """
+    sub function of network_maintenance_on() and network_maintenance_off().
+    """
+    known_nodes_memory=KnownNodesMemory()
+    known_nodes_memory.known_nodes
+    node_list = known_nodes_memory.known_nodes
+    new_node_list=[]
+    for node in node_list:
+        new_node_list.append(node)
+    my_node = Node(MY_HOSTNAME)
+    for node in new_node_list:
+        if node!= my_node:
+            try:
+                if mode=="off":node.network_maintenance_off()
+                if mode=="on":node.network_maintenance_on()
+            except Exception as e:
+                logging.info(f"**** ISSUE network_maintenance {mode}: {node.dict}")
+                logging.exception(e)
+
+    if mode=="off":maintenance_mode.switch_off()
+    if mode=="on":maintenance_mode.switch_on()
+    
+
+@app.route("/utxo/<user>", methods=['GET'])
+def get_user_utxos(user):
+    """
+    get all the available utxo of an user.
+    """
+    logging.info(f"User utxo request {user}")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_user_utxos(user))
+
+@app.route("/utxo_balance/<user>", methods=['GET'])
+def get_user_utxo_balance(user):
+    """
+    get the balance and utxo of an user.
+    """
+    logging.info(f"User utxo spent request {user}")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_user_utxos_balance(user))
+
+def get_utxo(public_key_hash, *args, **kwargs):
+    """
+    retrieve all the available utxo of a given account.
+    """
+    smart_contract_only=kwargs.get('smart_contract_only',True)
+    utxo_url='http://'+MY_HOSTNAME+'/utxo/'+public_key_hash
+    resp = requests.get(utxo_url)
+    utxo_dict_init = resp.json()
+    utxo_list=copy.deepcopy(utxo_dict_init['utxos'])
+    for utxo in utxo_list:
+        try:
+            utxo['smart_contract_flag']
+            if smart_contract_only is False:
+                #we remove all the smart_contract, let's remove this value
+                #this is used to transfer the nig out of the smart_contract
+                utxo_dict_init['utxos'].remove(utxo)
+        except:
+            if smart_contract_only is True:
+                #we keep only the smart_contract, let's remove this value
+                utxo_dict_init['utxos'].remove(utxo)
+    return utxo_dict_init
+
+
+
+@app.route("/smart_contract_api/<account>/<smart_contract_transaction_hash>", methods=['GET'])
+def get_smart_contract_api2(account,smart_contract_transaction_hash):
+    """
+    get the content of a smart contract from a smart_contract_transaction_hash.
+    """
+    logging.info(f"smart_contract_api account:{account} ")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_smart_contract_api(account,smart_contract_transaction_hash=smart_contract_transaction_hash))
+
+@app.route("/smart_contract_api/<account>", methods=['GET'])
+def get_smart_contract_api(account):
+    """
+    get the content of a smart contract.
+    """
+    logging.info(f"smart_contract_api account:{account} ")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_smart_contract_api(account))
+
+@app.route("/smart_contract_api_leader_node/<account>/<smart_contract_transaction_hash>", methods=['GET'])
+def get_smart_contract_api_leader_node(account,smart_contract_transaction_hash):
+    """
+    get the content of a smart contract directly from master state during transaction validation
+    while it's not yet written on the blockchain. For leader node only.
+    """
+    logging.info(f"smart_contract_api_leader_node account:{account} ")
+    return jsonify(load_smart_contract_from_master_state_leader_node(account,smart_contract_transaction_hash=smart_contract_transaction_hash))
+
+@app.route("/leader_node_smart_contract_api/<account>", methods=['GET'])
+def get_leader_node_smart_contract_api(account):
+    """
+    get the content of a smart contract from a smart_contract_transaction_hash 
+    directly from master state during transaction validation
+    while it's not yet written on the blockchain. For leader node only.
+    """
+    logging.info(f"leader_node_smart_contract_api account:{account} ")
+    smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(account)
+    return jsonify({'smart_contract_transaction_hash':smart_contract_transaction_hash})   
+
+
+@app.route("/user_creation", methods=['GET'])
+def get_user_creation():
+    """
+    create private key, public key hash and public key hex of an user.
+    """
+    logging.info(f"user creation request")
+    user_dict={}
+    owner = Owner()
+    print(f"private key: {owner.private_key.export_key(format='DER')}")
+    print(f"public key hash: {owner.public_key_hash}")
+    print(f"public key hex: {owner.public_key_hex}")
+    return "Transaction success", 200
+
+@app.route("/transactions/<transaction_hash>", methods=['GET'])
+def get_transaction(transaction_hash):
+    """
+    get the content of a transaction by its transaction_hash.
+    """
+    logging.info(f"Transaction request {transaction_hash}")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_transaction(transaction_hash))
+
+
+@app.route("/known_node_request", methods=['GET'])
+def known_node_request():
+    """
+    get the list of known nodes of the node.
+    """
+    logging.info("Known node request")
+    return jsonify(network.return_known_nodes())
+
+@app.route("/new_node_advertisement", methods=['POST'])
+def new_node_advertisement():
+    """
+    save a new node in the list of known nodes of the node.
+    """
+    logging.info("New node advertisement request")
+    content = request.json
+    hostname = content["hostname"]
+    known_nodes_memory = KnownNodesMemory()
+    try:
+        new_node = Node(hostname)
+        known_nodes_memory.store_new_node(new_node)
+    except TransactionException as transaction_exception:
+        return f'{transaction_exception}', 400
+    return "New node advertisement success", 200
+
+@app.route("/new_leader_node_schedule_advertisement", methods=['POST'])
+def new_leader_node_schedule_advertisement():
+    """
+    save a new leader node schedule (leader node rotation).
+    """
+    logging.info("New leader node schedule advertisement request")
+    content = request.json
+    leader_node_schedule_raw = content["leader_node_schedule"]
+    leader_node_schedule_memory = LeaderNodeScheduleMemory()
+    try:
+        logging.info(f"leader_node_schedule_raw {leader_node_schedule_raw}")
+        leader_node_schedule_json = json.loads(leader_node_schedule_raw)
+        leader_node_schedule_memory.store_new_leader_node_schedule_json(leader_node_schedule_json)
+    except TransactionException as transaction_exception:
+        return f'{transaction_exception}', 400
+    return "New node advertisement success", 200
+
+@app.route("/restart", methods=['GET'])
+def restart():
+    """
+    restart the network of nodes by completely reseting 
+    the storage of each node known by the leader node.
+    It can be only triggered by the leader node.
+    """
+    logging.info("===Network restart request")
+    known_nodes_memory=KnownNodesMemory()
+    known_nodes_memory.known_nodes
+    node_list = known_nodes_memory.known_nodes
+    new_node_list=[]
+    for node in node_list:
+        new_node_list.append(node)
+
+    logging.info(f"===new_node_list:{new_node_list}")
+    my_node = Node(MY_HOSTNAME)
+    #network = Network(my_node)
+    mempool = MemPool()
+    mempool.clear_transactions_from_memory()
+
+    master_state_threading.receiving_reset()
+    master_state_readiness.release()
+
+    from common.consensus_blockchain import consensus_blockchain
+    consensus_blockchain.refresh()
+    
+    
+    #full reset of the network
+    shutil.rmtree(STORAGE_DIR)
+    os.makedirs(STORAGE_DIR)
+    #ask all the node to rejoin the reseted network
+    for node in new_node_list:
+        logging.info(f"node: {node} my_node:{my_node}")
+        if node!= my_node:
+            node.restart_request()
+
+    network.known_nodes_memory = KnownNodesMemory()
+    network.join_network(reset_network=True)
+    for node in new_node_list:
+        logging.info(f"node: {node} my_node:{my_node}")
+        if node!= my_node:
+            node.restart_join()
+
+    response = app.response_class(
+        response=json.dumps("Network Restart success"),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+@app.route("/restart_request", methods=['POST'])
+def restart_request():
+    """
+    manage a request to restart the node triggered by the leader node (cf. function restart()).
+    """
+    logging.info("Node restart request")
+    my_node = Node(MY_HOSTNAME)
+    #network = Network(my_node)
+    mempool = MemPool()
+    mempool.clear_transactions_from_memory()
+    master_state_threading.receiving_reset()
+    master_state_readiness.release()
+    node_list = network.return_known_nodes()
+
+    from common.consensus_blockchain import consensus_blockchain
+    consensus_blockchain.refresh()
+    #full reset of the netowrk
+    shutil.rmtree(STORAGE_DIR)
+    os.makedirs(STORAGE_DIR)
+    return "Node Restart success", 200
+
+@app.route("/PoH_reset", methods=['GET'])
+def PoH_reset():
+    """
+    reset the Proof Of History (PoH).
+    """
+    logging.info("PoH_reset")
+    PoH_memory.PoH_start_flag=False
+    return "PoH_reset success", 200
+
+
+@app.route("/sell_followup_step4_pin/<user>/<payment_ref>", methods=['GET'])
+def sell_followup_step4_pin(user,payment_ref):
+    """
+    check if the pin code provide in step 4 in the marketplace is valid.
+    """
+    logging.info(f"sell_followup_step4_pin user:{user} payment_ref:{payment_ref}")
+    pin_encrypted=None
+    blockchain_memory = BlockchainMemory()
+    try:
+        blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    except Exception as e:
+        logging.info(f"exception: {e}")
+    
+    pin_encrypted=blockchain_base.get_followup_step4_pin(user,payment_ref)
+
+
+    if pin_encrypted is not None:
+        response={'pin_encrypted':pin_encrypted}
+        return jsonify(response)
+    else:
+        logging.info(f"not pin found for payment_ref: {payment_ref}")
+        response={'pin_encrypted':'not found'}
+        return jsonify(response)
+    return "Restart success", 200
+
+
+@app.route("/marketplace_step/<marketplace_step>/<user_public_key_hash>",defaults={'amount': None}, methods=['GET'])
+@app.route("/marketplace_step/<marketplace_step>/<user_public_key_hash>/<amount>", methods=['GET'])
+def get_marketplace_step(marketplace_step,user_public_key_hash,amount):
+    """
+    get all the marketplace request for a given step below an amount if provided.
+    """
+    logging.info(f"User marketplace_step request {marketplace_step} {user_public_key_hash}")
+    try:
+        blockchain_memory = BlockchainMemory()
+        blockchain_base = blockchain_memory.get_all_blockchain_from_memory()
+        return jsonify(blockchain_base.get_marketplace_step(marketplace_step,user_public_key_hash,amount=amount))
+    except Exception as e:
+        logging.info(f"exception: {e}")
+        return jsonify([])
+
+
+@app.route("/check_notification/<user_public_key_hash>/<notification_timestamp_dict_raw>", methods=['GET'])
+def get_check_notification(user_public_key_hash,notification_timestamp_dict_raw):
+    """
+    check if notifications are needed in the mobile app (interface) for a given account.
+    """
+    notification_timestamp_dict=json.loads(notification_timestamp_dict_raw)
+    notification_dict={}
+    for marketplace_step in notification_timestamp_dict.keys():
+        marketplace_step_counter=0
+        logging.info(f"marketplace_step for user: {marketplace_step}")
+        archive_flag=False
+        archive_timestamp=False
+        if int(marketplace_step)>=4:
+            archive_flag=True
+            archive_timestamp=float(notification_timestamp_dict[marketplace_step])
+        try:
+            blockchain_memory = BlockchainMemory()
+            blockchain_base = blockchain_memory.get_all_blockchain_from_memory()
+            marketplace_step_raw=blockchain_base.get_marketplace_step(marketplace_step,user_public_key_hash,archive_flag=archive_flag,archive_timestamp=archive_timestamp)['results']
+            for elem in marketplace_step_raw:
+                if int(elem["timestamp_nig"])>int(float(notification_timestamp_dict[marketplace_step])) and elem["readonly_flag"] is False :marketplace_step_counter+=1
+            notification_dict[marketplace_step]=marketplace_step_counter
+        except Exception as e:
+            logging.info(f"exception: {e}")
+            notification_dict[marketplace_step]=0
+    logging.info(f"==>notification_dict:{notification_dict}")
+    logging.info(f"check_notification for user: {user_public_key_hash} notification_timestamp:{notification_timestamp_dict}")
+    return jsonify(notification_dict)
+
+
+@app.route("/nig_value_projection/<nig_amount>", methods=['GET'])
+def get_nig_value_projection(nig_amount):
+    """
+    calculate the NIG value in 6 months, 1 year, 2 years, 3 years and 5 years.
+    """
+    range_list1=[190,365,730,1095,1825]
+    range_list2=["6 mois","1 an  ","2 ans ","3 ans ","5 ans "]
+    return get_nig_value_projection_raw(nig_amount,range_list1,range_list2)
+
+
+@app.route("/nig_value_projection_year/<nig_amount>", methods=['GET'])
+def get_nig_value_projection_year(nig_amount):
+    """
+    calculate the NIG value in 1 month, 2 months, 3 months, 6 months, 9 months and 1 year.
+    """
+    range_list1=[30,60,90,180,270,365]
+    range_list2=["1 mois","2 mois","3 mois","6 mois","9 mois","1 an"]
+    return get_nig_value_projection_raw(nig_amount,range_list1,range_list2)
+
+@app.route("/nig_value_projection_future/<nig_amount>", methods=['GET'])
+def get_nig_value_projection_future(nig_amount):
+    """
+    calculate the NIG value in 1 year, 2 years, 3 years, 5 years, 7 years and 10 years.
+    """
+    range_list1=[365,730,1095,1825,2555,3650]
+    range_list2=["1 an  ","2 ans ","3 ans ","5 ans ","7 ans ","10 ans "]
+    return get_nig_value_projection_raw(nig_amount,range_list1,range_list2)
+
+def get_nig_value_projection_raw(nig_amount,range_list1,range_list2):
+    """
+    sub function used to calculates the NIG value in function get_nig_value_projection,
+    function get_nig_value_projection_year and function get_nig_value_projection_future.
+    """
+    logging.info(f"get_nig_value")
+    from common.values import EUR_NIG_VALUE_START_TIMESTAMP,EUR_NIG_VALUE_START_CONVERSION_RATE,EUR_NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE,EUR_NIG_VALUE_START_INCREASE_HALVING_DAYS
+    current_timestamp=datetime.timestamp(datetime.utcnow())
+    t1=datetime.utcnow()
+    
+    result=[]
+    for i in range(len(range_list1)):
+        t2=t1+datetime_delta.timedelta(days=range_list1[i])
+        #delta=t2-t1
+        delta=t2-datetime.fromtimestamp(float(EUR_NIG_VALUE_START_TIMESTAMP))
+        delta_days=delta.days
+        flag=True
+        nig_value=float(EUR_NIG_VALUE_START_CONVERSION_RATE)
+        nig_increase=1
+        INCREASE_DAILY_PERCENTAGE=float(EUR_NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE)
+        HALVING_DAYS=float(EUR_NIG_VALUE_START_INCREASE_HALVING_DAYS)
+        while flag is True:
+            if delta_days<HALVING_DAYS:
+                nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,delta_days)
+                nig_rate=nig_value*nig_increase
+                nig_value=float(nig_amount)*nig_rate
+            
+                nig_increase_percentage=(nig_increase-1)*100
+                nig_increase_percentage_string="{:.2f}".format(nig_increase_percentage)
+                nig_value_string="{:.2f}".format(nig_value)
+                nig_rate_string="{:.2f}".format(nig_rate)
+                flag=False
+            else:
+                nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,HALVING_DAYS)
+                delta_days-=HALVING_DAYS
+                INCREASE_DAILY_PERCENTAGE=INCREASE_DAILY_PERCENTAGE/2
+
+        result.append(str(int(nig_value)))
+
+        logging.info(f" {range_list2[i]} => nig_value: {nig_value_string}€ increase: {nig_increase_percentage_string}% nig_rate : {nig_rate_string} NIG last increase: {INCREASE_DAILY_PERCENTAGE}")
+    
+    return jsonify(result)
+
+@app.route("/nig_rate_eur", methods=['GET'])
+def get_nig_rate():
+    """
+    get the current NIG value in € for 1 NIG.
+    """
+    nig_rate=calculate_nig_rate(currency='eur')
+    nig_rate_string="{:.2f}".format(nig_rate)
+    logging.info(f" nig_rate : {nig_rate_string} € for 1 NIG")
+    return jsonify(nig_rate)
+
+def calculate_nig_rate(*args, **kwargs):
+    """
+    calculate NIG value in € for 1 NIG based on a given timestamp.
+    """
+    #logging.info(f"get_nig_rate_eur")
+    timestamp=kwargs.get('timestamp',None)
+    currency=kwargs.get('currency','eur').upper()
+    variable_module = __import__("common")
+    NIG_VALUE_START_TIMESTAMP=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_TIMESTAMP")
+    NIG_VALUE_START_CONVERSION_RATE=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_CONVERSION_RATE")
+    NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE")
+    NIG_VALUE_START_INCREASE_HALVING_DAYS=variable_module.values.__getattribute__(currency+"_NIG_VALUE_START_INCREASE_HALVING_DAYS")
+    if timestamp is not None:date_now=datetime.fromtimestamp(timestamp)
+    else:date_now=datetime.utcnow()
+
+    delta=date_now-datetime.fromtimestamp(float(NIG_VALUE_START_TIMESTAMP))
+    #delta=date_now-(datetime.utcnow()-datetime_delta.timedelta(189))
+    delta_days=delta.days
+    #logging.info(f" delta_days: {delta_days}")
+    flag=True
+    nig_rate_initial=float(NIG_VALUE_START_CONVERSION_RATE)
+    nig_increase=1
+    INCREASE_DAILY_PERCENTAGE=float(NIG_VALUE_START_INCREASE_DAILY_PERCENTAGE)
+    HALVING_DAYS=float(NIG_VALUE_START_INCREASE_HALVING_DAYS)
+    while flag is True:
+        if delta_days<HALVING_DAYS:
+            nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,delta_days)
+            nig_rate=nig_rate_initial*nig_increase
+            flag=False
+        else:
+            nig_increase=nig_increase*math.pow((float(INCREASE_DAILY_PERCENTAGE)/100)+1,HALVING_DAYS)
+            delta_days-=HALVING_DAYS
+            INCREASE_DAILY_PERCENTAGE=INCREASE_DAILY_PERCENTAGE/2    
+    #logging.info(f"nig_rate: {nig_rate}")
+    return nig_rate
+
+
+@app.route("/transaction_creation", methods=['GET'])
+def transaction_creation():
+    """
+    tutorial showing how to create a transaction on the blockchain.
+    """
+    #test for making a transaction via API
+    #Camille => Bertand  
+
+    from blockchain_users.albert import private_key as albert_private_key
+    from blockchain_users.bertrand import private_key as bertrand_private_key
+    from blockchain_users.camille import private_key as camille_private_key
+    from blockchain_users.albert import public_key_hash as albert_public_key_hash
+    from blockchain_users.bertrand import public_key_hash as bertrand_public_key_hash
+    from blockchain_users.camille import public_key_hash as camille_public_key_hash
+    from common.transaction import Transaction
+    from common.transaction_input import TransactionInput
+    from common.transaction_output import TransactionOutput
+    from wallet.wallet import Owner, Wallet, Transaction
+    import requests
+    albert_owner=Owner(private_key=albert_private_key)
+    bertrand_owner=Owner(private_key=bertrand_private_key)
+    camille_owner=Owner(private_key=camille_private_key)
+    albert_wallet = Wallet(albert_owner,Node(MY_HOSTNAME))
+    bertrand_wallet = Wallet(bertrand_owner,Node(MY_HOSTNAME))
+    camille_wallet = Wallet(camille_owner,Node(MY_HOSTNAME))
+
+    #sender_wallet=bertrand_wallet
+    #receiver_wallet=camille_wallet
+
+    sender_owner=camille_owner
+    receiver_owner=bertrand_owner
+    sender_wallet=camille_wallet
+    receiver_wallet=bertrand_wallet
+    transaction_amount=2
+
+    #let's retrieve the utxo
+    utxo_url='http://'+MY_HOSTNAME+'/utxo/'+sender_owner.public_key_hash
+    resp = requests.get(utxo_url)
+    utxo_dict = resp.json()
+
+    if transaction_amount>utxo_dict['total']:
+        #transaction amount is exceeding wallet total
+        logging.info(f"transaction amount {transaction_amount} is exceeding wallet total {utxo_dict['total']} for sender {sender_owner.public_key_hash} ")
+    else:
+        #wallet total is exceeding transaction amount
+        remaing_transaction_amount=transaction_amount
+        input_list=[]
+        output_list=[]
+        for utxo in utxo_dict['utxos']:
+            if utxo['amount']>=remaing_transaction_amount:
+                #only one utxo is sufficient
+                input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=sender_owner.public_key_hash))
+                #input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash'))
+                #check=TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash')
+                #logging.info(f"====check check.to_json() {check.to_json()}")
+                
+                
+                output_list.append(TransactionOutput(public_key_hash=receiver_owner.public_key_hash, amount=remaing_transaction_amount,interface_public_key_hash=interface_public_key_hash,))
+                if utxo['amount']-remaing_transaction_amount>0:
+                    output_list.append(TransactionOutput(public_key_hash=sender_owner.public_key_hash, amount=(utxo['amount']-remaing_transaction_amount),interface_public_key_hash=interface_public_key_hash,))
+                sender_wallet.process_transaction(inputs=input_list, outputs=output_list)
+                break
+            else:
+                #more than one utxo will be needed
+                input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=sender_owner.public_key_hash))
+                #input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash'))
+                #check=TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash='sender_wallet.public_key_hash')
+                #logging.info(f"====check check.to_json() {check.to_json()}")
+
+                output_list.append(TransactionOutput(public_key_hash=receiver_owner.public_key_hash, amount=utxo['amount'],interface_public_key_hash=interface_public_key_hash,))
+                
+                remaing_transaction_amount-=utxo['amount']
+                sender_wallet.process_transaction(inputs=input_list, outputs=output_list)
+                input_list=[]
+                output_list=[]
+
+    return "Restart success", 200
+
+####SMART CONTRACT
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+import binascii
+
+from blockchain_users.marketplace import private_key as marketplace_private_key
+smart_contract_owner=Owner(private_key=marketplace_private_key)
+smart_contract_wallet = Wallet(smart_contract_owner,Node(MY_HOSTNAME))
+
+
+#from common.transaction import Transaction
+from common.transaction_input import TransactionInput
+from common.transaction_output import TransactionOutput
+#from wallet.wallet import Owner, Wallet, Transaction
+from wallet.wallet import Owner, Wallet
+from common.transaction_account import decrypt_account
+
+
+from blockchain_users.bertrand import private_key as bertrand_private_key
+bertrand_owner=Owner(private_key=bertrand_private_key)
+bertrand_wallet = Wallet(bertrand_owner,Node(MY_HOSTNAME))
+
+from blockchain_users.camille import private_key as camille_private_key
+camille_owner=Owner(private_key=camille_private_key)
+camille_wallet = Wallet(camille_owner,Node(MY_HOSTNAME))
+
+
+from common.smart_contract_script import *
+
+@app.route("/create_smart_contract_account", methods=['GET'])
+def get_create_smart_contract_account():
+    """
+    create a smart contract account (public key hash). Use by Mobile App (interface).
+    """
+    from common.owner import Owner
+    owner = Owner()
+    return jsonify(owner.public_key_hash)
+
+@app.route("/smart_contract_creation", methods=['POST'])
+def get_smart_contract_creation():
+    """
+    create and validate a new smart contract based on its provided payload. Use by Mobile App (interface).
+    """
+    content = request.json
+    #fix for boolean
+    content=clean_request(content)
+    smart_contract_public_key_hash=content['smart_contract_public_key_hash']
+    sender_public_key_hash=content['sender_public_key_hash']
+    payload=content['payload']
+    #logging.info(f"====smart_contract_public_key_hash:{smart_contract_public_key_hash}")
+    smart_contract_dict=create_smart_contract(smart_contract_public_key_hash,sender_public_key_hash,payload)
+    #logging.info(f"####smart_contract_dict:{smart_contract_dict}")
+    return jsonify(smart_contract_dict)
+
+@app.route("/smart_contract", methods=['POST'])
+def get_smart_contract():
+    """
+    add and validate a new provided payload on an existing smart contract.
+    """
+    content = request.json
+    #fix for boolean
+    content=clean_request(content)
+    #logging.info(f"###smart_contract content:{content}")
+    smart_contract_type=content['smart_contract_type']
+    smart_contract_public_key_hash=content['smart_contract_public_key_hash']
+    sender_public_key_hash=content['sender_public_key_hash']
+    try:smart_contract_transaction_hash=content['smart_contract_transaction_hash']
+    except:smart_contract_transaction_hash=None
+    try:smart_contract_previous_transaction=content['smart_contract_previous_transaction']
+    except:smart_contract_previous_transaction=None
+    try:smart_contract_new=content['smart_contract_new']
+    except:smart_contract_new=False
+    payload=content['payload']
+    
+    smart_contract_dict={}
+    if smart_contract_public_key_hash=="marketplace":
+        smart_contract_public_key_hash=smart_contract_owner.public_key_hash
+    smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_public_key_hash)
+    if smart_contract_transaction_hash is None:
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(smart_contract_public_key_hash)
+    logging.info(f"########### CHECK smart_contract_transaction_hash: {smart_contract_transaction_hash}")
+    smart_contract=SmartContract(smart_contract_public_key_hash,
+                                 smart_contract_sender=sender_public_key_hash,
+                                 smart_contract_type=smart_contract_type,
+                                 payload=payload,
+                                 smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                 smart_contract_transaction_hash=smart_contract_transaction_hash,
+                                 smart_contract_new=smart_contract_new)
+
+    smart_contract.process()
+    if smart_contract.error_flag is False:
+        smart_contract_dict['smart_contract_account']=smart_contract.smart_contract_account
+        smart_contract_dict['smart_contract_sender']=smart_contract.smart_contract_sender
+        smart_contract_dict['smart_contract_new']=smart_contract.smart_contract_new
+        smart_contract_dict['smart_contract_flag']=True
+        smart_contract_dict['smart_contract_gas']=smart_contract.gas
+        smart_contract_dict['smart_contract_memory']=smart_contract.smart_contract_memory
+        smart_contract_dict['smart_contract_memory_size']=smart_contract.smart_contract_memory_size
+        smart_contract_dict['smart_contract_type']=smart_contract.smart_contract_type
+        smart_contract_dict['smart_contract_payload']=smart_contract.payload
+        smart_contract_dict['smart_contract_result']=smart_contract.result
+        smart_contract_dict['smart_contract_previous_transaction']=smart_contract.smart_contract_previous_transaction
+        smart_contract_dict['smart_contract_transaction_hash']=smart_contract.smart_contract_transaction_hash
+    smart_contract_dict['smart_contract_error_flag']=smart_contract.error_flag
+    smart_contract_dict['smart_contract_error_code']=str(smart_contract.error_code)
+    return jsonify(smart_contract_dict)
+
+
+
+
 @app.route("/blockchain_root", methods=['GET'])
 def get_blockchain_root():
+    """
+    get all the available chains of blocks waiting to be validated by the nodes.
+    """
     logging.info("Get Root of BlockChain")
     #step 2 sorting of best block
     from common.consensus_blockchain import consensus_blockchain
@@ -1287,142 +1349,11 @@ def get_blockchain_root():
     return jsonify(final_chain_list)
 
 
-class BacklogScoreProcessing:
-    #this object is ensuring that there is not too much request
-    #to avoid overloading
-    def __init__(self,*args, **kwargs):
-        self.backlog=[]
-
-    def __clean_request(self):
-        backlog=copy.deepcopy(self.backlog)
-        for item in backlog:
-            if (time.time()-item[1])>60:
-                #the request is older than 60 sec
-                #we can remove it
-                self.backlog.remove(item)
-                
-    def check_request(self,participant_public_key_hash):
-        self.__clean_request()
-        if participant_public_key_hash in [y[0] for y in self.backlog]:return True
-        else:
-            self.backlog.append([participant_public_key_hash,time.time()])
-            return False
-       
-
-backlog_score_processing=BacklogScoreProcessing()
-
-@app.route("/participant_refresh_score/<participant_public_key_hash>", methods=['GET'])
-def participant_refresh_score(participant_public_key_hash):
-    #refresh of the participant score
-    if backlog_score_processing.check_request(participant_public_key_hash) is False:
-        participant_refresh_score_processing=ParticipantRefreshScoreProcessing()
-        participant_refresh_score_processing.launch(participant_public_key_hash)
-    return "Transaction success", 200
-
-
-class ParticipantRefreshScoreProcessing:
-    def __init__(self,*args, **kwargs):
-        self.e = threading.Event()
-
-    def launch(self,participant_public_key_hash):
-        self.PoH_threading = threading.Thread(target=self.start, args=(self.e,participant_public_key_hash))
-        self.PoH_threading.start()
-
-    def start(self,e,participant_public_key_hash):
-        while e.is_set() is False:
-            participant_refresh_score(participant_public_key_hash=participant_public_key_hash)
-            logging.info('===> participant_rating_refresh termination')
-            self.stop()
-            break
-
-    def stop(self):
-        self.e.set()
-
-
-
-def participant_refresh_score(*args, **kwargs):
-    #Step 0 during 4 PoH_DURATION_SEC to ensure that the preivous block is processed
-    logging.info(f"###INFO participant_refresh_score init")
-    participant_public_key_hash = kwargs.get('participant_public_key_hash',None)
-    block_creation_flag = kwargs.get('block_creation_flag',False)
-    if block_creation_flag is False:time.sleep(PoH_DURATION_SEC*3)
-    
-    logging.info(f"###INFO participant_refresh_score participant_public_key_hash:{participant_public_key_hash}")
-    #Step 1 retrieve the smart_contract associated to the participant
-    sender_public_key_hash=marketplace_owner.public_key_hash
-    payload=f"""
-public_key_hash="{participant_public_key_hash}"
-"""+participant_retrieve_smart_contract
-    smart_contract=SmartContract(CONTEST_PUBLIC_KEY_HASH,
-                                smart_contract_sender=sender_public_key_hash,
-                                smart_contract_type="api",
-                                payload=payload)
-    smart_contract.process()
-    participant_smart_contract_public_key_hash=smart_contract.result
-    if participant_smart_contract_public_key_hash is not None:
-        #Step 2 refresh the score
-        sender_public_key_hash=marketplace_owner.public_key_hash
-        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(participant_smart_contract_public_key_hash)
-        utxo_dict=get_utxo(participant_smart_contract_public_key_hash)
-        input_list=[]
-        output_list=[]
-        for utxo in utxo_dict['utxos']:
-            smart_contract=SmartContract(participant_smart_contract_public_key_hash,
-                                        smart_contract_sender=sender_public_key_hash,
-                                        smart_contract_type="source",
-                                        payload=participant_refresh_score_script,
-                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
-                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
-            smart_contract.process()
-            logging.info(f'####smart_contract.result:{smart_contract.result}')
-            if smart_contract.error_flag is False and smart_contract.smart_contract_memory!=[]:
-                unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+participant_smart_contract_public_key_hash
-                input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
-                output_list.append(TransactionOutput(list_public_key_hash=[participant_smart_contract_public_key_hash], 
-                                                     account_temp=True,
-                                                    amount=0,
-                                                    interface_public_key_hash=interface_public_key_hash,
-                                                    smart_contract_account=smart_contract.smart_contract_account,
-                                                    smart_contract_sender=smart_contract.smart_contract_sender,
-                                                    smart_contract_new=smart_contract.smart_contract_new,
-                                                    smart_contract_flag=True,
-                                                    smart_contract_gas=smart_contract.gas,
-                                                    smart_contract_memory=smart_contract.smart_contract_memory,
-                                                    smart_contract_memory_size=smart_contract.smart_contract_memory_size,
-                                                    smart_contract_type=smart_contract.smart_contract_type,
-                                                    smart_contract_payload=smart_contract.payload,
-                                                    smart_contract_result=smart_contract.result,
-                                                    smart_contract_previous_transaction=smart_contract.smart_contract_previous_transaction,
-                                                    smart_contract_transaction_hash=smart_contract.smart_contract_transaction_hash,
-                                                    marketplace_transaction_flag=False,
-                                                    smart_contract_transaction_flag=True))
-
-                if block_creation_flag is True:
-                    transaction_refresh_score = TransactionInBlock(input_list, output_list)
-                    transaction_refresh_score.sign(marketplace_owner)
-                    return transaction_refresh_score
-                    break
-                else:
-                    marketplace_wallet.process_transaction(inputs=input_list, outputs=output_list)
-                break
-
-    return None
-
-
-@app.route("/contest_refresh_ranking", methods=['GET'])
-def contest_refresh_ranking():
-    #refresh of the contest ranking
-    sender_public_key_hash=marketplace_owner.public_key_hash
-    smart_contract=SmartContract(CONTEST_PUBLIC_KEY_HASH,
-                                smart_contract_sender=sender_public_key_hash,
-                                smart_contract_type="api",
-                                payload=contest_refresh_ranking_script)
-    smart_contract.process()
-    return jsonify(smart_contract.result)
-
-
 
 class MarketplaceRequestArchivingProcessing:
+    """
+    Class to archive expired marketplace requests.
+    """
     def __init__(self,*args, **kwargs):
         self.e = threading.Event()
 
@@ -1441,6 +1372,9 @@ class MarketplaceRequestArchivingProcessing:
         self.e.set()
 
 def marketplace_request_archiving(*args, **kwargs):
+    """
+    sub function of MarketplaceRequestArchivingProcessing Class.
+    """
     #Archiving of the expired marketplace request
     logging.info(f"###INFO marketplace_request_archiving init")
     marketplace_account = kwargs.get('marketplace_account',None)
@@ -1614,9 +1548,160 @@ return mp_request_step2_done.requested_nig
             logging.info(f"**** ISSUE: {smart_contract.error_code}")
 
 
+
+
+class BacklogScoreProcessing:
+    """
+    Class to manage the backlog of request for refreshing score 
+    to avoid having more than 1 request for the same participant.
+    """
+    def __init__(self,*args, **kwargs):
+        self.backlog=[]
+
+    def __clean_request(self):
+        backlog=copy.deepcopy(self.backlog)
+        for item in backlog:
+            if (time.time()-item[1])>60:
+                #the request is older than 60 sec
+                #we can remove it
+                self.backlog.remove(item)
+                
+    def check_request(self,participant_public_key_hash):
+        self.__clean_request()
+        if participant_public_key_hash in [y[0] for y in self.backlog]:return True
+        else:
+            self.backlog.append([participant_public_key_hash,time.time()])
+            return False
+       
+
+backlog_score_processing=BacklogScoreProcessing()
+
+@app.route("/participant_refresh_score/<participant_public_key_hash>", methods=['GET'])
+def trigger_participant_refresh_score(participant_public_key_hash):
+    """
+    trigger the refresh of the score of a participant.
+    """
+    if backlog_score_processing.check_request(participant_public_key_hash) is False:
+        participant_refresh_score_processing=ParticipantRefreshScoreProcessing()
+        participant_refresh_score_processing.launch(participant_public_key_hash)
+    return "Transaction success", 200
+
+
+class ParticipantRefreshScoreProcessing:
+    """
+    Class to process all the request to refresh the score of participant 
+    in parallel to avoid overloading triggered by function trigger_participant_refresh_score.
+    """
+    def __init__(self,*args, **kwargs):
+        self.e = threading.Event()
+
+    def launch(self,participant_public_key_hash):
+        self.PoH_threading = threading.Thread(target=self.start, args=(self.e,participant_public_key_hash))
+        self.PoH_threading.start()
+
+    def start(self,e,participant_public_key_hash):
+        while e.is_set() is False:
+            participant_refresh_score(participant_public_key_hash=participant_public_key_hash)
+            logging.info('===> participant_rating_refresh termination')
+            self.stop()
+            break
+
+    def stop(self):
+        self.e.set()
+
+def participant_refresh_score(*args, **kwargs):
+    """
+    sub function of Class ParticipantRefreshScoreProcessing to refresh the score of a participant.
+    """
+    #Step 0 during 4 PoH_DURATION_SEC to ensure that the preivous block is processed
+    logging.info(f"###INFO participant_refresh_score init")
+    participant_public_key_hash = kwargs.get('participant_public_key_hash',None)
+    block_creation_flag = kwargs.get('block_creation_flag',False)
+    if block_creation_flag is False:time.sleep(PoH_DURATION_SEC*3)
+    
+    logging.info(f"###INFO participant_refresh_score participant_public_key_hash:{participant_public_key_hash}")
+    #Step 1 retrieve the smart_contract associated to the participant
+    sender_public_key_hash=marketplace_owner.public_key_hash
+    payload=f"""
+public_key_hash="{participant_public_key_hash}"
+"""+participant_retrieve_smart_contract
+    smart_contract=SmartContract(CONTEST_PUBLIC_KEY_HASH,
+                                smart_contract_sender=sender_public_key_hash,
+                                smart_contract_type="api",
+                                payload=payload)
+    smart_contract.process()
+    participant_smart_contract_public_key_hash=smart_contract.result
+    if participant_smart_contract_public_key_hash is not None:
+        #Step 2 refresh the score
+        sender_public_key_hash=marketplace_owner.public_key_hash
+        smart_contract_previous_transaction,smart_contract_transaction_hash=load_smart_contract(participant_smart_contract_public_key_hash)
+        utxo_dict=get_utxo(participant_smart_contract_public_key_hash)
+        input_list=[]
+        output_list=[]
+        for utxo in utxo_dict['utxos']:
+            smart_contract=SmartContract(participant_smart_contract_public_key_hash,
+                                        smart_contract_sender=sender_public_key_hash,
+                                        smart_contract_type="source",
+                                        payload=participant_refresh_score_script,
+                                        smart_contract_previous_transaction=smart_contract_transaction_hash,
+                                        smart_contract_transaction_hash=smart_contract_transaction_hash)
+            smart_contract.process()
+            logging.info(f'####smart_contract.result:{smart_contract.result}')
+            if smart_contract.error_flag is False and smart_contract.smart_contract_memory!=[]:
+                unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+participant_smart_contract_public_key_hash
+                input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
+                output_list.append(TransactionOutput(list_public_key_hash=[participant_smart_contract_public_key_hash], 
+                                                     account_temp=True,
+                                                    amount=0,
+                                                    interface_public_key_hash=interface_public_key_hash,
+                                                    smart_contract_account=smart_contract.smart_contract_account,
+                                                    smart_contract_sender=smart_contract.smart_contract_sender,
+                                                    smart_contract_new=smart_contract.smart_contract_new,
+                                                    smart_contract_flag=True,
+                                                    smart_contract_gas=smart_contract.gas,
+                                                    smart_contract_memory=smart_contract.smart_contract_memory,
+                                                    smart_contract_memory_size=smart_contract.smart_contract_memory_size,
+                                                    smart_contract_type=smart_contract.smart_contract_type,
+                                                    smart_contract_payload=smart_contract.payload,
+                                                    smart_contract_result=smart_contract.result,
+                                                    smart_contract_previous_transaction=smart_contract.smart_contract_previous_transaction,
+                                                    smart_contract_transaction_hash=smart_contract.smart_contract_transaction_hash,
+                                                    marketplace_transaction_flag=False,
+                                                    smart_contract_transaction_flag=True))
+
+                if block_creation_flag is True:
+                    transaction_refresh_score = TransactionInBlock(input_list, output_list)
+                    transaction_refresh_score.sign(marketplace_owner)
+                    return transaction_refresh_score
+                    break
+                else:
+                    marketplace_wallet.process_transaction(inputs=input_list, outputs=output_list)
+                break
+
+    return None
+
+
+@app.route("/contest_refresh_ranking", methods=['GET'])
+def contest_refresh_ranking():
+    """
+    get the ranking of all the participants.
+    """
+    #refresh of the contest ranking
+    sender_public_key_hash=marketplace_owner.public_key_hash
+    smart_contract=SmartContract(CONTEST_PUBLIC_KEY_HASH,
+                                smart_contract_sender=sender_public_key_hash,
+                                smart_contract_type="api",
+                                payload=contest_refresh_ranking_script)
+    smart_contract.process()
+    return jsonify(smart_contract.result)
+
+
+
 @app.route("/refresh_reputation/<account_public_key_hash>", methods=['GET'])
-def refresh_reputation(account_public_key_hash):
-    #refresh of the reputation of an account
+def trigger_refresh_reputation(account_public_key_hash):
+    """
+    trigger the refresh of the reputation of a participant.
+    """
     #if backlog_score_processing.check_request(account_public_key_hash) is False:
     refresh_reputation_processing=RefreshReputationProcessing()
     refresh_reputation_processing.launch(account_public_key_hash)
@@ -1624,6 +1709,10 @@ def refresh_reputation(account_public_key_hash):
 
 
 class RefreshReputationProcessing:
+    """
+    Class to process all the request to refresh the reputation of participant 
+    in parallel to avoid overloading triggered by function trigger_refresh_reputation.
+    """
     def __init__(self,*args, **kwargs):
         self.e = threading.Event()
 
@@ -1643,6 +1732,9 @@ class RefreshReputationProcessing:
 
 
 def refresh_reputation(*args, **kwargs):
+    """
+    sub function of RefreshReputationProcessing Class.
+    """
     #Step 0 during 4 PoH_DURATION_SEC to ensure that the preivous block is processed
     logging.info(f"###INFO refresh_reputation init")
     #time.sleep(PoH_DURATION_SEC*3)
@@ -1752,3 +1844,142 @@ if __name__ == "__main__":
     main()
 
 if MY_NODE.startswith("local"):start()
+
+@app.route("/restart_join", methods=['POST'])
+def restart_join():
+    """
+    =>function to be removed
+    """
+    logging.info("Node restart join")
+    network.known_nodes_memory = KnownNodesMemory()
+    network.join_network()
+    return "Node Restart success", 200
+
+
+@app.route("/all_utxo/<user>", methods=['GET'])
+def get_user_all_utxos(user):
+    """
+    =>function to be removed
+    """
+    logging.info(f"User all utxo request {user}")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_user_all_utxos(user))
+
+@app.route("/utxo_raw/<user>", methods=['GET'])
+def get_user_utxos_raw(user):
+    """
+    =>function to be removed
+    """
+    logging.info(f"User utxo request {user}")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_user_utxos_raw(user))
+
+@app.route("/utxo_account_temp/<user>", methods=['GET'])
+def get_user_utxos_account_temp(user):
+    """
+    =>function to be removed
+    """
+    logging.info(f"User utxo request for account temp {user}")
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_user_utxos_account_temp(user))
+
+@app.route("/utxo_account_temp/<user>/<payment_ref>", methods=['GET'])
+def get_user_utxos_account_temp_payment_ref(user,payment_ref):
+    """
+    =>function to be removed
+    """
+    logging.info(f"User utxo request for account temp {user}")
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    return jsonify(blockchain_base.get_user_utxos_account_temp(user,payment_ref=payment_ref))
+
+@app.route("/encryption_test", methods=['GET'])
+def encryption_test():
+    """
+    =>function to be removed
+    """
+    logging.info("encryption_test")
+    from Crypto.PublicKey import RSA
+    from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
+    import binascii, json
+    transaction_data = {
+            "name": "Banque Postale James Bond",
+            "iban":"FR03 2457 1245 1864 3267 9H65 345",
+            "bic": "PSSTGBDDFTZ",
+            "email": "james.bond@gmail.com",
+            "phone": "0123456789",
+            "country" : "France" ,
+        }
+    data = json.dumps(transaction_data, indent=2)
+    
+    #logging.info(f"data: {data}")
+    #step 1 encryption
+    key = RSA.importKey(binascii.unhexlify(camille_public_key_hex))
+    cipher = Cipher_PKCS1_v1_5.new(key)
+    data_encrypted=cipher.encrypt(data.encode())
+    logging.info(f"data_encrypted: {data_encrypted}")
+
+    #data2 = json.dumps(data_encrypted.decode("utf8"))
+    data2 = json.dumps(data_encrypted.hex())
+    logging.info(f"data2: {data2}")
+    
+
+    data3=bytes.fromhex(json.loads(data2))
+    logging.info(f"data3: {data3}")
+
+    
+
+    #step 2 decryption
+    key = RSA.importKey(camille_private_key)
+    decipher = Cipher_PKCS1_v1_5.new(key)
+    #data_decrypted=decipher.decrypt(str.encode(str(data_encrypted,'utf-8', 'ignore')), None).decode()
+    data_decrypted=decipher.decrypt(bytes.fromhex(json.loads(data2)), None).decode()
+    #logging.info(f"data_decrypted: {data_decrypted}")
+
+    transaction_data_decrypted = json.loads(data_decrypted)
+    test=transaction_data_decrypted['iban']
+    logging.info(f"transaction_data_decrypted: {test}")
+
+    
+    return "Restart success", 200
+
+@app.route("/new_owner", methods=['GET'])
+def new_owner():
+    """
+    =>function to be removed
+    """
+    logging.info("generate new Owner")
+    test_owner=Owner()
+    logging.info(f"private_key: {test_owner.private_key.exportKey(format='DER')}")
+    logging.info(f"public_key_hex: {test_owner.public_key_hex}")
+    logging.info(f"public_key_hash: {test_owner.public_key_hash}")
+    return "Restart success", 200
+
+@app.route("/marketplace_genesis", methods=['GET'])
+def get_marketplace_genesis():
+    """
+    =>function to be removed
+    """
+    logging.info(f"get_marketplace_genesis")
+    blockchain_memory = BlockchainMemory()
+    try:
+        #blockchain_base = blockchain_memory.get_blockchain_from_memory(block_pointer="marketplace_genesis")
+        blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    except Exception as e:
+        logging.info(f"exception: {e}")
+    return jsonify(blockchain_base.get_marketplace_genesis())
+
+
+@app.route("/maintenance")
+def maintenance():
+    """
+    =>function to be removed
+    """
+    response = app.response_class(
+        response=json.dumps("Sorry, off for maintenance!"),
+        status=503,
+        mimetype='application/json'
+    )
+    return response
