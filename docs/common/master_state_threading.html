@@ -107,28 +107,31 @@
 </span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span>
 </span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>
 </span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="k">def</span> <span class="nf">receiving_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;ensure that a block will be not created </span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">        during the receiving of Block</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>    <span class="k">def</span> <span class="nf">receiving_akn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;aaknowledge the block receiving </span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">        and to launch the purge of the backlog </span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">        and the block creation</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>    <span class="k">def</span> <span class="nf">receiving_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;avoid blocking MasterStateThreading</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="n">master_state_threading</span><span class="o">=</span><span class="n">MasterStateThreading</span><span class="p">()</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">        ensure that a block will be not created </span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">        during the receiving of Block</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>    <span class="k">def</span> <span class="nf">receiving_akn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">        acknowledge the block receiving </span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">        and to launch the purge of the backlog </span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">        and the block creation</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="k">def</span> <span class="nf">receiving_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">        avoid blocking MasterStateThreading</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="n">master_state_threading</span><span class="o">=</span><span class="n">MasterStateThreading</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -165,25 +168,28 @@
 </span><span id="MasterStateThreading-22"><a href="#MasterStateThreading-22"><span class="linenos">22</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span>
 </span><span id="MasterStateThreading-23"><a href="#MasterStateThreading-23"><span class="linenos">23</span></a>
 </span><span id="MasterStateThreading-24"><a href="#MasterStateThreading-24"><span class="linenos">24</span></a>    <span class="k">def</span> <span class="nf">receiving_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="MasterStateThreading-25"><a href="#MasterStateThreading-25"><span class="linenos">25</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;ensure that a block will be not created </span>
-</span><span id="MasterStateThreading-26"><a href="#MasterStateThreading-26"><span class="linenos">26</span></a><span class="sd">        during the receiving of Block</span>
-</span><span id="MasterStateThreading-27"><a href="#MasterStateThreading-27"><span class="linenos">27</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="MasterStateThreading-28"><a href="#MasterStateThreading-28"><span class="linenos">28</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="MasterStateThreading-29"><a href="#MasterStateThreading-29"><span class="linenos">29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-</span><span id="MasterStateThreading-30"><a href="#MasterStateThreading-30"><span class="linenos">30</span></a>
-</span><span id="MasterStateThreading-31"><a href="#MasterStateThreading-31"><span class="linenos">31</span></a>    <span class="k">def</span> <span class="nf">receiving_akn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="MasterStateThreading-32"><a href="#MasterStateThreading-32"><span class="linenos">32</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;aaknowledge the block receiving </span>
-</span><span id="MasterStateThreading-33"><a href="#MasterStateThreading-33"><span class="linenos">33</span></a><span class="sd">        and to launch the purge of the backlog </span>
-</span><span id="MasterStateThreading-34"><a href="#MasterStateThreading-34"><span class="linenos">34</span></a><span class="sd">        and the block creation</span>
-</span><span id="MasterStateThreading-35"><a href="#MasterStateThreading-35"><span class="linenos">35</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="MasterStateThreading-36"><a href="#MasterStateThreading-36"><span class="linenos">36</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="MasterStateThreading-37"><a href="#MasterStateThreading-37"><span class="linenos">37</span></a>
-</span><span id="MasterStateThreading-38"><a href="#MasterStateThreading-38"><span class="linenos">38</span></a>    <span class="k">def</span> <span class="nf">receiving_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="MasterStateThreading-39"><a href="#MasterStateThreading-39"><span class="linenos">39</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;avoid blocking MasterStateThreading</span>
-</span><span id="MasterStateThreading-40"><a href="#MasterStateThreading-40"><span class="linenos">40</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="MasterStateThreading-41"><a href="#MasterStateThreading-41"><span class="linenos">41</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="MasterStateThreading-42"><a href="#MasterStateThreading-42"><span class="linenos">42</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="MasterStateThreading-43"><a href="#MasterStateThreading-43"><span class="linenos">43</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="MasterStateThreading-25"><a href="#MasterStateThreading-25"><span class="linenos">25</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading-26"><a href="#MasterStateThreading-26"><span class="linenos">26</span></a><span class="sd">        ensure that a block will be not created </span>
+</span><span id="MasterStateThreading-27"><a href="#MasterStateThreading-27"><span class="linenos">27</span></a><span class="sd">        during the receiving of Block</span>
+</span><span id="MasterStateThreading-28"><a href="#MasterStateThreading-28"><span class="linenos">28</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading-29"><a href="#MasterStateThreading-29"><span class="linenos">29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="MasterStateThreading-30"><a href="#MasterStateThreading-30"><span class="linenos">30</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span><span id="MasterStateThreading-31"><a href="#MasterStateThreading-31"><span class="linenos">31</span></a>
+</span><span id="MasterStateThreading-32"><a href="#MasterStateThreading-32"><span class="linenos">32</span></a>    <span class="k">def</span> <span class="nf">receiving_akn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="MasterStateThreading-33"><a href="#MasterStateThreading-33"><span class="linenos">33</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading-34"><a href="#MasterStateThreading-34"><span class="linenos">34</span></a><span class="sd">        acknowledge the block receiving </span>
+</span><span id="MasterStateThreading-35"><a href="#MasterStateThreading-35"><span class="linenos">35</span></a><span class="sd">        and to launch the purge of the backlog </span>
+</span><span id="MasterStateThreading-36"><a href="#MasterStateThreading-36"><span class="linenos">36</span></a><span class="sd">        and the block creation</span>
+</span><span id="MasterStateThreading-37"><a href="#MasterStateThreading-37"><span class="linenos">37</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading-38"><a href="#MasterStateThreading-38"><span class="linenos">38</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="MasterStateThreading-39"><a href="#MasterStateThreading-39"><span class="linenos">39</span></a>
+</span><span id="MasterStateThreading-40"><a href="#MasterStateThreading-40"><span class="linenos">40</span></a>    <span class="k">def</span> <span class="nf">receiving_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="MasterStateThreading-41"><a href="#MasterStateThreading-41"><span class="linenos">41</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading-42"><a href="#MasterStateThreading-42"><span class="linenos">42</span></a><span class="sd">        avoid blocking MasterStateThreading</span>
+</span><span id="MasterStateThreading-43"><a href="#MasterStateThreading-43"><span class="linenos">43</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading-44"><a href="#MasterStateThreading-44"><span class="linenos">44</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="MasterStateThreading-45"><a href="#MasterStateThreading-45"><span class="linenos">45</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="MasterStateThreading-46"><a href="#MasterStateThreading-46"><span class="linenos">46</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="kc">None</span>
 </span></pre></div>
 
 
@@ -283,11 +289,12 @@ and to ensure that a block is not received while another block is created.</p>
     </div>
     <a class="headerlink" href="#MasterStateThreading.receiving_block"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="MasterStateThreading.receiving_block-24"><a href="#MasterStateThreading.receiving_block-24"><span class="linenos">24</span></a>    <span class="k">def</span> <span class="nf">receiving_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="MasterStateThreading.receiving_block-25"><a href="#MasterStateThreading.receiving_block-25"><span class="linenos">25</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;ensure that a block will be not created </span>
-</span><span id="MasterStateThreading.receiving_block-26"><a href="#MasterStateThreading.receiving_block-26"><span class="linenos">26</span></a><span class="sd">        during the receiving of Block</span>
-</span><span id="MasterStateThreading.receiving_block-27"><a href="#MasterStateThreading.receiving_block-27"><span class="linenos">27</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="MasterStateThreading.receiving_block-28"><a href="#MasterStateThreading.receiving_block-28"><span class="linenos">28</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="MasterStateThreading.receiving_block-29"><a href="#MasterStateThreading.receiving_block-29"><span class="linenos">29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span><span id="MasterStateThreading.receiving_block-25"><a href="#MasterStateThreading.receiving_block-25"><span class="linenos">25</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading.receiving_block-26"><a href="#MasterStateThreading.receiving_block-26"><span class="linenos">26</span></a><span class="sd">        ensure that a block will be not created </span>
+</span><span id="MasterStateThreading.receiving_block-27"><a href="#MasterStateThreading.receiving_block-27"><span class="linenos">27</span></a><span class="sd">        during the receiving of Block</span>
+</span><span id="MasterStateThreading.receiving_block-28"><a href="#MasterStateThreading.receiving_block-28"><span class="linenos">28</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading.receiving_block-29"><a href="#MasterStateThreading.receiving_block-29"><span class="linenos">29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="MasterStateThreading.receiving_block-30"><a href="#MasterStateThreading.receiving_block-30"><span class="linenos">30</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -308,16 +315,17 @@ during the receiving of Block</p>
 
     </div>
     <a class="headerlink" href="#MasterStateThreading.receiving_akn"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="MasterStateThreading.receiving_akn-31"><a href="#MasterStateThreading.receiving_akn-31"><span class="linenos">31</span></a>    <span class="k">def</span> <span class="nf">receiving_akn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="MasterStateThreading.receiving_akn-32"><a href="#MasterStateThreading.receiving_akn-32"><span class="linenos">32</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;aaknowledge the block receiving </span>
-</span><span id="MasterStateThreading.receiving_akn-33"><a href="#MasterStateThreading.receiving_akn-33"><span class="linenos">33</span></a><span class="sd">        and to launch the purge of the backlog </span>
-</span><span id="MasterStateThreading.receiving_akn-34"><a href="#MasterStateThreading.receiving_akn-34"><span class="linenos">34</span></a><span class="sd">        and the block creation</span>
-</span><span id="MasterStateThreading.receiving_akn-35"><a href="#MasterStateThreading.receiving_akn-35"><span class="linenos">35</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="MasterStateThreading.receiving_akn-36"><a href="#MasterStateThreading.receiving_akn-36"><span class="linenos">36</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">True</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="MasterStateThreading.receiving_akn-32"><a href="#MasterStateThreading.receiving_akn-32"><span class="linenos">32</span></a>    <span class="k">def</span> <span class="nf">receiving_akn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="MasterStateThreading.receiving_akn-33"><a href="#MasterStateThreading.receiving_akn-33"><span class="linenos">33</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading.receiving_akn-34"><a href="#MasterStateThreading.receiving_akn-34"><span class="linenos">34</span></a><span class="sd">        acknowledge the block receiving </span>
+</span><span id="MasterStateThreading.receiving_akn-35"><a href="#MasterStateThreading.receiving_akn-35"><span class="linenos">35</span></a><span class="sd">        and to launch the purge of the backlog </span>
+</span><span id="MasterStateThreading.receiving_akn-36"><a href="#MasterStateThreading.receiving_akn-36"><span class="linenos">36</span></a><span class="sd">        and the block creation</span>
+</span><span id="MasterStateThreading.receiving_akn-37"><a href="#MasterStateThreading.receiving_akn-37"><span class="linenos">37</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading.receiving_akn-38"><a href="#MasterStateThreading.receiving_akn-38"><span class="linenos">38</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">True</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>aaknowledge the block receiving 
+            <div class="docstring"><p>acknowledge the block receiving 
 and to launch the purge of the backlog 
 and the block creation</p>
 </div>
@@ -335,12 +343,13 @@ and the block creation</p>
 
     </div>
     <a class="headerlink" href="#MasterStateThreading.receiving_reset"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="MasterStateThreading.receiving_reset-38"><a href="#MasterStateThreading.receiving_reset-38"><span class="linenos">38</span></a>    <span class="k">def</span> <span class="nf">receiving_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="MasterStateThreading.receiving_reset-39"><a href="#MasterStateThreading.receiving_reset-39"><span class="linenos">39</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;avoid blocking MasterStateThreading</span>
-</span><span id="MasterStateThreading.receiving_reset-40"><a href="#MasterStateThreading.receiving_reset-40"><span class="linenos">40</span></a><span class="sd">        &#39;&#39;&#39;</span>
-</span><span id="MasterStateThreading.receiving_reset-41"><a href="#MasterStateThreading.receiving_reset-41"><span class="linenos">41</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="MasterStateThreading.receiving_reset-42"><a href="#MasterStateThreading.receiving_reset-42"><span class="linenos">42</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="MasterStateThreading.receiving_reset-43"><a href="#MasterStateThreading.receiving_reset-43"><span class="linenos">43</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="kc">None</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="MasterStateThreading.receiving_reset-40"><a href="#MasterStateThreading.receiving_reset-40"><span class="linenos">40</span></a>    <span class="k">def</span> <span class="nf">receiving_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="MasterStateThreading.receiving_reset-41"><a href="#MasterStateThreading.receiving_reset-41"><span class="linenos">41</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading.receiving_reset-42"><a href="#MasterStateThreading.receiving_reset-42"><span class="linenos">42</span></a><span class="sd">        avoid blocking MasterStateThreading</span>
+</span><span id="MasterStateThreading.receiving_reset-43"><a href="#MasterStateThreading.receiving_reset-43"><span class="linenos">43</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="MasterStateThreading.receiving_reset-44"><a href="#MasterStateThreading.receiving_reset-44"><span class="linenos">44</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_readiness_flag</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="MasterStateThreading.receiving_reset-45"><a href="#MasterStateThreading.receiving_reset-45"><span class="linenos">45</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_status</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="MasterStateThreading.receiving_reset-46"><a href="#MasterStateThreading.receiving_reset-46"><span class="linenos">46</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">receiving_start_time</span> <span class="o">=</span> <span class="kc">None</span>
 </span></pre></div>
 
 

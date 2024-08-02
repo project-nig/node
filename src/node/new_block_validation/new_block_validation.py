@@ -39,6 +39,9 @@ class NewBlockException(Exception):
 
 
 class NewBlock:
+    """
+    Class to validate a new block.
+    """
     def __init__(self, blockchain: Block,  hostname: str):
         from common.values import STORAGE_DIR,NEW_BLOCKCHAIN_DIR_BACKLOG
         self.STORAGE_DIR=STORAGE_DIR
@@ -56,10 +59,11 @@ class NewBlock:
         self.refresh_score_list=[]
 
     def receive(self, new_block: dict, sender: str):
-        '''Validation of the block hash and Hash of PoH of the previous block
+        """
+        Validation of the block hash and Hash of PoH of the previous block
         raise an Error in case of issue
-        Otherwise nothing
-        '''
+        Otherwise nothing.
+        """
         block_header = BlockHeader(**new_block["header"])
         block_PoH = BlockPoH(**new_block["PoH"])
         
@@ -148,10 +152,11 @@ node_network.get_public_key_hex(node_public_key_hash)
 
 
     def _validate_PoH(self):
-        '''Validate the PoH of the block
+        """
+        Validate the PoH of the block
         return self.is_valid = False if issue
-        Otherwise nothing
-        '''
+        Otherwise nothing.
+        """
         #STEP 1 - Validation of PoH_registry_input_data
         PoH_registry_input_data = self.new_block.block_PoH.PoH_registry_input_data
         start = time.time()
@@ -187,10 +192,11 @@ node_network.get_public_key_hex(node_public_key_hash)
     
 
     def _validate_transactions(self,master_state_readiness):
-        '''Validate the total input & total output amount of all transactions
+        """
+        validate the total input & total output amount of all transactions
         return self.is_valid = False if issue
-        Otherwise nothing
-        '''
+        Otherwise nothing.
+        """
         input_amount = 0
         output_amount = 0
         
@@ -277,8 +283,9 @@ node_network.get_public_key_hex(node_public_key_hash)
         
 
     def add_in_backlog(self,master_state_readiness):
-        '''store the block in a file in blockchain_backlog folder
-        '''
+        """
+        store the block in a file in blockchain_backlog folder.
+        """
         self.new_block.previous_block = self.blockchain
         self.blockchain_memory.store_block_in_blockchain_in_backlog(self.new_block,master_state_readiness)
 
@@ -434,9 +441,10 @@ memory_list.add([block_vote,'block_vote',['block_PoH','vote_list','slash_list','
 
       
     def check_vote_and_backlog(self,master_state_readiness,*args, **kwargs):
-        '''Vote and check the backlog of block 
+        """
+        vote and check the backlog of block 
         to include them if needed on the blockchain
-        '''
+        """
         leader_node_flag = kwargs.get('leader_node_flag',False)
         new_block_2_exclude = kwargs.get('new_block_2_exclude',None)
         latest_received_block = kwargs.get('latest_received_block',None)

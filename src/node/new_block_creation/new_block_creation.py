@@ -34,6 +34,9 @@ class BlockException(Exception):
 
 
 class ProofOfWork:
+    """
+    Class to create a new block.
+    """
     def __init__(self, hostname: str):
         self.hostname = hostname
         self.PoH_memory = None

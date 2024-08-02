@@ -22,6 +22,9 @@ class TransactionException(Exception):
 
 
 class Transaction:
+    """
+    Class to validate a transaction.
+    """
     def __init__(self, blockchain: Block, hostname: str):
         self.blockchain = blockchain
         self.transaction_data = {}
