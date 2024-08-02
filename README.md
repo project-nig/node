@@ -1,10 +1,11 @@
+
 # What is NIG ?
 The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
 
 ## Process to run Nodes of NIG network
 
-Process to intall and run locally 3 Nodes of the NIG network
+Process to install and run locally 3 Nodes of the NIG network
 
 ## Authors
 
@@ -13,7 +14,7 @@ Process to intall and run locally 3 Nodes of the NIG network
 
 ## Run Locally
 
-Install Python 3.11.4 => https://www.python.org/downloads/release/python-3114/
+Install [Python 3.11.4](https://www.python.org/downloads/release/python-3114/)
 
 Clone the project
 
@@ -98,6 +99,10 @@ All the technical documentation can be found in the docs folder. Once you have c
 	wallet in wallet.html
 ```
 
+## Hello world example
+
+A very basic Hello world example to explain how to generate a purchase request on the Marketplace can be found [here](HELLOWORLD.md).
+
 ## Contribute to the Development
 
 New contributors are very welcome and needed. Discover how you can contribute [here](CONTRIBUTING.md).
@@ -122,6 +127,16 @@ Launch the integration test scripts.
   tox -e integration
 ```
 If everything goes well, you should have a report validating your development. If not, the errors will be explained.
+
+## Documentation
+
+Project NIG is using [pdoc](https://pdoc.dev/docs/pdoc.html) for generating the documentation. Here the process:
+```bash
+  start your node at least once
+  run pdoc ./src/common/ -o ./docs for the documentation in common folder
+  run pdoc ./src/node/ -o ./docs for the documentation in node folder
+  delete the file index.html in folders /docs
+```
 
 ## Feedback
 

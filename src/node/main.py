@@ -1839,6 +1839,14 @@ memory_list.add([reputation,'reputation',['nb_transaction','nb_pos','nb_neg']])
                             #logging.info(f'==>output_list:{output_list}')
                         break
 
+@app.route("/helloworld", methods=['GET'])
+def helloworld():
+    """
+    helloworld tutorial
+    """
+    from common.HELLOWORLD import test_marketplace0
+    test_marketplace0()
+    return "Restart success", 200
 
 if __name__ == "__main__":
     main()
