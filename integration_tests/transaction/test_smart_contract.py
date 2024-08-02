@@ -326,7 +326,7 @@ reputation_1=1
     
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(0,smart_contract_account,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,transaction_amount_eur=transaction_amount_eur)
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/1/'+marketplace_owner.public_key_hash
@@ -461,7 +461,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(2,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig)
     
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/2/'+daniel_owner.public_key_hash
@@ -595,7 +595,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(3,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet)
     
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash
@@ -722,7 +722,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(4,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig,seller_transaction_amount=seller_transaction_amount,buyer_requested_deposit=buyer_requested_deposit,seller_public_key_hash=seller_public_key_hash)
     
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash
@@ -853,7 +853,7 @@ mp_request_step2_done.get_requested_deposit()
 
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(1,smart_contract_account,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,buyer_requested_deposit=buyer_requested_deposit)
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/1/'+marketplace_owner.public_key_hash
@@ -1009,7 +1009,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step7 : launch the creation of a purchase request
     get_smart_contract_detail(2,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig,buyer_requested_deposit=buyer_requested_deposit)
     
-    time.sleep(20)
+    time.sleep(30)
     
     #step8 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/2/'+daniel_owner.public_key_hash
@@ -1152,7 +1152,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(3,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet)
     
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash
@@ -1278,7 +1278,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(4,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig,seller_transaction_amount=seller_transaction_amount,buyer_requested_deposit=buyer_requested_deposit,seller_public_key_hash=seller_public_key_hash)
     
-    time.sleep(20)
+    time.sleep(30)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash
