@@ -45,8 +45,8 @@ return marketplace_request_code.code
 * The following parameters are used to setup the contract transaction.
 	* <i>smart_contract_type</i> = API as we're just querying the smart contract and not adding information on it via SOURCE.
 	* <i>smart_contract_public_key_hash</i> = MARKETPLACE_CODE_PUBLIC_KEY_HASH this is the address ('41e69d07d38a4d7cca36df456ef099e8efb0512d') of the smart contract. 
-	*<i>sender_public_key_hash</i> = a default value. It should be the address of the account which is query the smart contract.
-	*<i>payload</i> = the payload will be sent to query the smart contract.
+	* <i>sender_public_key_hash</i> = a default value. It should be the address of the account which is query the smart contract.
+	* <i>payload</i> = the payload will be sent to query the smart contract.
 ```bash
   smart_contract_data = {
         'smart_contract_type': 'api',
