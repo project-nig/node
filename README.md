@@ -1,6 +1,6 @@
 
 # What is NIG ?
-The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
+The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
 
 ## Process to run Nodes of NIG network
@@ -79,7 +79,7 @@ Launch 2 others Node
 An overiew of the [technical details](https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub) is available (in French).
 
 ### Visual Diagrams
-Several viusal diagrams are available to better understand the interactions between the Class, Object, Method, etc
+Several diagrams are available to better understand the interactions between the Class, Object, Method, etc
 >How the [NIG Network](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=10_Network#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1YCxaD_aJYUuVm_GbWdbpG3JfiKawxqzH%26export%3Ddownload) is initialized.
 
 >How a [transaction](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=20_Transaction#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D10RUXVQOz87zV22Xx90fcjsxpcc8i8BDU%26export%3Ddownload) is made on the NIG network.

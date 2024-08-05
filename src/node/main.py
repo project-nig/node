@@ -935,7 +935,7 @@ def restart_request():
 @app.route("/PoH_reset", methods=['GET'])
 def PoH_reset():
     """
-    reset the Proof Of History (PoH).
+    reset the Proof Of History (PoH). Test.
     """
     logging.info("PoH_reset")
     PoH_memory.PoH_start_flag=False
