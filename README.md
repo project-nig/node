@@ -3,17 +3,17 @@
 # What is NIG ?
 The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
+##Table of content
 
-## Process to run Nodes of NIG network
-
-Process to install and run locally 3 Nodes of the NIG network
+ - [Process to run Nodes of NIG network](/#process-to-run-nodes-of-nig-network)
 
 ## Authors
 
 - [@Crypto_NIG](https://github.com/nigcrypto)
 
 
-## Run Locally
+## Process to run Nodes of NIG network
+Process to install and run locally 3 Nodes of the NIG network
 
 Install [Python 3.11.4](https://www.python.org/downloads/release/python-3114/)
 
