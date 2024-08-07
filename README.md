@@ -159,6 +159,8 @@ Move all the content of the folder *testing_scripts* in to the root directory wh
   \copy_env.bat
   \copy_env_WO_values.bat
 ```
+Open each script file (.bat) and replace *"....path to source folder..."* by the real **path to the root folder** where all the code of the 3 node is stored.
+
 If you have already successfully started the 3 nodes, launch this script:
 ```bash
   back-up_values.bat
