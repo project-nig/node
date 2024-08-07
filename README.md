@@ -3,9 +3,15 @@
 # What is NIG ?
 The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
-##Table of content
-
+## Table of content
  - [Process to run Nodes of NIG network](/#process-to-run-nodes-of-nig-network)
+ -  [Documentation](/#documentation)
+ -  [Hello World Example](/#hello-world-example)
+ -  [Contribute to the development](/#contribute-to-the-development)
+ -  [Run integration tests](/#run-integration-tests)
+ - [Update documentation](/#update-documentation)
+ -  [Scripts for testing](/#scripts-for-testing)
+ - [Feedback](/#feedback)
 
 ## Authors
 
@@ -115,7 +121,7 @@ A very basic Hello world example to explain how to generate a purchase request o
 New contributors are very welcome and needed. Check out the [good first issue](https://github.com/project-nig/beta_node/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) to easily see how you can [contribute](CONTRIBUTING.md).
 
 
-## Running Integration tests
+## Run Integration tests
 
 Install Pytest => https://docs.pytest.org/
 
@@ -135,7 +141,7 @@ Launch the integration test scripts.
 ```
 If everything goes well, you should have a report validating your development. If not, the errors will be explained.
 
-## Documentation
+## Update documentation
 
 Project NIG is using [pdoc](https://pdoc.dev/docs/pdoc.html) for generating the documentation. Here the process:
 ```bash
