@@ -1,4 +1,5 @@
 
+
 # What is NIG ?
 The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
@@ -22,7 +23,7 @@ Clone the project
   git clone https://github.com/project-nig/beta_node.git
 ```
 
-Rename the folder beta_node to nodeX where X corresponds to the number of the node (ex:1n then 2 and finally 3)
+Rename the folder beta_node to nodeX where X corresponds to the number of the node (ex: 1 then 2 and finally 3)
 
 ```bash
   MOVE beta_node nodeX
@@ -68,7 +69,13 @@ Start the node
 ```
 The default blockchain is available on http://127.0.0.X:8000/block
 
-Launch 2 others Node
+Create 2 others Node in the **same folder !** than the first node. Your root directory should be like that:
+```bash
+  \node1\
+  \node2\
+  \node3\
+```
+Launch 2 others Node in their respective folder.
 ```bash
   Start all the tasks from cloning the projet until the start of the node
   Replace X all the times with 2 for 2nd Node and then 3 for the third node
@@ -76,7 +83,7 @@ Launch 2 others Node
 
 ## Documentation
 ### Overview
-An overiew of the [technical details](https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub) is available (in French).
+An overview of the [technical details](https://docs.google.com/document/d/e/2PACX-1vTO0nKIogxFLGWkN0QpaMsGsg9Cp-Aqfv31sc6p_HQnb7tShmqymOM05o3_7YCFkBY7GIipWSNO756d/pub) is available (in French).
 
 ### Visual Diagrams
 Several diagrams are available to better understand the interactions between the Class, Object, Method, etc
@@ -135,8 +142,50 @@ Project NIG is using [pdoc](https://pdoc.dev/docs/pdoc.html) for generating the 
   start your node at least once
   run pdoc ./src/common/ -o ./docs for the documentation in common folder
   run pdoc ./src/node/ -o ./docs for the documentation in node folder
-  delete the file index.html in folders /docs
+  delete the file index.html in folders \docs
 ```
+## Scripts for testing
+
+Some scripts are available in the folder [testing_scripts](/testing_scripts) to ease the reset of your testing environment. Move all the content of the folder testing_scripts in to the root directory where the code of your 3 nodes is stored. Your root directory should be now like this:
+```bash
+  \node1\
+  \node2\
+  \node3\
+  \values_temp\
+  \back-up_values.bat
+  \copy_env.bat
+  \copy_env_WO_values.bat
+```
+If you have already successfully started the 3 nodes, launch this script:
+```bash
+  back-up_values.bat
+```
+This will back_up the *values.py* file of *node1* and *node2* into the folder *values_temp* which will be used each time that you reset your testing environment.
+
+Once you want to reset the testing environment, click on this script:
+```bash
+  copy_env.bat
+```
+This will copy all the code from the *node3* into *node1* and *node2* and the *values.py* file from their respective directory *nodeX* in the *values_temp* folder in their *nodeX* folder at the root. Please be aware that your **working environment is always node3 !**. Never update the code in node1 and node2 as it will be overwritten with the scripts.
+
+Then you need to restart your 3 nodes by using the below python script where X corresponds to the number of the node (ex:1 then 2 and finally 3)
+```bash
+flask run --host=127.0.0.X
+```
+
+Each time that you're changing a parameter in the *values.py* of node3, you have 2 options:
+
+ - Option 1: make the same change in the *values.py* of node1 and node2. Launch this script:
+
+```bash
+  back-up_values.bat
+```
+ - Option 2: launch the below script:
+
+```bash
+  copy_env_WO_values.bat
+```
+follow the procedure called "*Change the parameter in the file nodeX\src\common\values.py*" described in [run-locally](/beta_node?tab=readme-ov-file#run-locally) in order to configure properly all the *values.py* file of each node.
 
 ## Feedback
 
