@@ -911,6 +911,8 @@ def restart():
     )
     return response
 
+
+
 @app.route("/restart_request", methods=['POST'])
 def restart_request():
     """
@@ -930,6 +932,16 @@ def restart_request():
     #full reset of the netowrk
     shutil.rmtree(STORAGE_DIR)
     os.makedirs(STORAGE_DIR)
+    return "Node Restart success", 200
+
+@app.route("/restart_join", methods=['POST'])
+def restart_join():
+    """
+    manage a request to join the network triggered by the leader node (cf. function restart()).
+    """
+    logging.info("Node restart join")
+    network.known_nodes_memory = KnownNodesMemory()
+    network.join_network()
     return "Node Restart success", 200
 
 @app.route("/PoH_reset", methods=['GET'])
@@ -1853,15 +1865,6 @@ if __name__ == "__main__":
 
 if MY_NODE.startswith("local"):start()
 
-@app.route("/restart_join", methods=['POST'])
-def restart_join():
-    """
-    =>function to be removed
-    """
-    logging.info("Node restart join")
-    network.known_nodes_memory = KnownNodesMemory()
-    network.join_network()
-    return "Node Restart success", 200
 
 
 @app.route("/all_utxo/<user>", methods=['GET'])
