@@ -10,7 +10,7 @@ The NIG project aims to remunerate the money lying dormant in current bank accou
  -  [Contribute to the development](/#contribute-to-the-development)
  -  [Run integration tests](/#run-integration-tests)
  - [Update documentation](/#update-documentation)
- -  [Testing environment](/#testing_environment)
+ -  [Testing environment](/#testing-environment)
  - [Feedback](/#feedback)
 
 ## Authors
