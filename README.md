@@ -146,7 +146,10 @@ Project NIG is using [pdoc](https://pdoc.dev/docs/pdoc.html) for generating the 
 ```
 ## Scripts for testing
 
-Some scripts are available in the folder [testing_scripts](/testing_scripts) to ease the reset of your testing environment. Move all the content of the folder testing_scripts in to the root directory where the code of your 3 nodes is stored. Your root directory should be now like this:
+Some scripts are available in the folder [testing_scripts](/testing_scripts) to ease the reset of your testing environment. 
+
+### Setup to do once
+Move all the content of the folder *testing_scripts* in to the root directory where the code of your 3 nodes is stored. Your root directory should be now like this:
 ```bash
   \node1\
   \node2\
@@ -161,8 +164,8 @@ If you have already successfully started the 3 nodes, launch this script:
   back-up_values.bat
 ```
 This will back_up the *values.py* file of *node1* and *node2* into the folder *values_temp* which will be used each time that you reset your testing environment.
-
-Once you want to reset the testing environment, click on this script:
+### Process to follow each time you want to reset the testing environment
+click on this script:
 ```bash
   copy_env.bat
 ```
