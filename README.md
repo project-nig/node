@@ -105,7 +105,7 @@ A very basic Hello world example to explain how to generate a purchase request o
 
 ## Contribute to the Development
 
-New contributors are very welcome and needed. Discover how you can contribute [here](CONTRIBUTING.md).
+New contributors are very welcome and needed. Check out the [good first issue](https://github.com/project-nig/beta_node/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) to easily see how you can contribute [here](CONTRIBUTING.md).
 
 
 ## Running Integration tests

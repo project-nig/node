@@ -14,7 +14,7 @@ Reviewing and testing is highly valued and the most effective way you can contri
 
 Before you start contributing, familiarize yourself with the NIG project code and tests. Refer to the documentation in the repository on how to build NIG project and how to run the unit tests and integration tests.
 
-There are many open issues of varying difficulty waiting to be fixed. If you're looking for somewhere to start contributing, check out the [good first issue](https://github.com/project-nig/beta_node/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) list or changes that are [up for grabs](https://github.com/project-nig/beta_node/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22). Some of them might no longer be applicable. So if you are interested, but unsure, you might want to leave a comment on the issue first.
+There are many open issues of varying difficulty waiting to be fixed. If you're looking for somewhere to start contributing, check out the [good first issue](https://github.com/project-nig/beta_node/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) list. Some of them might no longer be applicable. So if you are interested, but unsure, you might want to leave a comment on the issue first.
 
 
 ### Good First Issue Label
