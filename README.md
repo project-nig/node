@@ -173,7 +173,7 @@ This will copy all the code from the *node3* into *node1* and *node2* and the *v
 
 Then you need to restart your 3 nodes by using the below python script where X corresponds to the number of the node (ex:1 then 2 and finally 3)
 ```bash
-flask run --host=127.0.0.X
+\nodeX\flask run --host=127.0.0.X
 ```
 
 Each time that you're changing a parameter in the *values.py* of node3, you have 2 options:
@@ -188,7 +188,7 @@ Each time that you're changing a parameter in the *values.py* of node3, you have
 ```bash
   copy_env_WO_values.bat
 ```
-follow the procedure called "*Change the parameter in the file nodeX\src\common\values.py*" described in [run-locally](/?tab=readme-ov-file#run-locally) in order to configure properly all the *values.py* file of each node.
+follow the procedure called "*Change the parameter in the file nodeX\src\common\values.py*" described in [run-locally](/beta_node?tab=readme-ov-file#run-locally) in order to configure properly all the *values.py* file of each node.
 
 ## Feedback
 
