@@ -1,5 +1,6 @@
 
 
+
 # What is NIG ?
 The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
 
@@ -146,8 +147,9 @@ If everything goes well, you should have a report validating your development. I
 Project NIG is using [pdoc](https://pdoc.dev/docs/pdoc.html) for generating the documentation. Here the process:
 ```bash
   start your node at least once
-  run pdoc ./src/common/ -o ./docs for the documentation in common folder
-  run pdoc ./src/node/ -o ./docs for the documentation in node folder
+  run the 2 below python scripts:
+  pdoc ./src/common/ -o ./docs for the documentation in common folder
+  pdoc ./src/node/ -o ./docs for the documentation in node folder
   delete the file index.html in folders \docs
 ```
 ## Testing environment
