@@ -162,10 +162,10 @@ if you have performed some change on the code of node3 which doesn't require a r
 ```bash
   flask run --host=127.0.0.3
 ```
-### OPTION 3: Restart of all the nodes
-if you have performed some change on the code of node3 which  requires a restart of all the nodes, some scripts are available in the folder [testing_scripts](/testing_scripts) to ease the full restart of your testing environment. 
+### OPTION 3: Restart of all the nodes (only for Windows)
+if you have performed some change on the code of node3 which  requires a restart of all the nodes, some scripts are available **only for WINDOWS** in the folder [testing_scripts](/testing_scripts/windows) to ease the full restart of your testing environment. 
 #### Setup to do once
-Move all the content of the folder *testing_scripts* in to the root directory where the code of your 3 nodes is stored. Your root directory should be now like this:
+Move all the content of the folder *testing_scripts/windows/* in to the root directory where the code of your 3 nodes is stored. Your root directory should be now like this:
 ```bash
   \node1\
   \node2\
