@@ -10,7 +10,7 @@ The NIG project aims to remunerate the money lying dormant in current bank accou
  -  [Contribute to the development](/#contribute-to-the-development)
  -  [Run integration tests](/#run-integration-tests)
  - [Update documentation](/#update-documentation)
- -  [Scripts for testing](/#scripts-for-testing)
+ -  [Testing environment](/#testing_environment)
  - [Feedback](/#feedback)
 
 ## Authors
@@ -150,11 +150,21 @@ Project NIG is using [pdoc](https://pdoc.dev/docs/pdoc.html) for generating the 
   run pdoc ./src/node/ -o ./docs for the documentation in node folder
   delete the file index.html in folders \docs
 ```
-## Scripts for testing
-
-Some scripts are available in the folder [testing_scripts](/testing_scripts) to ease the reset of your testing environment. 
-
-### Setup to do once
+## Testing environment
+Your testing environment is made of the 3 nodes which are running. Several strategies are available to reset or restart this testing environment. Please be aware that your **working environment is always node3 !**. Never update the code in node1 and node2 as it will be overwritten with the scripts.
+### OPTION 1: Quick reset of the blockchain
+if you simply want to reset the value of the blockchain, run the below url on node3 only:
+```bash
+  http://127.0.0.3:5000/restart
+```
+### OPTION 2: Quick restart of node 3
+if you have performed some change on the code of node3 which doesn't require a restart all the node, stop the node 3 and run the below python script:
+```bash
+  flask run --host=127.0.0.3
+```
+### OPTION 3: Restart of all the nodes
+if you have performed some change on the code of node3 which  requires a restart all the nodes, some scripts are available in the folder [testing_scripts](/testing_scripts) to ease the full restart of your testing environment. 
+#### Setup to do once
 Move all the content of the folder *testing_scripts* in to the root directory where the code of your 3 nodes is stored. Your root directory should be now like this:
 ```bash
   \node1\
@@ -172,12 +182,12 @@ If you have already successfully started the 3 nodes, launch this script:
   back-up_values.bat
 ```
 This will back_up the *values.py* file of *node1* and *node2* into the folder *values_temp* which will be used each time that you reset your testing environment.
-### Process to follow each time you want to reset the testing environment
+#### Process to follow each time you want to restart the testing environment
 click on this script:
 ```bash
   copy_env.bat
 ```
-This will copy all the code from the *node3* into *node1* and *node2* and the *values.py* file from their respective directory *nodeX* in the *values_temp* folder in their *nodeX* folder at the root. Please be aware that your **working environment is always node3 !**. Never update the code in node1 and node2 as it will be overwritten with the scripts.
+This will copy all the code from the *node3* into *node1* and *node2* and the *values.py* file from their respective directory *nodeX* in the *values_temp* folder in their *nodeX* folder at the root. 
 
 Then you need to restart your 3 nodes by using the below python script where X corresponds to the number of the node (ex:1 then 2 and finally 3)
 ```bash
