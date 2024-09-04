@@ -17,11 +17,14 @@ class MarketplaceRequest:
         self.timestamp_step3=None
         self.timestamp_step4=None
         self.requested_amount=0
+        self.requested_gap=0
         self.requested_currency='EUR'
         self.requested_deposit=0
         self.requested_nig=0
         self.requested_nig_step2=None
         self.requested_nig_step2_flag=False
+        self.recurrency_flag=False
+        self.recurrency_duration=120
         self.timestamp_nig=None
         self.buyer_public_key_hex=None
         self.buyer_public_key_hash=None
@@ -80,7 +83,7 @@ class MarketplaceRequest:
                 if self.seller_public_key_hash==user_public_key_hash:flag=True
                 if self.step==2:readonly_flag=True
             if flag is True:
-                mp_details = {"timestamp_nig": self.timestamp,"requester_public_key_hash": self.buyer_public_key_hash,"requester_public_key_hex": self.buyer_public_key_hex,"seller_public_key_hash": self.seller_public_key_hash,"requested_amount": self.requested_amount,"requested_currency":self.requested_currency,"requested_nig": self.requested_nig,"payment_ref": self.mp_request_name}
+                mp_details = {"timestamp_nig": self.timestamp,"requester_public_key_hash": self.buyer_public_key_hash,"requester_public_key_hex": self.buyer_public_key_hex,"seller_public_key_hash": self.seller_public_key_hash,"requested_amount": self.requested_amount,"requested_gap": self.requested_gap,"requested_currency":self.requested_currency,"requested_nig": self.requested_nig,"payment_ref": self.mp_request_name}
                 mp_details['seller_public_key_hex']=self.seller_public_key_hex
                 mp_details['encrypted_account']=self.encrypted_account
                 mp_details['smart_contract_ref']=self.smart_contract_ref
@@ -96,22 +99,23 @@ class MarketplaceRequest:
             mp_details = {"timestamp_nig": self.timestamp_step4, "readonly_flag":False}
         return mp_details
 
-    def step1(self,mp_request_name,buyer_public_key_hash,buyer_public_key_hex,requested_amount,smart_contract_ref,new_user_flag,buyer_reput_trans,buyer_reput_reliability):
+    def step1(self,mp_request_name,buyer_public_key_hash,buyer_public_key_hex,requested_amount,requested_gap,smart_contract_ref,new_user_flag,buyer_reput_trans,buyer_reput_reliability):
         if buyer_public_key_hash is not None and 'None' not in buyer_public_key_hash:
             if self.step==0:
                 self.mp_request_name=mp_request_name
                 self.buyer_public_key_hash=buyer_public_key_hash
                 self.buyer_public_key_hex=buyer_public_key_hex
                 self.requested_amount=requested_amount
+                self.requested_gap=requested_gap
                 self.timestamp_nig=datetime.timestamp(datetime.utcnow())
-                self.requested_nig=CONVERT_2_NIG(requested_amount,self.timestamp_nig,self.requested_currency)
+                self.requested_nig=CONVERT_2_NIG(requested_amount,self.timestamp_nig,self.requested_currency)*(1-self.requested_gap/100)
                 self.step=1
                 self.smart_contract_ref=smart_contract_ref
                 self.timestamp_step1=datetime.timestamp(datetime.utcnow())
                 if new_user_flag=="true" or new_user_flag=="True":new_user_flag=True
                 if new_user_flag=="false" or new_user_flag=="False":
                     new_user_flag=False
-                    self.requested_deposit=CONVERT_2_NIG(requested_amount,self.timestamp_nig,self.requested_currency)*GET_BUYER_SAFETY_COEF()
+                    self.requested_deposit=CONVERT_2_NIG(requested_amount,self.timestamp_nig,self.requested_currency)*GET_BUYER_SAFETY_COEF()*(1-self.requested_gap/100)
                 self.new_user_flag=new_user_flag
                 self.buyer_reput_trans=buyer_reput_trans
                 self.buyer_reput_reliability=buyer_reput_reliability
@@ -126,7 +130,7 @@ class MarketplaceRequest:
                 self.timestamp_nig=datetime.timestamp(datetime.utcnow())
                 self.requested_nig_step2=copy.deepcopy(self.requested_nig)
                 self.requested_nig_step2_flag=True
-                self.requested_nig=CONVERT_2_NIG(self.requested_amount,self.timestamp_nig,self.requested_currency)
+                self.requested_nig=CONVERT_2_NIG(self.requested_amount,self.timestamp_nig,self.requested_currency)*(1-self.requested_gap/100)
                 self.encrypted_account=encrypted_account
                 self.mp_request_signature=mp_request_signature
                 self.step=2
@@ -283,11 +287,11 @@ memory_list.add([marketplace,'marketplace',['first_mp_request_name','current_mp_
 
 marketplace_script1="""
 mp_request_step2_done=MarketplaceRequest()
-mp_request_step2_done.step1("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
+mp_request_step2_done.step1("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,requested_gap,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
 mp_request_step2_done.account=sender
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 mp_request_step2_done.get_requested_deposit()
 
@@ -572,8 +576,8 @@ marketplace_expiration_script=f"""
 memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.validate_expiration({MARKETPLACE_STEP1_EXPIRATION},{MARKETPLACE_STEP2_EXPIRATION},{MARKETPLACE_STEP3_EXPIRATION})
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 mp_request_step2_done.get_requested_deposit()
 """

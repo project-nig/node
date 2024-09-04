@@ -680,7 +680,7 @@ mp_request_step2_done.get_mp_info_and_expiration({marketplace_step},'{user_publi
                         if check_flag is True:
                             #requested_nig needs to be updated with the last NIG rate
                             from node.main import calculate_nig_rate
-                            try:mp_info['requested_nig']=normal_round(mp_info['requested_amount']/calculate_nig_rate(),ROUND_VALUE_DIGIT)
+                            try:mp_info['requested_nig']=normal_round((mp_info['requested_amount']/calculate_nig_rate())*(1-mp_info['requested_gap']/100),ROUND_VALUE_DIGIT)
                             except:pass
                             if step2_amount is None:
                                 if mp_info is not None:return_list.append(mp_info)
@@ -731,8 +731,10 @@ mp_request_step2_done.get_mp_info_archive({marketplace_step})
                 logging.info(f"**** ISSUE get_marketplace_step_raw archive marketplace_account2")
                 logging.exception(e)
 
+        #sorting of the list by request_gap
+        new_return_list = sorted(return_list, key=itemgetter('requested_gap'), reverse=True)
 
-        return return_list
+        return new_return_list
 
     def get_marketplace_genesis(self) -> dict:
         return_dict = {

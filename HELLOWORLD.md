@@ -65,11 +65,11 @@ return marketplace_request_code.code
 ```bash
   marketplace_script="""
 mp_request_step2_done=MarketplaceRequest()
-mp_request_step2_done.step1("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
+mp_request_step2_done.step1("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,requested_gap,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
 mp_request_step2_done.account=sender
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 mp_request_step2_done.get_requested_deposit()
 
@@ -107,7 +107,8 @@ reputation_1=1
 * Several parameters are needed for configuring the transactions.
 	* <i>sender_public_key_hash</i> = the address (public key hash) of the account which is purchasing.
 	* <i>unlocking_public_key_hash</i> = the address (public key hash) of the account which is purchasing which is used to unlock the transaction/utxo.
-	*  <i>list_public_key_hash</i> = list of the addresses all the accounts which can interact with that smart contract : the smart contract itself, the buyer and the marketplace.
+	* <i>list_public_key_hash</i> = list of the addresses all the accounts which can interact with that smart contract : the smart contract itself, the buyer and the marketplace.
+    * <i>requested_gap</i> = 0 to stick to the reference price.
 	* <i>account_temp</i> = True default value for a purchase request.
 	* <i>marketplace_step</i> = 0 default value for a purchase request.
 	* <i>input_list</i> = [] default list of the inputs of the transaction.
@@ -116,6 +117,7 @@ reputation_1=1
   sender_public_key_hash=daniel_owner.public_key_hash
   unlocking_public_key_hash=daniel_owner.public_key_hash
   list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
+  requested_gap=0
   account_temp=True
   marketplace_step=0
   input_list=[]
