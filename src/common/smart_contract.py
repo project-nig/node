@@ -276,6 +276,7 @@ globals()['get_obj_by_name']=locals()['get_obj_by_name']
                 logging.exception(e)
                 self.error_flag=True
                 self.error_code=e
+                break
 
         #code source is preloaded with MemoryList to allow the storing of object in memory
         self.code_source=self.preloaded_code
@@ -385,6 +386,8 @@ globals()['get_obj_by_name']=locals()['get_obj_by_name']
                 logging.exception(e)
                 self.error_flag=True
                 self.error_code=e
+        else:
+            logging.info(f"**** WARNING not enough gas to run_smart_contract")
 
     def clean_memory(self):
         #clean the variable in globals()

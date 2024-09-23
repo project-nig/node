@@ -146,7 +146,7 @@ def test_simple_transaction(marketplace_owner,daniel_owner,daniel_wallet,smart_c
         break
 
     camille_wallet.process_transaction(inputs=input_list, outputs=output_list)
-    time.sleep(20)
+    time.sleep(30)
     
     #step4 : retrieve new value
     seller_utxo_dict=get_utxo(camille_owner.public_key_hash)
@@ -165,7 +165,7 @@ def test_simple_transaction(marketplace_owner,daniel_owner,daniel_wallet,smart_c
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
     last_transaction=last_block.transactions[0]
-
+    
     daniel_transaction=None
     camille_transaction=None
     for utxo in last_transaction["outputs"]:

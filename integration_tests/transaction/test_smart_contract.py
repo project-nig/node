@@ -37,7 +37,7 @@ from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 import binascii
 from node.main import calculate_nig_rate
-from common.utils import normal_round
+from common.utils import normal_round,extract_marketplace_request
 
 
 @pytest.fixture(scope="module")
@@ -344,7 +344,7 @@ reputation_1=1
     #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
 
     daniel_transaction=None
     camille_transaction=None
@@ -481,7 +481,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
 
     daniel_transaction=None
     camille_transaction=None
@@ -614,7 +614,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
 
     daniel_transaction=None
     camille_transaction=None
@@ -736,7 +736,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
      #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
     transaction_amount=mp_details[5]
 
     daniel_transaction=None
@@ -872,7 +872,7 @@ mp_request_step2_done.get_requested_deposit()
      #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
 
     daniel_transaction=None
     camille_transaction=None
@@ -1030,7 +1030,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
 
     daniel_transaction=None
     camille_transaction=None
@@ -1172,7 +1172,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
 
     daniel_transaction=None
     camille_transaction=None
@@ -1294,7 +1294,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
      #step7 : retrieve new information
     last_block=blockchain_memory.get_blockchain_from_memory()
     last_block_header=last_block.block_header
-    last_transaction=last_block.transactions[0]
+    last_transaction=extract_marketplace_request(last_block)
     transaction_amount=mp_details[5]
     seller_deposit=mp_details[5]*mp_details[6]-mp_details[5]
     buyer_requested_deposit=mp_details[9]

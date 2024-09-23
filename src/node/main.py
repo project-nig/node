@@ -24,7 +24,7 @@ from node.transaction_validation.transaction_validation import Transaction, Tran
 from common.transaction import Transaction as TransactionInBlock
 from common.io_mem_pool import MemPool
 from common.values import ROUND_VALUE_DIGIT
-from common.utils import normal_round,clean_request,check_marketplace_step2
+from common.utils import normal_round,clean_request,check_marketplace_step1,check_marketplace_step2,get_carriage_transaction,check_marketplace_raw
 from common.io_leader_node_schedule import LeaderNodeScheduleMemory
 from node.new_block_creation.new_block_creation import ProofOfWork, BlockException
 
@@ -207,8 +207,9 @@ class TransactionMultiProcessing:
         #self.PoH_threading.join()
 
     def start(self,e,transaction_data,new_transaction_flag):
+        new_public_key_hash=Owner().public_key_hash
         while e.is_set() is False:
-            Process_transaction(transaction_data=transaction_data,new_transaction_flag=new_transaction_flag)
+            Process_transaction(transaction_data=transaction_data,new_transaction_flag=new_transaction_flag,new_public_key_hash=new_public_key_hash)
             logging.info('===> TransactionMultiProcessing termination')
             self.stop()
             break
@@ -226,6 +227,7 @@ def Process_transaction(*args, **kwargs):
     purge_flag = kwargs.get('purge_flag',False)
     transaction_data = kwargs.get('transaction_data',True)
     new_transaction_flag = kwargs.get('new_transaction_flag',False)
+    new_public_key_hash = kwargs.get('new_public_key_hash',False)
     #logging.info(f"### purge_flag:{purge_flag}")
     
     #STEP2 Processing of transaction
@@ -295,14 +297,131 @@ def Process_transaction(*args, **kwargs):
 
                     #if transaction.is_valid is True and transaction.is_smart_contract_valid is True or leader_node_flag is False and "BlockVote" not in str(transaction_data):
                     if transaction.is_valid is True and transaction.is_smart_contract_valid is True:
+                        
                         #storing in a temporay master state
                         master_state_temp=MasterState(temporary_save_flag=True)
+                        check_step1=check_marketplace_step1(transaction.outputs,check_user_flag=False)
+                        if check_marketplace_step1(transaction.outputs,check_user_flag=False) is True:
+                            #this is a marketplace step 1, let's add a carriage transaction to increase performance
+
+                            #Step 1 : retrieve the needed information of the marketplace step 1 request
+                            master_state=MasterState()
+                            mp_account_data=None
+                            requested_amount=None
+                            requested_gap=0
+                            marketplace_data={}
+                            for utxo in transaction.outputs:
+                                account_list_temp=master_state.extract_account_list_from_locking_script("OP_SC",utxo)
+                                #check to avoid issue
+                                #for step 0 there is only 1 UTXO
+                                #for step 1 there is more than 1 UTXO so we keep only 
+                                #the one where account_list has more than 1 item to avoid issue
+                                #with deposit transaction
+                                if len(account_list_temp)>1 or len(transaction.outputs)==1:
+                                    account_list=account_list_temp
+                                    try:
+                                        payload=utxo['smart_contract_payload']+f'''
+return mp_request_step2_done.get_mp_info(1,None)
+'''
+                                        smart_contract=SmartContract(account_list[0],
+                                                                     smart_contract_sender='sender_public_key_hash',
+                                                                     smart_contract_type="source",
+                                                                     smart_contract_new=True,
+                                                                     payload=payload)
+                                        smart_contract.process()
+                                        locals()['smart_contract']
+                                        if smart_contract.result is not None :mp_account_data=smart_contract.result
+                                        if mp_account_data is not None:
+                                            requested_amount=mp_account_data['requested_amount']
+                                            requested_gap=mp_account_data['requested_gap']
+                                    except Exception as e:
+                                        logging.info(f"### ISSUE master_state get mp_account_data account:{account_list[0]} {e}")
+                                        logging.exception(e)
+
+                            #Step 2 : retrieve the right MP account
+                            mp_account,mp_amount,mp_gap,next_mp,sc,last_flag=master_state.get_buy_mp_account_from_memory(requested_gap)
+                            if last_flag is True:
+                                #first transaction of the list
+                                #OR last transaction of the list
+                                #there is no Need to update a previous carriage request
+                                next_mp_account=new_public_key_hash
+                                carriage_transaction_list=[{"mp_account":mp_account,
+                                                            "requested_amount":requested_amount,
+                                                            "requested_gap":requested_gap,
+                                                            "sc_account":account_list[0],
+                                                            "next_mp_account":next_mp_account}]
+                            else:
+                                #transaction in the middle of the list
+                                #current carriage transaction and previous need to be updated
+                                new_mp_account=new_public_key_hash
+                                carriage_transaction_list=[{"mp_account":mp_account,
+                                                            "requested_amount":requested_amount,
+                                                            "requested_gap":requested_gap,
+                                                            "sc_account":account_list[0],
+                                                            "next_mp_account":new_mp_account},
+                                                           {"mp_account":new_mp_account,
+                                                            "requested_amount":mp_amount,
+                                                            "requested_gap":mp_gap,
+                                                            "sc_account":sc,
+                                                            "next_mp_account":next_mp}]
+                            for carriage_item in carriage_transaction_list:
+                                carriage_item_mp_account=carriage_item["mp_account"]
+                                carriage_item_requested_amount=carriage_item["requested_amount"]
+                                carriage_item_requested_gap=carriage_item["requested_gap"]
+                                carriage_item_sc_account=carriage_item["sc_account"]
+                                carriage_item_next_mp_account=carriage_item["next_mp_account"]
+                                
+                                carriage_transaction=get_carriage_transaction(carriage_item_mp_account,carriage_item_requested_amount,carriage_item_requested_gap,carriage_item_sc_account,carriage_item_next_mp_account)
+                            
+                                #update of temporay master state and storage with the carriage_transaction
+                                carriage_transaction_2_save = Transaction(blockchain_base, MY_HOSTNAME)
+                                carriage_transaction_2_save.receive(transaction=carriage_transaction.transaction_data)
+                                carriage_transaction_2_save.is_funds_sufficient=True
+                                carriage_transaction_2_save.is_valid=True
+                            
+                                try:
+                                    master_state_temp.update_master_state(carriage_transaction.transaction_data,"TempBlockPoH",leader_node_flag=leader_node_flag,NIGthreading_flag=True)
+                                    master_state_temp.store_master_state_in_memory("TempBlockPoH")
+                                    carriage_transaction_2_save.store()
+                                    carriage_transaction_2_save.add_to_PoH(PoH_memory)
+                                except Exception as e:
+                                    #issue with the SmartContract
+                                    #carriage_transaction.is_smart_contract_valid=False
+                                    logging.info(f"ERROR with update_master_state of carriage_transaction Exception: {e}")
+                                    logging.exception(e)
+                                    
+                        if check_marketplace_raw(transaction.outputs,4) is True or check_marketplace_raw(transaction.outputs,45) is True or check_marketplace_raw(transaction.outputs,66) is True or check_marketplace_raw(transaction.outputs,98) is True or check_marketplace_raw(transaction.outputs,99) is True:
+                            logging.info("###INFO CARRIAGE cancellation request")
+                            master_state=MasterState()
+                            for utxo in transaction.outputs:
+                                account_list=master_state.extract_account_list_from_locking_script("OP_SC",utxo)
+                                from common.utils import delete_carriage_transaction
+                                carriage_transaction=delete_carriage_transaction(account_list[0])
+                            
+                                #update of temporay master state and storage with the carriage_transaction
+                                carriage_transaction_2_save = Transaction(blockchain_base, MY_HOSTNAME)
+                                carriage_transaction_2_save.receive(transaction=carriage_transaction.transaction_data)
+                                carriage_transaction_2_save.is_funds_sufficient=True
+                                carriage_transaction_2_save.is_valid=True
+                            
+                                try:
+                                    master_state_temp.update_master_state(carriage_transaction.transaction_data,"TempBlockPoH",leader_node_flag=leader_node_flag,NIGthreading_flag=True)
+                                    master_state_temp.store_master_state_in_memory("TempBlockPoH")
+                                    carriage_transaction_2_save.store()
+                                    carriage_transaction_2_save.add_to_PoH(PoH_memory)
+                                except Exception as e:
+                                    #issue with the SmartContract
+                                    #carriage_transaction.is_smart_contract_valid=False
+                                    logging.info(f"ERROR with update_master_state of carriage_transaction Exception: {e}")
+                                    logging.exception(e)
+
+
+
                         #logging.info(f"########### temporary_storage_sharding transaction: {transaction.transaction_data}")
                         #update of transaction_data as smart_contract_previous_transaction has changed
                         transaction.transaction_data["outputs"]=transaction.outputs
                         transaction.transaction_data["inputs"]=transaction.inputs
                         logging.info(f"==>block_PoH:TempBlockPoH")
-                        #if "127.0.0.3:5000" not in str(transaction.transaction_data):
                         try:
                             master_state_temp.update_master_state(transaction.transaction_data,"TempBlockPoH",leader_node_flag=leader_node_flag,NIGthreading_flag=True)
                             master_state_temp.store_master_state_in_memory("TempBlockPoH")
@@ -364,7 +483,8 @@ def leader_node_advance_purge_backlog():
     #sorting of Backlog by timestamp
     backlog_list_sorted=sorted(backlog_list, key=itemgetter('timestamp'))
     for backlog_transaction in backlog_list_sorted:
-        Process_transaction(purge_flag=True,transaction_data=backlog_transaction)
+        new_public_key_hash=Owner().public_key_hash
+        Process_transaction(purge_flag=True,transaction_data=backlog_transaction,new_public_key_hash=new_public_key_hash)
     
     #let's clean all the file of the folder
     import os, glob
@@ -1555,6 +1675,11 @@ return mp_request_step2_done.requested_nig
                 #Refresh of the reputation
                 #refresh_reputation(account_list_2_remove[0])
                 #refresh_reputation(account_list_2_remove[1])
+
+            #deletion of carriage request for marketplace step 1
+            #from common.utils import delete_carriage_transaction
+            #delete_carriage_transaction(marketplace_account)
+
         else:
             logging.info(f"**** ISSUE marketplace_request_archiving , marketplace_account: {marketplace_account} marketplace_step:{marketplace_step} request_type:{request_type}")
             logging.info(f"**** ISSUE: {smart_contract.error_code}")

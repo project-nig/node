@@ -248,6 +248,11 @@ memory_list.add([marketplace_request_code,'marketplace_request_code',['code']])
 123456
 """
 
+marketplace_script_details="""
+memory_obj_2_load=['mp_request_step2_done']
+mp_request_step2_done.get_mp_info(1)
+"""
+
 marketplace_script="""
 ###VERSION:1
 ###END
@@ -297,9 +302,6 @@ mp_request_step2_done.get_requested_deposit()
 
 """
 
-marketplace_script_step="""
-marketplace.get_marketplace_step_list(marketplace_step,user_public_key_hash)
-"""
 
 marketplace_script2_1="""
 mp_request_step1.get_mp_details(2)
@@ -630,3 +632,36 @@ memory_list.add([reputation_code,'reputation_code',['code']])
 """
 
 
+carriage_code_script="""
+###VERSION:1
+###END
+class CarriageRequest:
+    def __init__(self):
+        self.step=10
+        self.requested_amount=0
+        self.requested_gap=0
+        self.requested_currency='EUR'
+        self.sc=None
+        self.next_mp=None
+
+    def setup(self,requested_amount,requested_gap,sc,next_mp):
+        self.requested_amount=requested_amount
+        self.requested_gap=requested_gap
+        self.sc=sc
+        self.next_mp=next_mp
+
+    def get_mp_info(self):
+        return {"requested_amount": self.requested_amount,"requested_gap": self.requested_gap,"requested_currency":self.requested_currency,"sc":self.sc,"next_mp":self.next_mp}
+        requested_currency
+
+    def reset(self):
+        self.step=60
+        self.requested_amount=0
+        self.requested_gap=0
+        self.sc=None
+        self.next_mp=None
+
+carriage_request=CarriageRequest()
+carriage_request.setup(requested_amount,requested_gap,sc,next_mp)
+memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
+"""

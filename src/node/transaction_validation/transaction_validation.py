@@ -9,7 +9,7 @@ from common.io_mem_pool import MemPool
 from node.transaction_validation.script import StackScript
 from common.io_known_nodes import KnownNodesMemory
 from common.values import ROUND_VALUE_DIGIT
-from common.utils import normal_round,calculate_hash,check_marketplace_step2,check_marketplace_step1
+from common.utils import normal_round,calculate_hash,check_marketplace_step2,check_marketplace_step1,check_carriage_request
 from common.io_leader_node_schedule import LeaderNodeScheduleMemory
 from common.smart_contract import SmartContract,load_smart_contract_from_master_state
 
@@ -85,7 +85,7 @@ class Transaction:
         if self.inputs==[]:self.is_valid = True
         for tx_input in self.inputs:
             #Step 1 for new User of Marketplace is not Checked as we're always using the same UTXO
-            if check_marketplace_step1(self.outputs) is False:
+            if check_marketplace_step1(self.outputs) is False and check_carriage_request(self.outputs) is False:
                 try:
                     #logging.info(f"tx_input: {tx_input}")
                     transaction_hash = tx_input["transaction_hash"]
@@ -213,7 +213,7 @@ class Transaction:
     def store(self):
         if self.is_valid and self.is_funds_sufficient:
             logging.info("Storing transaction data in memory")
-            #logging.info(f"Transaction data: {self.transaction_data}")
+            #logging.info(f"###INFO Transaction data: {self.transaction_data}")
             current_transactions = self.mempool.get_transactions_from_memory()
             current_transactions.append(self.transaction_data)
             self.mempool.store_transactions_in_memory(current_transactions)

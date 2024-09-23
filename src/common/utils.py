@@ -1,5 +1,9 @@
 from Crypto.Hash import RIPEMD160, SHA256
 import logging
+from datetime import datetime
+import random
+from common.smart_contract_script import carriage_code_script
+
 
 
 def calculate_hash(data, hash_function: str = "sha256") -> str:
@@ -151,6 +155,15 @@ def check_marketplace_step2(outputs):
     """
     return check_marketplace_raw(outputs,2)
 
+def check_carriage_request(outputs):
+    """
+    Check if the output of a transaction is a Carriage request for MarketPlace step 1 request
+    """
+    check1=check_marketplace_raw(outputs,10)
+    check2=check_marketplace_raw(outputs,60)
+    if check1 is True or check2 is True: return True
+    else: return False
+
 
 def check_smart_contract_consistency(transaction):
     """
@@ -289,3 +302,173 @@ def check_marketplace_reputation_refresh(outputs):
     return reputation_refresh_flag,[buyer_public_key_hash,seller_public_key_hash]
 
 
+def get_carriage_transaction(mp_account,requested_amount,requested_gap,sc,next_mp):
+    '''SmartContract use to carriage a step 1 transaction in the Marketplace
+    '''
+    from common.smart_contract import SmartContract
+    from common.transaction import Transaction
+    from common.transaction_output import TransactionOutput
+    from common.transaction_input import TransactionInput
+    from node.main import marketplace_owner
+    payload=f'''
+requested_amount="{requested_amount}"
+requested_gap="{requested_gap}"
+sc="{sc}"
+next_mp="{next_mp}"
+'''+carriage_code_script
+    smart_contract_block=SmartContract(mp_account,
+                                smart_contract_sender=marketplace_owner.public_key_hash,
+                                smart_contract_new=True,
+                                smart_contract_gas=1000000,
+                                smart_contract_type="source",
+                                payload=payload)
+    smart_contract_block.process()
+
+    from common.smart_contract import load_smart_contract_from_master_state
+    smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account)
+
+    from common.io_blockchain import BlockchainMemory
+    blockchain_memory = BlockchainMemory()
+    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+    utxo_dict=blockchain_base.get_user_utxos(mp_account)
+
+    
+    unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+mp_account
+
+    #default input value in case of new carriage request
+    transaction_hash="abcd1234"
+    output_index=0
+    for utxo in utxo_dict['utxos']:
+        #input value in case of existing carriage request
+        transaction_hash=utxo['transaction_hash']
+        output_index=utxo['output_index']
+        break
+   
+    input_1 = TransactionInput(transaction_hash=transaction_hash, output_index=output_index,unlocking_public_key_hash=unlocking_public_key_hash)
+    output_1 = TransactionOutput(list_public_key_hash=[mp_account], 
+                                            amount=0,
+                                            account_temp=True,
+                                            smart_contract_transaction_flag=False,
+                                            marketplace_transaction_flag=True,
+                                            smart_contract_account=smart_contract_block.smart_contract_account,
+                                            smart_contract_sender=smart_contract_block.smart_contract_sender,
+                                            smart_contract_new=smart_contract_block.smart_contract_new,
+                                            smart_contract_flag=True,
+                                            smart_contract_gas=smart_contract_block.gas,
+                                            smart_contract_memory=smart_contract_block.smart_contract_memory,
+                                            smart_contract_memory_size=smart_contract_block.smart_contract_memory_size,
+                                            smart_contract_type=smart_contract_block.smart_contract_type,
+                                            smart_contract_payload=smart_contract_block.payload,
+                                            smart_contract_result=smart_contract_block.result,
+                                            smart_contract_previous_transaction=smart_contract_block.smart_contract_previous_transaction)
+    transaction_1 = Transaction([input_1], [output_1])
+    transaction_1.sign(marketplace_owner)
+    return transaction_1
+
+def delete_carriage_transaction(sc_to_delete):
+    '''Delete the SmartContract use to carriage a step 1 transaction in the Marketplace
+    '''
+    try:
+        locals()['smart_contract']
+    except:
+        pass
+    from common.master_state import MasterState
+    from common.smart_contract import SmartContract
+    from common.transaction import Transaction
+    from common.transaction_output import TransactionOutput
+    from common.transaction_input import TransactionInput
+    from node.main import marketplace_owner
+    from common.values import MARKETPLACE_BUY
+    master_state=MasterState()
+    mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(sc_to_delete)
+    if mp_account_to_update is not None:
+
+        from common.smart_contract import load_smart_contract_from_master_state
+        smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account_to_update)
+        if nb_transactions<=1:
+            payload=f'''
+memory_obj_2_load=['carriage_request']
+carriage_request.reset()
+memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
+'''
+        else:
+            if mp_first_account_to_update_data_flag is True:
+                requested_amount=mp_account_to_update_data["amount"]
+                requested_gap=mp_account_to_update_data["gap"]
+                sc=mp_account_to_update_data["sc"]
+                next_mp=mp_account_to_update_data["next_mp"]
+                payload=f'''
+memory_obj_2_load=['carriage_request']
+carriage_request.step=10
+carriage_request.requested_amount="{requested_amount}"
+carriage_request.requested_gap="{requested_gap}"
+carriage_request.sc="{sc}"
+carriage_request.next_mp="{next_mp}"
+
+memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
+'''
+            else:
+                payload=f'''
+memory_obj_2_load=['carriage_request']
+carriage_request.step=10
+carriage_request.next_mp="{new_next_mp}"
+memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
+'''
+        smart_contract_block=SmartContract(mp_account_to_update,
+                                    smart_contract_sender=marketplace_owner.public_key_hash,
+                                    smart_contract_new=False,
+                                    smart_contract_gas=1000000,
+                                    smart_contract_type="source",
+                                    payload=payload,
+                                    smart_contract_previous_transaction=smart_contract_transaction_hash)
+        smart_contract_block.process()
+
+        from common.io_blockchain import BlockchainMemory
+        blockchain_memory = BlockchainMemory()
+        blockchain_base = blockchain_memory.get_blockchain_from_memory()
+        utxo_dict=blockchain_base.get_user_utxos(mp_account_to_update)
+    
+        unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+mp_account_to_update
+    
+        for utxo in utxo_dict['utxos']:
+            #input value in case of existing carriage request
+            input_1 = TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash)
+            output_1 = TransactionOutput(list_public_key_hash=[mp_account_to_update], 
+                                                    amount=0,
+                                                    account_temp=True,
+                                                    smart_contract_transaction_flag=False,
+                                                    marketplace_transaction_flag=True,
+                                                    smart_contract_account=smart_contract_block.smart_contract_account,
+                                                    smart_contract_sender=smart_contract_block.smart_contract_sender,
+                                                    smart_contract_new=smart_contract_block.smart_contract_new,
+                                                    smart_contract_flag=True,
+                                                    smart_contract_gas=smart_contract_block.gas,
+                                                    smart_contract_memory=smart_contract_block.smart_contract_memory,
+                                                    smart_contract_memory_size=smart_contract_block.smart_contract_memory_size,
+                                                    smart_contract_type=smart_contract_block.smart_contract_type,
+                                                    smart_contract_payload=smart_contract_block.payload,
+                                                    smart_contract_result=smart_contract_block.result,
+                                                    smart_contract_previous_transaction=smart_contract_block.smart_contract_previous_transaction)
+            transaction_1 = Transaction([input_1], [output_1])
+            break
+
+        transaction_1.sign(marketplace_owner)
+        return transaction_1
+
+       
+def extract_marketplace_request(block):
+    #this function is extract the marketplace request out of the list of transaction
+    #it's used in integration test
+    result=None
+    for transaction in block.transactions:
+        try:
+            for outputs in transaction["outputs"]:
+                try:
+                    if outputs['marketplace_transaction_flag']=="true" or outputs['marketplace_transaction_flag']=="True" or outputs['marketplace_transaction_flag'] is True:
+                        result=transaction
+                        break
+                except:
+                    pass
+        except:
+            pass
+    return result

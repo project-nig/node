@@ -6,7 +6,7 @@ import binascii
 from datetime import datetime
 
 from common.utils import calculate_hash,normal_round,convert_str_2_bool
-from common.values import ROUND_VALUE_DIGIT,MARKETPLACE_STEP1_EXPIRATION,MARKETPLACE_STEP2_EXPIRATION,MARKETPLACE_STEP3_EXPIRATION,THRESHOLD0_TO_SALE_2_NEWUSER,THRESHOLD1_TO_SALE_2_NEWUSER,CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER
+from common.values import ROUND_VALUE_DIGIT,MARKETPLACE_STEP1_EXPIRATION,MARKETPLACE_STEP2_EXPIRATION,MARKETPLACE_STEP3_EXPIRATION,THRESHOLD0_TO_SALE_2_NEWUSER,THRESHOLD1_TO_SALE_2_NEWUSER,CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER,MARKETPLACE_STEP1_NB_ITEM_LIST
 
 from common.smart_contract_script import *
 
@@ -193,12 +193,12 @@ class Block:
     def signature_hash(self):
         block_bytes = json.dumps(self.signature_data(), indent=2).encode('utf-8')
         hash_object = SHA256.new(block_bytes)
-        logging.info(f"===== signature_hash:{hash_object.hexdigest()}")
+        #logging.info(f"===== signature_hash:{hash_object.hexdigest()}")
         return hash_object
 
     def sign_block(self, owner):        
         signature = pkcs1_15.new(owner.private_key).sign(self.signature_hash())
-        logging.info(f"===== signature:{binascii.hexlify(signature)}")
+        #logging.info(f"===== signature:{binascii.hexlify(signature)}")
         self.block_signature=binascii.hexlify(signature).decode("utf-8")
         
 
@@ -248,7 +248,7 @@ class Block:
                                         t=locking_script.split(" ")[i+1]
                                         check=locking_script.split(" ")[i+1]==payment_ref
                                         transaction_hash2=transaction["transaction_hash"]
-                                        logging.info(f"payment_ref {payment_ref} value {t} check{check} transaction_hash: {transaction_hash2}")
+                                        #logging.info(f"payment_ref {payment_ref} value {t} check{check} transaction_hash: {transaction_hash2}")
                                         if locking_script.split(" ")[i+1]==payment_ref:
                                             #this is the requested payment_ref
                                             check_payment_flag=True
@@ -267,7 +267,6 @@ class Block:
                                         "fee_miner": output["fee_miner"],
                                     }
                                     )
-                                #logging.info(return_dict["utxos"])
                         elif element.startswith("MP"):
                             #first operation of the Marketplace, no need to go further
                             break
@@ -333,7 +332,7 @@ class Block:
                                     "fee_miner": output["fee_miner"],
                                 }
                             )
-                            logging.info(f"============ return_dict: {return_dict}")
+                            #logging.info(f"============ return_dict: {return_dict}")
                         elif element.startswith("MP"):
                             #first operation of the Marketplace, no need to go further
                             break
@@ -352,7 +351,7 @@ class Block:
             from node.main import calculate_nig_rate
             return_dict['total_euro']=normal_round(return_dict['total']*calculate_nig_rate(),ROUND_VALUE_DIGIT)
             index=0
-            logging.info(f"return_dict['utxos']:{return_dict['utxos']}")
+            #logging.info(f"return_dict['utxos']:{return_dict['utxos']}")
             for utxo in return_dict['utxos']:
                 return_dict['utxos'][index]=self.master_state.current_master_state[user]['utxos_data'][utxo]['output']
                 return_dict['utxos'][index].pop('account_list')
@@ -486,7 +485,7 @@ class Block:
                 return_dict_balance['utxos'].append(return_dict['balance']['credit'][utxo])
 
             for utxo in return_dict['balance']['debit'].keys():
-                logging.info(f"****INFO utxo user: {utxo}")
+                #logging.info(f"****INFO utxo user: {utxo}")
                 return_dict['balance']['debit'][utxo]['balance']='debit'
                 return_dict['balance']['debit'][utxo]['user']=return_dict['balance']['debit'][utxo]['account_credit_list'][0]
                 total_debit+=return_dict['balance']['debit'][utxo]['amount']
@@ -510,7 +509,7 @@ class Block:
         return_dict["total"]=0
         utxos_elem_2_del=[]
         for utxos_elem in return_dict["utxos"]:
-            logging.info(f" utxos_elem: {utxos_elem}")
+            #logging.info(f" utxos_elem: {utxos_elem}")
             if utxos_elem['account_temp'] is False:
                 utxos_elem_2_del.append(utxos_elem)
             else:
@@ -589,14 +588,14 @@ class Block:
 
 
     def get_marketplace_step_raw(self,marketplace_step_raw,user_public_key_hash, *args, **kwargs):
-        step2_amount=kwargs.get('amount',None)
+        self.step2_amount=kwargs.get('amount',None)
         archive_flag=kwargs.get('archive_flag',False)
-        archive_timestamp=kwargs.get('archive_timestamp',False)
-        if step2_amount is not None:step2_amount=float(step2_amount)
+        self.archive_timestamp=kwargs.get('archive_timestamp',False)
+        if self.step2_amount is not None:self.step2_amount=float(self.step2_amount)
         ####SMART CONTRACT
         try:marketplace_step=int(marketplace_step_raw)
         except:marketplace_step=0
-        from common.values import MY_HOSTNAME
+        from common.values import MY_HOSTNAME,MARKETPLACE_BUY
         from blockchain_users.marketplace import private_key as marketplace_private_key
         from blockchain_users.marketplace import public_key_hash as marketplace_public_key
         from common.node import Node
@@ -605,7 +604,7 @@ class Block:
         smart_contract_wallet = Wallet(smart_contract_owner,Node(MY_HOSTNAME))
 
         from common.smart_contract import SmartContract,check_smart_contract,load_smart_contract
-        return_list=[]
+        self.return_list=[]
        
         from common.io_blockchain import BlockchainMemory
         blockchain_memory = BlockchainMemory()
@@ -615,7 +614,7 @@ class Block:
         else:sell_to_new_user_flag=True
         logging.info(f"### Check sell_to_new_user_flag:{sell_to_new_user_flag}")
         if marketplace_step==1:
-            user_utxos=blockchain_base.get_user_utxos(marketplace_public_key)
+            user_utxos=blockchain_base.get_user_utxos(MARKETPLACE_BUY)
             if CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER is True:
                 logging.info(f"### Check  seller reputation for marketplace_step 1")
                 #let's check the reputation of this user to check if he can sell to new user or not
@@ -639,102 +638,147 @@ reputation.get_reputation()
                     logging.info(f"###ERROR checking reputation of user_public_key_hash:{user_public_key_hash} exception: {e}")
 
         else:user_utxos=blockchain_base.get_user_utxos(user_public_key_hash)
-        logging.info(f"### user_utxos:{user_utxos}")
-        #STEP 1 : check marketplace
-        try:
+        #logging.info(f"### user_utxos:{user_utxos}")
+        #STEP 1 : Specific process for Marketplace step 1
+        if marketplace_step==1:
+            mp_request_account=MARKETPLACE_BUY
+            mp_amount=None
+            while True:
+                try:
+                    try:
+                        self.master_state.get_master_state_from_memory_from_account_list([mp_request_account],leader_node_flag=True,NIGthreading_flag=True)
+                        mp_account_utxo=self.master_state.current_master_state[mp_request_account]
+                        mp_account_data=mp_account_utxo['marketplace']
+                        marketplace_account=mp_account_data['sc']
+                        mp_amount=mp_account_data['amount']
+                    except Exception as e:
+                        #there is not value, this is the last transaction
+                        break
+                    
+                    check_flag=True
+                    if self.step2_amount is not None:
+                        #check that the amount of purchase request is above the marketplace request amount
+                        if float(mp_amount)>self.step2_amount:check_flag=False
+
+                    if check_flag is True:
+                        if marketplace_account is not None:self.check_marketplace_account(marketplace_account,marketplace_step,user_public_key_hash,sell_to_new_user_flag)
+                    
+                        if self.step2_amount is not None and self.step2_amount<0:break
+                        if len(self.return_list)>=MARKETPLACE_STEP1_NB_ITEM_LIST:break
+    
+                    mp_request_account=mp_account_data['next_mp']
+                except Exception as e:
+                    break
+        else:
             for marketplace_account in user_utxos["marketplace"]:
-                payload=f'''
+                self.check_marketplace_account(marketplace_account,marketplace_step,user_public_key_hash,sell_to_new_user_flag)
+                
+        #check of archiving
+        if archive_flag is True:self.check_archive_marketplace_account(user_utxos,marketplace_step)
+
+        #sorting of the list by request_gap
+        new_return_list = sorted(self.return_list, key=itemgetter('requested_gap'), reverse=True)
+
+        return new_return_list
+
+
+    def check_marketplace_account(self,marketplace_account,marketplace_step,user_public_key_hash,sell_to_new_user_flag):
+        from common.smart_contract import SmartContract
+        #STEP 2 : check marketplace
+        try:
+            #logging.info(f"### INFO marketplace_account {marketplace_account}")
+            payload=f'''
 memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.get_mp_info_and_expiration({marketplace_step},'{user_public_key_hash}',{MARKETPLACE_STEP1_EXPIRATION},{MARKETPLACE_STEP2_EXPIRATION},{MARKETPLACE_STEP3_EXPIRATION})
+'''
+            smart_contract=SmartContract(marketplace_account,
+                                            smart_contract_sender='sender_public_key_hash',
+                                            smart_contract_type="api",
+                                            payload=payload)
+            smart_contract.process()
+            #logging.info(f"### marketplace_account:{marketplace_account} marketplace_step:{marketplace_step} MARKETPLACE_STEP1_EXPIRATION:{MARKETPLACE_STEP1_EXPIRATION} MARKETPLACE_STEP2_EXPIRATION:{MARKETPLACE_STEP2_EXPIRATION} MARKETPLACE_STEP3_EXPIRATION:{MARKETPLACE_STEP3_EXPIRATION}")
+            if smart_contract.error_flag is False:
+                locals()['smart_contract']
+                mp_info,expiration,requested_amount,step=smart_contract.result
+                #Step 1: Check if the request has expired
+                #logging.info(f"### marketplace_account:{marketplace_account} expiration:{expiration}")
+                if expiration is True or expiration=="True":
+                    #this request needs to be archived
+                    #logging.info(f"###INFO marketplace request: {marketplace_account} in step:{step} has expired")
+                    from node.main import MarketplaceRequestArchivingProcessing
+                    marketplace_request_archiving_processing=MarketplaceRequestArchivingProcessing()
+                    marketplace_request_archiving_processing.launch(request_type="expiration",marketplace_account=marketplace_account,marketplace_step=step,mp_request_signature=None)
+                else:
+                    #Step 2: Check if it's a new user only for marketplace_step 1
+                    check_flag=True
+                    if step==1:
+                        try:
+                            buyer_reput_trans=mp_info['buyer_reput_trans']
+                            if buyer_reput_trans==0 and sell_to_new_user_flag is False:
+                                #this user is not allowed to sell to new user
+                                check_flag=False
+                        except Exception as e:
+                            check_flag=False
+                            if step>1:
+                                logging.info(f"**** INFO no buyer_reput_trans: {mp_info}")
+                                logging.exception(e)
+                    if check_flag is True:
+                        #requested_nig needs to be updated with the last NIG rate
+                        from node.main import calculate_nig_rate
+                        try:mp_info['requested_nig']=normal_round((mp_info['requested_amount']/calculate_nig_rate())*(1-mp_info['requested_gap']/100),ROUND_VALUE_DIGIT)
+                        except:pass
+                        if self.step2_amount is None:
+                            if mp_info is not None:self.return_list.append(mp_info)
+                        else:
+                            if mp_info is not None and float(requested_amount)<=self.step2_amount:
+                                self.return_list.append(mp_info)
+                                self.step2_amount-=float(requested_amount)
+
+                    
+            else:
+                logging.info(f"**** ISSUE get_marketplace_step_raw marketplace_account1: {marketplace_account}")
+                logging.info(f"**** ISSUE: {smart_contract.error_code}")
+        except Exception as e:
+            logging.info(f"**** ISSUE get_marketplace_step_raw marketplace_account2")
+            logging.exception(e)
+
+
+    def check_archive_marketplace_account(self,user_utxos,marketplace_step):
+        from common.smart_contract import SmartContract
+        #STEP 3 : check marketplace_archive if needed
+        try:
+            user_utxos["marketplace_archive"].reverse()
+            for marketplace_account in user_utxos["marketplace_archive"]:
+                payload=f'''
+memory_obj_2_load=['mp_request_step2_done']
+mp_request_step2_done.get_mp_info_archive({marketplace_step})
 '''
                 smart_contract=SmartContract(marketplace_account,
                                                 smart_contract_sender='sender_public_key_hash',
                                                 smart_contract_type="api",
                                                 payload=payload)
                 smart_contract.process()
-                logging.info(f"### marketplace_account:{marketplace_account} marketplace_step:{marketplace_step} MARKETPLACE_STEP1_EXPIRATION:{MARKETPLACE_STEP1_EXPIRATION} MARKETPLACE_STEP2_EXPIRATION:{MARKETPLACE_STEP2_EXPIRATION} MARKETPLACE_STEP3_EXPIRATION:{MARKETPLACE_STEP3_EXPIRATION}")
+                #logging.info(f"### marketplace_account:{marketplace_account} marketplace_step:{marketplace_step} MARKETPLACE_STEP1_EXPIRATION:{MARKETPLACE_STEP1_EXPIRATION} MARKETPLACE_STEP2_EXPIRATION:{MARKETPLACE_STEP2_EXPIRATION} MARKETPLACE_STEP3_EXPIRATION:{MARKETPLACE_STEP3_EXPIRATION}")
                 if smart_contract.error_flag is False:
-                    locals()['smart_contract']
-                    mp_info,expiration,requested_amount,step=smart_contract.result
-                    #Step 1: Check if the request has expired
-                    logging.info(f"### marketplace_account:{marketplace_account} expiration:{expiration}")
-                    if expiration is True or expiration=="True":
-                        #this request needs to be archived
-                        logging.info(f"###INFO marketplace request: {marketplace_account} in step:{step} has expired")
-                        from node.main import MarketplaceRequestArchivingProcessing
-                        marketplace_request_archiving_processing=MarketplaceRequestArchivingProcessing()
-                        marketplace_request_archiving_processing.launch(request_type="expiration",marketplace_account=marketplace_account,marketplace_step=step,mp_request_signature=None)
-                    else:
-                        #Step 2: Check if it's a new user only for marketplace_step 1
-                        check_flag=True
-                        if step==1:
-                            try:
-                                buyer_reput_trans=mp_info['buyer_reput_trans']
-                                if buyer_reput_trans==0 and sell_to_new_user_flag is False:
-                                    #this user is not allowed to sell to new user
-                                    check_flag=False
-                            except Exception as e:
-                                check_flag=False
-                                logging.info(f"**** INFO no buyer_reput_trans: {mp_info}")
-                                logging.exception(e)
-                        if check_flag is True:
-                            #requested_nig needs to be updated with the last NIG rate
-                            from node.main import calculate_nig_rate
-                            try:mp_info['requested_nig']=normal_round((mp_info['requested_amount']/calculate_nig_rate())*(1-mp_info['requested_gap']/100),ROUND_VALUE_DIGIT)
-                            except:pass
-                            if step2_amount is None:
-                                if mp_info is not None:return_list.append(mp_info)
-                            else:
-                                if mp_info is not None and float(requested_amount)<=step2_amount:
-                                    return_list.append(mp_info)
-                                    step2_amount-=float(requested_amount)
-
-                    
+                    if smart_contract.result is not None:
+                        locals()['smart_contract']
+                        mp_info=smart_contract.result
+                        #logging.info(f"### marketplace_account:{marketplace_account} mp_info:{mp_info} archive_timestamp:{self.archive_timestamp}")
+                        #logging.info(f"### marketplace_account:{marketplace_account} mp_info2:{type(mp_info)} archive_timestamp2:{type(self.archive_timestamp)}")
+                        check_timestamp=mp_info["timestamp_nig"]>self.archive_timestamp
+                        #logging.info(f"### marketplace_account:{marketplace_account} mp_info:{mp_info} mp_info>archive_timestamp:{check_timestamp}")
+                        if mp_info["timestamp_nig"]>self.archive_timestamp:self.return_list.append(mp_info)
+                        else:
+                            #no need to go futher to avoid analysing all the archive
+                            break
                 else:
-                    logging.info(f"**** ISSUE get_marketplace_step_raw marketplace_account1: {marketplace_account}")
+                    logging.info(f"**** ISSUE get_marketplace_step_raw archive marketplace_account1: {marketplace_account}")
                     logging.info(f"**** ISSUE: {smart_contract.error_code}")
         except Exception as e:
-            logging.info(f"**** ISSUE get_marketplace_step_raw marketplace_account2")
+            logging.info(f"**** ISSUE get_marketplace_step_raw archive marketplace_account2")
             logging.exception(e)
 
-        #STEP 2 : check marketplace_archive if needed
-        if archive_flag is True:
-            try:
-                user_utxos["marketplace_archive"].reverse()
-                for marketplace_account in user_utxos["marketplace_archive"]:
-                    payload=f'''
-memory_obj_2_load=['mp_request_step2_done']
-mp_request_step2_done.get_mp_info_archive({marketplace_step})
-'''
-                    smart_contract=SmartContract(marketplace_account,
-                                                    smart_contract_sender='sender_public_key_hash',
-                                                    smart_contract_type="api",
-                                                    payload=payload)
-                    smart_contract.process()
-                    logging.info(f"### marketplace_account:{marketplace_account} marketplace_step:{marketplace_step} MARKETPLACE_STEP1_EXPIRATION:{MARKETPLACE_STEP1_EXPIRATION} MARKETPLACE_STEP2_EXPIRATION:{MARKETPLACE_STEP2_EXPIRATION} MARKETPLACE_STEP3_EXPIRATION:{MARKETPLACE_STEP3_EXPIRATION}")
-                    if smart_contract.error_flag is False:
-                        if smart_contract.result is not None:
-                            locals()['smart_contract']
-                            mp_info=smart_contract.result
-                            logging.info(f"### marketplace_account:{marketplace_account} mp_info:{mp_info} archive_timestamp:{archive_timestamp}")
-                            logging.info(f"### marketplace_account:{marketplace_account} mp_info2:{type(mp_info)} archive_timestamp2:{type(archive_timestamp)}")
-                            check_timestamp=mp_info["timestamp_nig"]>archive_timestamp
-                            logging.info(f"### marketplace_account:{marketplace_account} mp_info:{mp_info} mp_info>archive_timestamp:{check_timestamp}")
-                            if mp_info["timestamp_nig"]>archive_timestamp:return_list.append(mp_info)
-                            else:
-                                #no need to go futher to avoid analysing all the archive
-                                break
-                    else:
-                        logging.info(f"**** ISSUE get_marketplace_step_raw archive marketplace_account1: {marketplace_account}")
-                        logging.info(f"**** ISSUE: {smart_contract.error_code}")
-            except Exception as e:
-                logging.info(f"**** ISSUE get_marketplace_step_raw archive marketplace_account2")
-                logging.exception(e)
 
-        #sorting of the list by request_gap
-        new_return_list = sorted(return_list, key=itemgetter('requested_gap'), reverse=True)
-
-        return new_return_list
 
     def get_marketplace_genesis(self) -> dict:
         return_dict = {

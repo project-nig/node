@@ -2,9 +2,10 @@ import json
 import logging
 import os
 import copy
-from common.utils import normal_round,check_marketplace_step1,check_smart_contract_consistency,check_marketplace_step2,extract_marketplace_account,check_marketplace_step
-from common.values import ROUND_VALUE_DIGIT, DEFAULT_TRANSACTION_FEE_PERCENTAGE
+from common.utils import normal_round,check_marketplace_step1,check_smart_contract_consistency,check_marketplace_step2,extract_marketplace_account,check_marketplace_step,check_carriage_request
+from common.values import ROUND_VALUE_DIGIT, DEFAULT_TRANSACTION_FEE_PERCENTAGE,MARKETPLACE_BUY
 from common.io_storage_sharding import StorageSharding
+
 
 
         
@@ -43,8 +44,8 @@ class MasterState:
         try:
             #account_list.append(transactions['inputs'][0]['transaction_hash']+'_'+str(transactions['inputs'][0]['output_index']))
             for utxo in transactions['outputs']:
-                test1=self.extract_account_list_from_locking_script("OP_SC",utxo)
-                test2=self.extract_account_list_from_locking_script("OP_DEL_SC",utxo)
+                #test1=self.extract_account_list_from_locking_script("OP_SC",utxo)
+                #test2=self.extract_account_list_from_locking_script("OP_DEL_SC",utxo)
                 #logging.info(f"####OP_SC:{test1}")
                 #logging.info(f"####OP_DEL_SC:{test2}")
                 account_list.extend(self.extract_account_list_from_locking_script("OP_SC",utxo))
@@ -180,6 +181,98 @@ class MasterState:
         except:
             pass
 
+    def get_buy_mp_account_from_memory(self,requested_gap) -> list:
+        mp_account=MARKETPLACE_BUY
+        mp_amount=None
+        mp_gap=None
+        next_mp=None
+        sc=None
+        last_flag=False
+
+        while True:
+            try:
+                try:
+                    self.get_master_state_from_memory_from_account_list([mp_account],leader_node_flag=True,NIGthreading_flag=True)
+                    mp_account_utxo=self.current_master_state[mp_account]
+                    mp_account_data=mp_account_utxo['marketplace']
+                except:
+                    #there is not value, this is the last transaction
+                    last_flag=True
+                    break
+                
+                mp_amount=mp_account_data['amount']
+                mp_gap=mp_account_data['gap']
+                next_mp=mp_account_data['next_mp']
+                sc=mp_account_data['sc']
+                
+                if float(requested_gap)>float(mp_account_data['gap']):
+                    break
+
+                mp_account=mp_account_data['next_mp']
+                
+            except Exception as e:
+                break
+        if mp_account is None:mp_account=MARKETPLACE_BUY
+        return mp_account,mp_amount,mp_gap,next_mp,sc,last_flag
+
+    def get_delete_mp_account_from_memory(self,sc_to_delete) -> list:
+        mp_account=MARKETPLACE_BUY
+        mp_account_to_update=MARKETPLACE_BUY
+        new_next_mp=None
+        nb_transactions=0
+        mp_account_to_update_data=None
+        mp_first_account_to_update_data_flag=False
+        
+        #1st loop to ensure that there is more than 1 transaction
+        while True:
+            try:
+                self.get_master_state_from_memory_from_account_list([mp_account],leader_node_flag=True,NIGthreading_flag=True)
+                mp_account_utxo=self.current_master_state[mp_account]
+                mp_account_data=mp_account_utxo['marketplace']
+                nb_transactions+=1
+                mp_account=mp_account_data['next_mp']
+                if nb_transactions>1:break
+            except:
+                #there is not value, this is the last transaction
+                break
+
+        #2nd loop to retrieve the right carriage request
+        mp_account=MARKETPLACE_BUY
+        while True:
+            try:
+                try:
+                    self.get_master_state_from_memory_from_account_list([mp_account],leader_node_flag=True,NIGthreading_flag=True)
+                    mp_account_utxo=self.current_master_state[mp_account]
+                    mp_account_data=mp_account_utxo['marketplace']
+                    mp_account_to_update_data=mp_account_data
+
+                except:
+                    #there is no value, this is the last transaction
+                    break
+                
+                if sc_to_delete==mp_account_data['sc']:
+                    #this is the carriage request to delete
+                    new_next_mp=mp_account_data['next_mp']
+                    if mp_account==MARKETPLACE_BUY:
+                        #specific process as it's the first carriage request
+                        mp_account=mp_account_data['next_mp']
+
+                        self.get_master_state_from_memory_from_account_list([mp_account],leader_node_flag=True,NIGthreading_flag=True)
+                        mp_account_utxo=self.current_master_state[mp_account]
+                        mp_account_data=mp_account_utxo['marketplace']
+
+                        mp_account_to_update=MARKETPLACE_BUY
+                        mp_account_to_update_data=mp_account_data
+                        mp_first_account_to_update_data_flag=True
+                            
+                    break
+
+                mp_account_to_update=mp_account
+                mp_account=mp_account_data['next_mp']
+                
+            except Exception as e:
+                break
+        return mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag
 
     def update_master_state(self, transaction: list,block_PoH,*args, **kwargs):
         previous_PoH_hash = kwargs.get('previous_PoH_hash',None)
@@ -247,7 +340,7 @@ class MasterState:
                     old_utxo_account=self.extract_account_list_from_unlocking_public_key_hash(transaction['inputs'][i]['unlocking_public_key_hash'])
 
                     #extract of the data
-                    if old_utxo_account!='':
+                    if old_utxo_account!='' and old_utxo_account!='abcd1234_0':
                         #logging.info(f"###### current_master_state:{self.current_master_state}")
                         account_dic=self.current_master_state[old_utxo_account]
                         if account_dic!={}:
@@ -309,7 +402,7 @@ class MasterState:
                 try:smart_contract_transaction_flag=utxo['smart_contract_transaction_flag']
                 except:smart_contract_transaction_flag=False
                 account_list=self.extract_account_list_from_locking_script("OP_SC",utxo)
-                #logging.info(f"====>account_list:{account_list}")
+                #logging.info(f"====>account_list1:{account_list}")
                 
                 #reputation account management
                 if "OP_RE" in utxo['locking_script']:
@@ -344,6 +437,10 @@ class MasterState:
                                 #step = 98 is used to archive the expired marketplace request 
                                 if smart_contract_memory[0][3][j]==98:marketplace_place_archiving_flag=True
                                 #logging.info(f"======> MarketPlace {smart_contract_memory[0][3][j]}: {transaction_hash}")
+                                #the carriage request needs to be cancelled for Marketplace step 1
+                                #logging.info("###INFO CARRIAGE cancellation request")
+                                #from common.utils import delete_carriage_transaction
+                                #delete_carriage_transaction(utxo['smart_contract_account'])
                         if smart_contract_memory[0][2][j]=='requested_amount':marketplace_place_step4_requested_amount=smart_contract_memory[0][3][j]
                         if smart_contract_memory[0][2][j]=='requested_currency':marketplace_place_step4_requested_currency=smart_contract_memory[0][3][j]
                         if smart_contract_memory[0][2][j]=='buyer_public_key_hash':marketplace_place_step4_buyer=smart_contract_memory[0][3][j]
@@ -367,8 +464,44 @@ class MasterState:
                 except:
                     pass
 
+                from common.smart_contract import SmartContract
+                #Step 1 : retrieve the needed information per account
+                mp_account_data=None
+                requested_amount=None
+                requested_gap=0
+                marketplace_data={}
+                #if marketplace_transaction_flag is True:
+                if check_carriage_request(transaction['outputs']) is True:
+                    try:
+                        from common.smart_contract import load_smart_contract_from_master_state
+                        smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(account_list[0])
+                        payload=utxo['smart_contract_payload']+f'''
+return carriage_request.get_mp_info()
+'''
+                        smart_contract=SmartContract(account_list[0],
+                                                     smart_contract_sender='sender_public_key_hash',
+                                                     smart_contract_type="source",
+                                                     smart_contract_new=False,
+                                                     payload=payload,
+                                                     smart_contract_previous_transaction=smart_contract_previous_transaction)
+                        smart_contract.process()
+                        locals()['smart_contract']
+                        if smart_contract.result is not None :mp_account_data=smart_contract.result
+                        if mp_account_data is not None:
+                            requested_amount=mp_account_data['requested_amount']
+                            requested_gap=mp_account_data['requested_gap']
+                    except Exception as e:
+                        logging.info(f"### ISSUE master_state get mp_account_data account:{account} {e}")
+                        logging.exception(e)
+                        
+                    #Step 2 : retrieve the marketplace_data
+                    marketplace_data['next_mp']=mp_account_data['next_mp']
+                    marketplace_data['gap']=requested_gap
+                    marketplace_data['amount']=requested_amount
+                    marketplace_data['sc']=mp_account_data['sc']
 
                 for account in account_list:
+                    #Step 3 : update master state
                     try:
                         #there are values for this account, let's update them
                         account_dic=self.current_master_state[account]
@@ -404,6 +537,10 @@ class MasterState:
                     if marketplace_transaction_flag is False and smart_contract_transaction_flag is False or account==account_list[0]:
                         #account==account_list[0] means that it's the datas of the SmartContract so we need to update the data of the Smart Contract
                         if account_dic!={}:
+                            if check_carriage_request(transaction['outputs']) is True:
+                                #process for carriage request of marketplace step 1
+                                account_dic['marketplace']=marketplace_data
+
                             if new_utxo_key not in account_dic['utxos']:
                                 account_dic['total']+=normal_round(new_utxo_value_output['amount'],ROUND_VALUE_DIGIT)
                                 account_dic['utxos'].append(new_utxo_key)
@@ -449,7 +586,9 @@ class MasterState:
                                     associated_account_dic_step4_to_update=self.current_master_state[associated_account_dic_step4]
                                     if account_list[0] not in associated_account_dic_step4_to_update['marketplace_archive']:associated_account_dic_step4_to_update['marketplace_archive'].append(account_list[0])
                                     try:
-                                        associated_account_dic_step4_to_update['marketplace'].remove(account_list[0])
+                                        try:
+                                            associated_account_dic_step4_to_update['marketplace'].remove(account_list[0])
+                                        except:pass
                                         #update of added value/gain
                                         if marketplace_place_step4==4 or marketplace_place_step4==45:
                                             logging.info(f"INFO ### marketplace_place added value")
@@ -527,12 +666,18 @@ class MasterState:
                     else:
                         #account_list[0] is the Smart Contract account
                         #account_list[1 and + ] are the other account associated to that Smart Contrat
-                        if marketplace_transaction_flag is True and marketplace_place_step4_flag is False:
-                            #this is a marketplace transaction
-                            if account_list[0] not in account_dic['marketplace']:account_dic['marketplace'].append(account_list[0])
-                        elif smart_contract_transaction_flag is True:
-                            #this is a smart contract transaction
-                            if account_list[0] not in account_dic['smart_contract']:account_dic['smart_contract'].append(account_list[0])
+                        from node.main import marketplace_owner
+                        if account!=marketplace_owner.public_key_hash:
+                            #the marketplace dict of marketplace is not updated.
+                            if check_carriage_request(transaction['outputs']) is True:
+                                #this is a carriage request of a marketplace step 1 transaction
+                                account_dic['marketplace']=marketplace_data
+                            elif marketplace_transaction_flag is True and marketplace_place_step4_flag is False:
+                                #this is a marketplace transaction
+                                if account_list[0] not in account_dic['marketplace']:account_dic['marketplace'].append(account_list[0])
+                            elif smart_contract_transaction_flag is True:
+                                #this is a smart contract transaction
+                                if account_list[0] not in account_dic['smart_contract']:account_dic['smart_contract'].append(account_list[0])
                         #reputation_acount management
                         #logging.info(f"====>reputation_acount2:{reputation_acount}")
                         if reputation_acount is not None:
@@ -540,7 +685,7 @@ class MasterState:
                             try:account_dic['smart_contract'].remove(reputation_acount[0])
                             except:pass
                         self.current_master_state[account]=account_dic
-
+                        
                 #Removal of association between some account and this SmartContract
                 account_list=self.extract_account_list_from_locking_script("OP_DEL_SC",utxo)
                 for account in account_list:
@@ -564,8 +709,9 @@ class MasterState:
             try:
                 self.current_master_state[old_utxo_account]['balance']['debit'][new_utxo_key]=new_utxo_value_output
             except Exception as e:
-                logging.info(f"**** Transaction7: {e}")
-                logging.exception(e)
+                if new_utxo_key!='abcd1234_0':
+                    logging.info(f"**** Transaction7: {e}")
+                    logging.exception(e)
 
     
 
