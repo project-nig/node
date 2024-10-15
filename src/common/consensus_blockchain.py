@@ -143,6 +143,7 @@ block_vote.vote_ratio()
                 self.best_block=best_block
 
         except Exception as e:
+            import logging
             logging.info(f"ERROR with ConcensusBlockChain setup")
             logging.exception(e)
         
