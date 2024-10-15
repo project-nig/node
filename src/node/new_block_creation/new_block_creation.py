@@ -225,7 +225,6 @@ class ProofOfWork:
             
         if len(transactions)>0:
             interface_transaction_fees_dic,node_transaction_fees_dic,miner_transaction_fees = self.get_transaction_fees(transactions)
-            logging.info(f"####INFO interface_transaction_fees_dic:{interface_transaction_fees_dic} node_transaction_fees_dic:{node_transaction_fees_dic} miner_transaction_fees:{miner_transaction_fees}")
             #STEP 1 Interface
             for interface_transaction_fees_public_key_hash in interface_transaction_fees_dic.keys():
                 interface_coinbase_transaction = self.get_coinbase_transaction(interface_transaction_fees_dic[interface_transaction_fees_public_key_hash],
