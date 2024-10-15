@@ -9,6 +9,8 @@ from common.utils import calculate_hash,normal_round
 from common.values import ROUND_VALUE_DIGIT
 
 
+
+
 class Stack:
     def __init__(self):
         self.elements = []
@@ -34,18 +36,16 @@ class StackScript(Stack):
             self.push(last_element)
             self.push(last_element)
         except Exception as e:
-            #self.is_valid = True
-            import logging
-            logging.info(f"op_dup issue: {e}")
+            from node.transaction_validation.transaction_validation import TransactionException
+            raise TransactionException("###ERROR op_dup issue",f"{e}")
 
     def op_hash160(self):
         try:
             last_element = self.pop()
             self.push(calculate_hash(calculate_hash(last_element, hash_function="sha256"), hash_function="ripemd160"))
         except Exception as e:
-            #self.is_valid = True
-            import logging
-            logging.info(f"op_hash160 issue: {e}")
+            from node.transaction_validation.transaction_validation import TransactionException
+            raise TransactionException("###ERROR op_hash160 issue",f"{e}")
 
     def op_equal_verify(self):
         try:
@@ -53,10 +53,8 @@ class StackScript(Stack):
             last_element_2 = self.pop()
             assert last_element_1 == last_element_2
         except Exception as e:
-            #self.is_valid = True
-            import logging
-            logging.info(f"&&&&&&& last_element_1: {last_element_1} last_element_2: {last_element_2} check:{last_element_1 == last_element_2}")
-            logging.info(f"op_equal_verify issue: {e}")
+            from node.transaction_validation.transaction_validation import TransactionException
+            raise TransactionException("###ERROR op_equal_verify issue",f"{last_element_1}!={last_element_1}")
 
     def op_checksig(self):
         try:
@@ -66,14 +64,14 @@ class StackScript(Stack):
             public_key_bytes = public_key.encode("utf-8")
             public_key_object = RSA.import_key(binascii.unhexlify(public_key_bytes))
             transaction_bytes = json.dumps(self.transaction_data, indent=2).encode('utf-8')
-            import logging
-            logging.info(f"======check signature: self.transaction_data {self.transaction_data}")
-            logging.info(f"======check signature_decoded: self.transaction_data {signature}")
             transaction_hash = SHA256.new(transaction_bytes)
             pkcs1_15.new(public_key_object).verify(transaction_hash, signature_decoded)
         except Exception as e:
-            #self.is_valid = True
-            logging.info(f"op_checksig issue: {e}")
+            import logging
+            logging.info(f"======check signature: self.transaction_data {self.transaction_data}")
+            logging.info(f"======check signature_decoded: self.transaction_data {signature}")
+            from node.transaction_validation.transaction_validation import TransactionException
+            raise TransactionException("###ERROR op_checksig issue",f"{e}")
 
     def op_account_temp(self):
         #nothing to do
