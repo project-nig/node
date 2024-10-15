@@ -152,7 +152,6 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
         unlocking_public_key_hash=daniel_owner.public_key_hash
         transaction_wallet=daniel_wallet
         smart_contract_new=True
-        #list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
         list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
         smart_contract_transaction_hash=None
         account_temp=True
@@ -1157,7 +1156,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(3,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet)
     
-    time.sleep(30)
+    time.sleep(50)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash
