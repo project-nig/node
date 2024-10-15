@@ -13,7 +13,7 @@ from common.io_known_nodes import KnownNodesMemory
 from common.merkle_tree import get_merkle_root
 from common.owner import Owner
 from common.transaction_output import TransactionOutput
-from common.utils import calculate_hash,normal_round,check_marketplace_step1,check_marketplace_step2,check_marketplace_reputation_refresh
+from common.utils import calculate_hash,normal_round,check_marketplace_step1_sell,check_marketplace_step1_buy,check_marketplace_step2,check_marketplace_reputation_refresh
 from common.values import NUMBER_OF_LEADING_ZEROS, BLOCK_REWARD, INTERFACE_BLOCK_REWARD_PERCENTAGE, NODE_BLOCK_REWARD_PERCENTAGE, MINER_BLOCK_REWARD_PERCENTAGE,ROUND_VALUE_DIGIT
 from common.io_leader_node_schedule import LeaderNodeScheduleMemory
 from common.node import Node
@@ -146,8 +146,7 @@ class ProofOfWork:
         step2_smart_contract_account_list=[]
         transactions_2_remove_list=[]
         for i in range(0,len(transactions)):
-            #if check_marketplace_step1(transactions[i]['outputs']) is False and  "BlockVote" not in str(transactions[i]['outputs']):
-            if check_marketplace_step1(transactions[i]['outputs']) is False:
+            if check_marketplace_step1_buy(transactions[i]['outputs']) is False and check_marketplace_step1_sell(transactions[i]['outputs']) is False:
                 for j in range(0,len(transactions[i]['inputs'])):
                     transactions_input_str=transactions[i]['inputs'][j]['transaction_hash']+'_'+str(transactions[i]['inputs'][j]['output_index'])
                     if transactions_input_str not in transactions_input_list:transactions_input_list.append(transactions_input_str)
@@ -226,28 +225,29 @@ class ProofOfWork:
             
         if len(transactions)>0:
             interface_transaction_fees_dic,node_transaction_fees_dic,miner_transaction_fees = self.get_transaction_fees(transactions)
+            logging.info(f"####INFO interface_transaction_fees_dic:{interface_transaction_fees_dic} node_transaction_fees_dic:{node_transaction_fees_dic} miner_transaction_fees:{miner_transaction_fees}")
             #STEP 1 Interface
             for interface_transaction_fees_public_key_hash in interface_transaction_fees_dic.keys():
                 interface_coinbase_transaction = self.get_coinbase_transaction(interface_transaction_fees_dic[interface_transaction_fees_public_key_hash],
-                                                                               INTERFACE_BLOCK_REWARD_PERCENTAGE,
-                                                                               interface_transaction_fees_public_key_hash,
-                                                                               "interface",
-                                                                               self.testing_flag)
+                                                                                INTERFACE_BLOCK_REWARD_PERCENTAGE,
+                                                                                interface_transaction_fees_public_key_hash,
+                                                                                "interface",
+                                                                                self.testing_flag)
                 transactions.append(interface_coinbase_transaction)
             #STEP 2 Node
             for node_transaction_fees_public_key_hash in node_transaction_fees_dic.keys():
                 node_coinbase_transaction = self.get_coinbase_transaction(node_transaction_fees_dic[node_transaction_fees_public_key_hash],
-                                                                               NODE_BLOCK_REWARD_PERCENTAGE,
-                                                                               node_transaction_fees_public_key_hash,
-                                                                               "node",
-                                                                               self.testing_flag)
+                                                                                NODE_BLOCK_REWARD_PERCENTAGE,
+                                                                                node_transaction_fees_public_key_hash,
+                                                                                "node",
+                                                                                self.testing_flag)
                 transactions.append(node_coinbase_transaction)
             #STEP 3 Miner
             miner_coinbase_transaction = self.get_coinbase_transaction(miner_transaction_fees,
-                                                                       MINER_BLOCK_REWARD_PERCENTAGE,
-                                                                       miner_public_key_hash,
-                                                                       "miner",
-                                                                       self.testing_flag)
+                                                                        MINER_BLOCK_REWARD_PERCENTAGE,
+                                                                        miner_public_key_hash,
+                                                                        "miner",
+                                                                        self.testing_flag)
             transactions.append(miner_coinbase_transaction)
 
             #STEP 4 Creation of the block
@@ -302,7 +302,6 @@ class ProofOfWork:
             
             master_state_temp.update_master_state(vote_transaction,self.new_block.block_header.current_PoH_hash,previous_PoH_hash=self.new_block.block_header.previous_PoH_hash,leader_node_flag=True)
             master_state_temp.store_master_state_in_memory(self.new_block.block_header.current_PoH_hash)
-
 
             #STEP 7 Delete TempBlockPoH
             master_state=MasterState()

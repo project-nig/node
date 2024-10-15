@@ -9,7 +9,7 @@ from common.io_mem_pool import MemPool
 from node.transaction_validation.script import StackScript
 from common.io_known_nodes import KnownNodesMemory
 from common.values import ROUND_VALUE_DIGIT
-from common.utils import normal_round,calculate_hash,check_marketplace_step2,check_marketplace_step1,check_carriage_request
+from common.utils import normal_round,calculate_hash,check_marketplace_step2,check_marketplace_step1_sell,check_marketplace_step1_buy,check_carriage_request
 from common.io_leader_node_schedule import LeaderNodeScheduleMemory
 from common.smart_contract import SmartContract,load_smart_contract_from_master_state
 
@@ -60,10 +60,15 @@ class Transaction:
 
     def execute_script(self, unlocking_script, locking_script):
         unlocking_script_list = unlocking_script.split(" ")
+        #logging.info(f"unlocking_script_list:{unlocking_script_list}")
         locking_script_list = locking_script.split(" ")
+        #logging.info(f"locking_script_list:{locking_script_list}")
         transaction_data = copy.deepcopy(self.transaction_data)
+        #logging.info(f"transaction_data:{transaction_data}")
         if "transaction_hash" in transaction_data:
-            transaction_data.pop("transaction_hash")
+            try:
+                transaction_data.pop("transaction_hash")
+            except:pass
         stack_script = StackScript(transaction_data)
         for element in unlocking_script_list:
             if element.startswith("OP"):
@@ -77,6 +82,7 @@ class Transaction:
                 class_method(stack_script)
             else:
                 stack_script.push(element)
+       
 
     def validate(self,*args, **kwargs):
         NIGthreading_flag=kwargs.get('NIGthreading_flag',False)
@@ -84,8 +90,8 @@ class Transaction:
         #specific case of self.inputs
         if self.inputs==[]:self.is_valid = True
         for tx_input in self.inputs:
-            #Step 1 for new User of Marketplace is not Checked as we're always using the same UTXO
-            if check_marketplace_step1(self.outputs) is False and check_carriage_request(self.outputs) is False:
+            #Step 1 (buy) and -1(sell) for new User of Marketplace is not Checked as we're always using the same UTXO
+            if check_marketplace_step1_buy(self.outputs) is False and check_marketplace_step1_sell(self.outputs) is False and check_carriage_request(self.outputs) is False:
                 try:
                     #logging.info(f"tx_input: {tx_input}")
                     transaction_hash = tx_input["transaction_hash"]
@@ -96,9 +102,9 @@ class Transaction:
                         unlocking_public_key_hash_list=unlocking_public_key_hash.split(" ")
                         unlocking_public_key_hash=unlocking_public_key_hash_list[2]
                     try:
-                        logging.info(f"transaction_hash: {transaction_hash} ")
+                        #logging.info(f"transaction_hash: {transaction_hash} ")
                         locking_script = self.blockchain.get_locking_script_from_utxo(unlocking_public_key_hash,transaction_hash,output_index,NIGthreading_flag=NIGthreading_flag)
-                        logging.info(f"locking_script: {locking_script}")
+                        #logging.info(f"locking_script: {locking_script}")
                     except Exception as e:
                         #self.is_valid = True
                         logging.info(f"Transaction script validation failed 0. Exception: {e}")
@@ -120,8 +126,8 @@ class Transaction:
     def get_total_amount_in_inputs(self, **kwargs):
         NIGthreading_flag=kwargs.get('NIGthreading_flag',False)
         total_in = 0
-        #Step 1 for new User of Marketplace is not Checked as we're always using the same UTXO
-        if check_marketplace_step1(self.outputs) is False:
+        #Step 1 (buy request) and -1(sell request) for new User of Marketplace is not Checked as we're always using the same UTXO
+        if check_marketplace_step1_buy(self.outputs) is False and check_marketplace_step1_sell(self.outputs) is False:
             for tx_input in self.inputs:
                 unlocking_public_key_hash = tx_input["unlocking_public_key_hash"]
                 if "SC " in unlocking_public_key_hash:

@@ -169,97 +169,115 @@
 </span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span> <span class="o">=</span> <span class="n">transaction_data</span>
 </span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>
 </span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>    <span class="k">def</span> <span class="nf">op_dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>    <span class="k">def</span> <span class="nf">op_hash160</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">last_element</span><span class="p">,</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;sha256&quot;</span><span class="p">),</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">))</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>
-</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>    <span class="k">def</span> <span class="nf">op_equal_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>        <span class="n">last_element_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>        <span class="n">last_element_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>        <span class="c1">#logging.info(f&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; last_element_1: {last_element_1} last_element_2: {last_element_2} check:{last_element_1 == last_element_2}&quot;)</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>        <span class="k">assert</span> <span class="n">last_element_1</span> <span class="o">==</span> <span class="n">last_element_2</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>    <span class="k">def</span> <span class="nf">op_checksig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>        <span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>        <span class="n">signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>        <span class="n">signature_decoded</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>        <span class="n">public_key_bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>        <span class="n">public_key_object</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">import_key</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">public_key_bytes</span><span class="p">))</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>        <span class="n">transaction_bytes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>        <span class="c1">#logging.info(f&quot;======check signature: self.transaction_data {self.transaction_data}&quot;)</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>        <span class="c1">#logging.info(f&quot;======check signature_decoded: self.transaction_data {signature}&quot;)</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>        <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">transaction_bytes</span><span class="p">)</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>        <span class="n">pkcs1_15</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">public_key_object</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">signature_decoded</span><span class="p">)</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>    <span class="k">def</span> <span class="nf">op_account_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>        <span class="k">pass</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>
-</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>    <span class="k">def</span> <span class="nf">mp_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>        <span class="c1">#removal of public_key_hash</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>    <span class="k">def</span> <span class="nf">mp_payref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>        <span class="c1">#validation that the conversion rate of NIG in MP_CUR is valid</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>        <span class="kn">from</span> <span class="nn">node.main</span> <span class="kn">import</span> <span class="n">calculate_nig_rate</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="n">MP_NIG_TIME</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>        <span class="n">MP_NIG</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>        <span class="n">MP_CUR</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>        <span class="n">MP_AMOUNT</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>        <span class="n">nig_rate</span><span class="o">=</span><span class="n">calculate_nig_rate</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="n">MP_NIG_TIME</span><span class="p">,</span><span class="n">currency</span><span class="o">=</span><span class="n">MP_CUR</span><span class="p">)</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>        <span class="n">requested_nig</span><span class="o">=</span><span class="n">normal_round</span><span class="p">(</span><span class="n">MP_AMOUNT</span><span class="o">/</span><span class="n">nig_rate</span><span class="p">,</span><span class="n">ROUND_VALUE_DIGIT</span><span class="p">)</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; nig_rate: </span><span class="si">{</span><span class="n">nig_rate</span><span class="si">}</span><span class="s2"> requested_nig: </span><span class="si">{</span><span class="n">requested_nig</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">requested_nig</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MP_NIG</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>        <span class="k">assert</span> <span class="n">requested_nig</span> <span class="o">==</span> <span class="n">MP_NIG</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_genesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>        <span class="k">pass</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>        <span class="k">pass</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>        <span class="k">pass</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>        <span class="k">pass</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>        <span class="k">pass</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>        <span class="k">pass</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>    <span class="k">def</span> <span class="nf">mp_cur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>            <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_dup issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>    <span class="k">def</span> <span class="nf">op_hash160</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>            <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">last_element</span><span class="p">,</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;sha256&quot;</span><span class="p">),</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">))</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_hash160 issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>    <span class="k">def</span> <span class="nf">op_equal_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>            <span class="n">last_element_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>            <span class="n">last_element_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>            <span class="k">assert</span> <span class="n">last_element_1</span> <span class="o">==</span> <span class="n">last_element_2</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; last_element_1: </span><span class="si">{</span><span class="n">last_element_1</span><span class="si">}</span><span class="s2"> last_element_2: </span><span class="si">{</span><span class="n">last_element_2</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">last_element_1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">last_element_2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_equal_verify issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>    <span class="k">def</span> <span class="nf">op_checksig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>            <span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>            <span class="n">signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>            <span class="n">signature_decoded</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>            <span class="n">public_key_bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>            <span class="n">public_key_object</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">import_key</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">public_key_bytes</span><span class="p">))</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>            <span class="n">transaction_bytes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;======check signature: self.transaction_data </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;======check signature_decoded: self.transaction_data </span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>            <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">transaction_bytes</span><span class="p">)</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>            <span class="n">pkcs1_15</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">public_key_object</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">signature_decoded</span><span class="p">)</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_checksig issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>    <span class="k">def</span> <span class="nf">op_account_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>        <span class="k">pass</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>    <span class="k">def</span> <span class="nf">mp_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>        <span class="c1">#removal of public_key_hash</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>    <span class="k">def</span> <span class="nf">mp_payref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>        <span class="c1">#validation that the conversion rate of NIG in MP_CUR is valid</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>        <span class="kn">from</span> <span class="nn">node.main</span> <span class="kn">import</span> <span class="n">calculate_nig_rate</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>        <span class="n">MP_NIG_TIME</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>        <span class="n">MP_NIG</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>        <span class="n">MP_CUR</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>        <span class="n">MP_AMOUNT</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>        <span class="n">nig_rate</span><span class="o">=</span><span class="n">calculate_nig_rate</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="n">MP_NIG_TIME</span><span class="p">,</span><span class="n">currency</span><span class="o">=</span><span class="n">MP_CUR</span><span class="p">)</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>        <span class="n">requested_nig</span><span class="o">=</span><span class="n">normal_round</span><span class="p">(</span><span class="n">MP_AMOUNT</span><span class="o">/</span><span class="n">nig_rate</span><span class="p">,</span><span class="n">ROUND_VALUE_DIGIT</span><span class="p">)</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; nig_rate: </span><span class="si">{</span><span class="n">nig_rate</span><span class="si">}</span><span class="s2"> requested_nig: </span><span class="si">{</span><span class="n">requested_nig</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">requested_nig</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MP_NIG</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>        <span class="k">assert</span> <span class="n">requested_nig</span> <span class="o">==</span> <span class="n">MP_NIG</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_genesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>        <span class="k">pass</span>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>    <span class="k">def</span> <span class="nf">mp_nig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>        <span class="k">pass</span>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>    <span class="k">def</span> <span class="nf">mp_nig_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>        <span class="k">pass</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>    <span class="k">def</span> <span class="nf">mp_public_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>        <span class="k">pass</span>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>    <span class="k">def</span> <span class="nf">op_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>        <span class="k">pass</span>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>    <span class="k">def</span> <span class="nf">op_del_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>        <span class="k">pass</span>
-</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>
-</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>    <span class="k">def</span> <span class="nf">op_re</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>        <span class="k">pass</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>        <span class="k">pass</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>    <span class="k">def</span> <span class="nf">mp_cur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>        <span class="k">pass</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>    <span class="k">def</span> <span class="nf">mp_nig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>        <span class="k">pass</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>    <span class="k">def</span> <span class="nf">mp_nig_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a>        <span class="k">pass</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a>    <span class="k">def</span> <span class="nf">mp_public_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a>        <span class="k">pass</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a>    <span class="k">def</span> <span class="nf">op_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>        <span class="k">pass</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>    <span class="k">def</span> <span class="nf">op_del_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>        <span class="k">pass</span>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>    <span class="k">def</span> <span class="nf">op_re</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -359,97 +377,115 @@
 </span><span id="StackScript-30"><a href="#StackScript-30"><span class="linenos"> 30</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span> <span class="o">=</span> <span class="n">transaction_data</span>
 </span><span id="StackScript-31"><a href="#StackScript-31"><span class="linenos"> 31</span></a>
 </span><span id="StackScript-32"><a href="#StackScript-32"><span class="linenos"> 32</span></a>    <span class="k">def</span> <span class="nf">op_dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-33"><a href="#StackScript-33"><span class="linenos"> 33</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-34"><a href="#StackScript-34"><span class="linenos"> 34</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
-</span><span id="StackScript-35"><a href="#StackScript-35"><span class="linenos"> 35</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
-</span><span id="StackScript-36"><a href="#StackScript-36"><span class="linenos"> 36</span></a>
-</span><span id="StackScript-37"><a href="#StackScript-37"><span class="linenos"> 37</span></a>    <span class="k">def</span> <span class="nf">op_hash160</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-38"><a href="#StackScript-38"><span class="linenos"> 38</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-39"><a href="#StackScript-39"><span class="linenos"> 39</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">last_element</span><span class="p">,</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;sha256&quot;</span><span class="p">),</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">))</span>
-</span><span id="StackScript-40"><a href="#StackScript-40"><span class="linenos"> 40</span></a>
-</span><span id="StackScript-41"><a href="#StackScript-41"><span class="linenos"> 41</span></a>    <span class="k">def</span> <span class="nf">op_equal_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-42"><a href="#StackScript-42"><span class="linenos"> 42</span></a>        <span class="n">last_element_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-43"><a href="#StackScript-43"><span class="linenos"> 43</span></a>        <span class="n">last_element_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-44"><a href="#StackScript-44"><span class="linenos"> 44</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="StackScript-45"><a href="#StackScript-45"><span class="linenos"> 45</span></a>        <span class="c1">#logging.info(f&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; last_element_1: {last_element_1} last_element_2: {last_element_2} check:{last_element_1 == last_element_2}&quot;)</span>
-</span><span id="StackScript-46"><a href="#StackScript-46"><span class="linenos"> 46</span></a>        <span class="k">assert</span> <span class="n">last_element_1</span> <span class="o">==</span> <span class="n">last_element_2</span>
-</span><span id="StackScript-47"><a href="#StackScript-47"><span class="linenos"> 47</span></a>
-</span><span id="StackScript-48"><a href="#StackScript-48"><span class="linenos"> 48</span></a>    <span class="k">def</span> <span class="nf">op_checksig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-49"><a href="#StackScript-49"><span class="linenos"> 49</span></a>        <span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-50"><a href="#StackScript-50"><span class="linenos"> 50</span></a>        <span class="n">signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-51"><a href="#StackScript-51"><span class="linenos"> 51</span></a>        <span class="n">signature_decoded</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-</span><span id="StackScript-52"><a href="#StackScript-52"><span class="linenos"> 52</span></a>        <span class="n">public_key_bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-</span><span id="StackScript-53"><a href="#StackScript-53"><span class="linenos"> 53</span></a>        <span class="n">public_key_object</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">import_key</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">public_key_bytes</span><span class="p">))</span>
-</span><span id="StackScript-54"><a href="#StackScript-54"><span class="linenos"> 54</span></a>        <span class="n">transaction_bytes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-</span><span id="StackScript-55"><a href="#StackScript-55"><span class="linenos"> 55</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="StackScript-56"><a href="#StackScript-56"><span class="linenos"> 56</span></a>        <span class="c1">#logging.info(f&quot;======check signature: self.transaction_data {self.transaction_data}&quot;)</span>
-</span><span id="StackScript-57"><a href="#StackScript-57"><span class="linenos"> 57</span></a>        <span class="c1">#logging.info(f&quot;======check signature_decoded: self.transaction_data {signature}&quot;)</span>
-</span><span id="StackScript-58"><a href="#StackScript-58"><span class="linenos"> 58</span></a>        <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">transaction_bytes</span><span class="p">)</span>
-</span><span id="StackScript-59"><a href="#StackScript-59"><span class="linenos"> 59</span></a>        <span class="n">pkcs1_15</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">public_key_object</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">signature_decoded</span><span class="p">)</span>
-</span><span id="StackScript-60"><a href="#StackScript-60"><span class="linenos"> 60</span></a>
-</span><span id="StackScript-61"><a href="#StackScript-61"><span class="linenos"> 61</span></a>    <span class="k">def</span> <span class="nf">op_account_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-62"><a href="#StackScript-62"><span class="linenos"> 62</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-63"><a href="#StackScript-63"><span class="linenos"> 63</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-64"><a href="#StackScript-64"><span class="linenos"> 64</span></a>
-</span><span id="StackScript-65"><a href="#StackScript-65"><span class="linenos"> 65</span></a>    <span class="k">def</span> <span class="nf">mp_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-66"><a href="#StackScript-66"><span class="linenos"> 66</span></a>        <span class="c1">#removal of public_key_hash</span>
-</span><span id="StackScript-67"><a href="#StackScript-67"><span class="linenos"> 67</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-68"><a href="#StackScript-68"><span class="linenos"> 68</span></a>
-</span><span id="StackScript-69"><a href="#StackScript-69"><span class="linenos"> 69</span></a>    <span class="k">def</span> <span class="nf">mp_payref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-70"><a href="#StackScript-70"><span class="linenos"> 70</span></a>        <span class="c1">#validation that the conversion rate of NIG in MP_CUR is valid</span>
-</span><span id="StackScript-71"><a href="#StackScript-71"><span class="linenos"> 71</span></a>        <span class="kn">from</span> <span class="nn">node.main</span> <span class="kn">import</span> <span class="n">calculate_nig_rate</span>
-</span><span id="StackScript-72"><a href="#StackScript-72"><span class="linenos"> 72</span></a>        <span class="n">MP_NIG_TIME</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="StackScript-73"><a href="#StackScript-73"><span class="linenos"> 73</span></a>        <span class="n">MP_NIG</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="StackScript-74"><a href="#StackScript-74"><span class="linenos"> 74</span></a>        <span class="n">MP_CUR</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript-75"><a href="#StackScript-75"><span class="linenos"> 75</span></a>        <span class="n">MP_AMOUNT</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="StackScript-76"><a href="#StackScript-76"><span class="linenos"> 76</span></a>        <span class="n">nig_rate</span><span class="o">=</span><span class="n">calculate_nig_rate</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="n">MP_NIG_TIME</span><span class="p">,</span><span class="n">currency</span><span class="o">=</span><span class="n">MP_CUR</span><span class="p">)</span>
-</span><span id="StackScript-77"><a href="#StackScript-77"><span class="linenos"> 77</span></a>        <span class="n">requested_nig</span><span class="o">=</span><span class="n">normal_round</span><span class="p">(</span><span class="n">MP_AMOUNT</span><span class="o">/</span><span class="n">nig_rate</span><span class="p">,</span><span class="n">ROUND_VALUE_DIGIT</span><span class="p">)</span>
-</span><span id="StackScript-78"><a href="#StackScript-78"><span class="linenos"> 78</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="StackScript-79"><a href="#StackScript-79"><span class="linenos"> 79</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; nig_rate: </span><span class="si">{</span><span class="n">nig_rate</span><span class="si">}</span><span class="s2"> requested_nig: </span><span class="si">{</span><span class="n">requested_nig</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">requested_nig</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MP_NIG</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="StackScript-80"><a href="#StackScript-80"><span class="linenos"> 80</span></a>        <span class="k">assert</span> <span class="n">requested_nig</span> <span class="o">==</span> <span class="n">MP_NIG</span>
-</span><span id="StackScript-81"><a href="#StackScript-81"><span class="linenos"> 81</span></a>
-</span><span id="StackScript-82"><a href="#StackScript-82"><span class="linenos"> 82</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_genesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-83"><a href="#StackScript-83"><span class="linenos"> 83</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-84"><a href="#StackScript-84"><span class="linenos"> 84</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-85"><a href="#StackScript-85"><span class="linenos"> 85</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-86"><a href="#StackScript-86"><span class="linenos"> 86</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-87"><a href="#StackScript-87"><span class="linenos"> 87</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-88"><a href="#StackScript-88"><span class="linenos"> 88</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-89"><a href="#StackScript-89"><span class="linenos"> 89</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-90"><a href="#StackScript-90"><span class="linenos"> 90</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-91"><a href="#StackScript-91"><span class="linenos"> 91</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-92"><a href="#StackScript-92"><span class="linenos"> 92</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-93"><a href="#StackScript-93"><span class="linenos"> 93</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-94"><a href="#StackScript-94"><span class="linenos"> 94</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-95"><a href="#StackScript-95"><span class="linenos"> 95</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-96"><a href="#StackScript-96"><span class="linenos"> 96</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-97"><a href="#StackScript-97"><span class="linenos"> 97</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-98"><a href="#StackScript-98"><span class="linenos"> 98</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-99"><a href="#StackScript-99"><span class="linenos"> 99</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-100"><a href="#StackScript-100"><span class="linenos">100</span></a>    <span class="k">def</span> <span class="nf">mp_cur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-33"><a href="#StackScript-33"><span class="linenos"> 33</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript-34"><a href="#StackScript-34"><span class="linenos"> 34</span></a>            <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-35"><a href="#StackScript-35"><span class="linenos"> 35</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="StackScript-36"><a href="#StackScript-36"><span class="linenos"> 36</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="StackScript-37"><a href="#StackScript-37"><span class="linenos"> 37</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript-38"><a href="#StackScript-38"><span class="linenos"> 38</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript-39"><a href="#StackScript-39"><span class="linenos"> 39</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript-40"><a href="#StackScript-40"><span class="linenos"> 40</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_dup issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-41"><a href="#StackScript-41"><span class="linenos"> 41</span></a>
+</span><span id="StackScript-42"><a href="#StackScript-42"><span class="linenos"> 42</span></a>    <span class="k">def</span> <span class="nf">op_hash160</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-43"><a href="#StackScript-43"><span class="linenos"> 43</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript-44"><a href="#StackScript-44"><span class="linenos"> 44</span></a>            <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-45"><a href="#StackScript-45"><span class="linenos"> 45</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">last_element</span><span class="p">,</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;sha256&quot;</span><span class="p">),</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">))</span>
+</span><span id="StackScript-46"><a href="#StackScript-46"><span class="linenos"> 46</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript-47"><a href="#StackScript-47"><span class="linenos"> 47</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript-48"><a href="#StackScript-48"><span class="linenos"> 48</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript-49"><a href="#StackScript-49"><span class="linenos"> 49</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_hash160 issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-50"><a href="#StackScript-50"><span class="linenos"> 50</span></a>
+</span><span id="StackScript-51"><a href="#StackScript-51"><span class="linenos"> 51</span></a>    <span class="k">def</span> <span class="nf">op_equal_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-52"><a href="#StackScript-52"><span class="linenos"> 52</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript-53"><a href="#StackScript-53"><span class="linenos"> 53</span></a>            <span class="n">last_element_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-54"><a href="#StackScript-54"><span class="linenos"> 54</span></a>            <span class="n">last_element_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-55"><a href="#StackScript-55"><span class="linenos"> 55</span></a>            <span class="k">assert</span> <span class="n">last_element_1</span> <span class="o">==</span> <span class="n">last_element_2</span>
+</span><span id="StackScript-56"><a href="#StackScript-56"><span class="linenos"> 56</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript-57"><a href="#StackScript-57"><span class="linenos"> 57</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript-58"><a href="#StackScript-58"><span class="linenos"> 58</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript-59"><a href="#StackScript-59"><span class="linenos"> 59</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; last_element_1: </span><span class="si">{</span><span class="n">last_element_1</span><span class="si">}</span><span class="s2"> last_element_2: </span><span class="si">{</span><span class="n">last_element_2</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">last_element_1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">last_element_2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-60"><a href="#StackScript-60"><span class="linenos"> 60</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_equal_verify issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-61"><a href="#StackScript-61"><span class="linenos"> 61</span></a>
+</span><span id="StackScript-62"><a href="#StackScript-62"><span class="linenos"> 62</span></a>    <span class="k">def</span> <span class="nf">op_checksig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-63"><a href="#StackScript-63"><span class="linenos"> 63</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript-64"><a href="#StackScript-64"><span class="linenos"> 64</span></a>            <span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-65"><a href="#StackScript-65"><span class="linenos"> 65</span></a>            <span class="n">signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-66"><a href="#StackScript-66"><span class="linenos"> 66</span></a>            <span class="n">signature_decoded</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+</span><span id="StackScript-67"><a href="#StackScript-67"><span class="linenos"> 67</span></a>            <span class="n">public_key_bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="StackScript-68"><a href="#StackScript-68"><span class="linenos"> 68</span></a>            <span class="n">public_key_object</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">import_key</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">public_key_bytes</span><span class="p">))</span>
+</span><span id="StackScript-69"><a href="#StackScript-69"><span class="linenos"> 69</span></a>            <span class="n">transaction_bytes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+</span><span id="StackScript-70"><a href="#StackScript-70"><span class="linenos"> 70</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript-71"><a href="#StackScript-71"><span class="linenos"> 71</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;======check signature: self.transaction_data </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-72"><a href="#StackScript-72"><span class="linenos"> 72</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;======check signature_decoded: self.transaction_data </span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-73"><a href="#StackScript-73"><span class="linenos"> 73</span></a>            <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">transaction_bytes</span><span class="p">)</span>
+</span><span id="StackScript-74"><a href="#StackScript-74"><span class="linenos"> 74</span></a>            <span class="n">pkcs1_15</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">public_key_object</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">signature_decoded</span><span class="p">)</span>
+</span><span id="StackScript-75"><a href="#StackScript-75"><span class="linenos"> 75</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript-76"><a href="#StackScript-76"><span class="linenos"> 76</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript-77"><a href="#StackScript-77"><span class="linenos"> 77</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_checksig issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-78"><a href="#StackScript-78"><span class="linenos"> 78</span></a>
+</span><span id="StackScript-79"><a href="#StackScript-79"><span class="linenos"> 79</span></a>    <span class="k">def</span> <span class="nf">op_account_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-80"><a href="#StackScript-80"><span class="linenos"> 80</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-81"><a href="#StackScript-81"><span class="linenos"> 81</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-82"><a href="#StackScript-82"><span class="linenos"> 82</span></a>
+</span><span id="StackScript-83"><a href="#StackScript-83"><span class="linenos"> 83</span></a>    <span class="k">def</span> <span class="nf">mp_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-84"><a href="#StackScript-84"><span class="linenos"> 84</span></a>        <span class="c1">#removal of public_key_hash</span>
+</span><span id="StackScript-85"><a href="#StackScript-85"><span class="linenos"> 85</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-86"><a href="#StackScript-86"><span class="linenos"> 86</span></a>
+</span><span id="StackScript-87"><a href="#StackScript-87"><span class="linenos"> 87</span></a>    <span class="k">def</span> <span class="nf">mp_payref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-88"><a href="#StackScript-88"><span class="linenos"> 88</span></a>        <span class="c1">#validation that the conversion rate of NIG in MP_CUR is valid</span>
+</span><span id="StackScript-89"><a href="#StackScript-89"><span class="linenos"> 89</span></a>        <span class="kn">from</span> <span class="nn">node.main</span> <span class="kn">import</span> <span class="n">calculate_nig_rate</span>
+</span><span id="StackScript-90"><a href="#StackScript-90"><span class="linenos"> 90</span></a>        <span class="n">MP_NIG_TIME</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="StackScript-91"><a href="#StackScript-91"><span class="linenos"> 91</span></a>        <span class="n">MP_NIG</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="StackScript-92"><a href="#StackScript-92"><span class="linenos"> 92</span></a>        <span class="n">MP_CUR</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript-93"><a href="#StackScript-93"><span class="linenos"> 93</span></a>        <span class="n">MP_AMOUNT</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="StackScript-94"><a href="#StackScript-94"><span class="linenos"> 94</span></a>        <span class="n">nig_rate</span><span class="o">=</span><span class="n">calculate_nig_rate</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="n">MP_NIG_TIME</span><span class="p">,</span><span class="n">currency</span><span class="o">=</span><span class="n">MP_CUR</span><span class="p">)</span>
+</span><span id="StackScript-95"><a href="#StackScript-95"><span class="linenos"> 95</span></a>        <span class="n">requested_nig</span><span class="o">=</span><span class="n">normal_round</span><span class="p">(</span><span class="n">MP_AMOUNT</span><span class="o">/</span><span class="n">nig_rate</span><span class="p">,</span><span class="n">ROUND_VALUE_DIGIT</span><span class="p">)</span>
+</span><span id="StackScript-96"><a href="#StackScript-96"><span class="linenos"> 96</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript-97"><a href="#StackScript-97"><span class="linenos"> 97</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; nig_rate: </span><span class="si">{</span><span class="n">nig_rate</span><span class="si">}</span><span class="s2"> requested_nig: </span><span class="si">{</span><span class="n">requested_nig</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">requested_nig</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MP_NIG</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript-98"><a href="#StackScript-98"><span class="linenos"> 98</span></a>        <span class="k">assert</span> <span class="n">requested_nig</span> <span class="o">==</span> <span class="n">MP_NIG</span>
+</span><span id="StackScript-99"><a href="#StackScript-99"><span class="linenos"> 99</span></a>
+</span><span id="StackScript-100"><a href="#StackScript-100"><span class="linenos">100</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_genesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="StackScript-101"><a href="#StackScript-101"><span class="linenos">101</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="StackScript-102"><a href="#StackScript-102"><span class="linenos">102</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-103"><a href="#StackScript-103"><span class="linenos">103</span></a>    <span class="k">def</span> <span class="nf">mp_nig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-103"><a href="#StackScript-103"><span class="linenos">103</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="StackScript-104"><a href="#StackScript-104"><span class="linenos">104</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="StackScript-105"><a href="#StackScript-105"><span class="linenos">105</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-106"><a href="#StackScript-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">mp_nig_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-106"><a href="#StackScript-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="StackScript-107"><a href="#StackScript-107"><span class="linenos">107</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="StackScript-108"><a href="#StackScript-108"><span class="linenos">108</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-109"><a href="#StackScript-109"><span class="linenos">109</span></a>    <span class="k">def</span> <span class="nf">mp_public_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-109"><a href="#StackScript-109"><span class="linenos">109</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="StackScript-110"><a href="#StackScript-110"><span class="linenos">110</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="StackScript-111"><a href="#StackScript-111"><span class="linenos">111</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-112"><a href="#StackScript-112"><span class="linenos">112</span></a>
-</span><span id="StackScript-113"><a href="#StackScript-113"><span class="linenos">113</span></a>    <span class="k">def</span> <span class="nf">op_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-114"><a href="#StackScript-114"><span class="linenos">114</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-115"><a href="#StackScript-115"><span class="linenos">115</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-116"><a href="#StackScript-116"><span class="linenos">116</span></a>
-</span><span id="StackScript-117"><a href="#StackScript-117"><span class="linenos">117</span></a>    <span class="k">def</span> <span class="nf">op_del_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript-118"><a href="#StackScript-118"><span class="linenos">118</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript-119"><a href="#StackScript-119"><span class="linenos">119</span></a>        <span class="k">pass</span>
-</span><span id="StackScript-120"><a href="#StackScript-120"><span class="linenos">120</span></a>
-</span><span id="StackScript-121"><a href="#StackScript-121"><span class="linenos">121</span></a>    <span class="k">def</span> <span class="nf">op_re</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-112"><a href="#StackScript-112"><span class="linenos">112</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-113"><a href="#StackScript-113"><span class="linenos">113</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-114"><a href="#StackScript-114"><span class="linenos">114</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-115"><a href="#StackScript-115"><span class="linenos">115</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-116"><a href="#StackScript-116"><span class="linenos">116</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-117"><a href="#StackScript-117"><span class="linenos">117</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-118"><a href="#StackScript-118"><span class="linenos">118</span></a>    <span class="k">def</span> <span class="nf">mp_cur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-119"><a href="#StackScript-119"><span class="linenos">119</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-120"><a href="#StackScript-120"><span class="linenos">120</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-121"><a href="#StackScript-121"><span class="linenos">121</span></a>    <span class="k">def</span> <span class="nf">mp_nig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="StackScript-122"><a href="#StackScript-122"><span class="linenos">122</span></a>        <span class="c1">#nothing to do</span>
 </span><span id="StackScript-123"><a href="#StackScript-123"><span class="linenos">123</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-124"><a href="#StackScript-124"><span class="linenos">124</span></a>    <span class="k">def</span> <span class="nf">mp_nig_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-125"><a href="#StackScript-125"><span class="linenos">125</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-126"><a href="#StackScript-126"><span class="linenos">126</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-127"><a href="#StackScript-127"><span class="linenos">127</span></a>    <span class="k">def</span> <span class="nf">mp_public_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-128"><a href="#StackScript-128"><span class="linenos">128</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-129"><a href="#StackScript-129"><span class="linenos">129</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-130"><a href="#StackScript-130"><span class="linenos">130</span></a>
+</span><span id="StackScript-131"><a href="#StackScript-131"><span class="linenos">131</span></a>    <span class="k">def</span> <span class="nf">op_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-132"><a href="#StackScript-132"><span class="linenos">132</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-133"><a href="#StackScript-133"><span class="linenos">133</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-134"><a href="#StackScript-134"><span class="linenos">134</span></a>
+</span><span id="StackScript-135"><a href="#StackScript-135"><span class="linenos">135</span></a>    <span class="k">def</span> <span class="nf">op_del_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-136"><a href="#StackScript-136"><span class="linenos">136</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-137"><a href="#StackScript-137"><span class="linenos">137</span></a>        <span class="k">pass</span>
+</span><span id="StackScript-138"><a href="#StackScript-138"><span class="linenos">138</span></a>
+</span><span id="StackScript-139"><a href="#StackScript-139"><span class="linenos">139</span></a>    <span class="k">def</span> <span class="nf">op_re</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript-140"><a href="#StackScript-140"><span class="linenos">140</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript-141"><a href="#StackScript-141"><span class="linenos">141</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -500,9 +536,14 @@
     </div>
     <a class="headerlink" href="#StackScript.op_dup"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_dup-32"><a href="#StackScript.op_dup-32"><span class="linenos">32</span></a>    <span class="k">def</span> <span class="nf">op_dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_dup-33"><a href="#StackScript.op_dup-33"><span class="linenos">33</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.op_dup-34"><a href="#StackScript.op_dup-34"><span class="linenos">34</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
-</span><span id="StackScript.op_dup-35"><a href="#StackScript.op_dup-35"><span class="linenos">35</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="StackScript.op_dup-33"><a href="#StackScript.op_dup-33"><span class="linenos">33</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript.op_dup-34"><a href="#StackScript.op_dup-34"><span class="linenos">34</span></a>            <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.op_dup-35"><a href="#StackScript.op_dup-35"><span class="linenos">35</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="StackScript.op_dup-36"><a href="#StackScript.op_dup-36"><span class="linenos">36</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
+</span><span id="StackScript.op_dup-37"><a href="#StackScript.op_dup-37"><span class="linenos">37</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript.op_dup-38"><a href="#StackScript.op_dup-38"><span class="linenos">38</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript.op_dup-39"><a href="#StackScript.op_dup-39"><span class="linenos">39</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript.op_dup-40"><a href="#StackScript.op_dup-40"><span class="linenos">40</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_dup issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -520,9 +561,14 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_hash160"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_hash160-37"><a href="#StackScript.op_hash160-37"><span class="linenos">37</span></a>    <span class="k">def</span> <span class="nf">op_hash160</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_hash160-38"><a href="#StackScript.op_hash160-38"><span class="linenos">38</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.op_hash160-39"><a href="#StackScript.op_hash160-39"><span class="linenos">39</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">last_element</span><span class="p">,</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;sha256&quot;</span><span class="p">),</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_hash160-42"><a href="#StackScript.op_hash160-42"><span class="linenos">42</span></a>    <span class="k">def</span> <span class="nf">op_hash160</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_hash160-43"><a href="#StackScript.op_hash160-43"><span class="linenos">43</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript.op_hash160-44"><a href="#StackScript.op_hash160-44"><span class="linenos">44</span></a>            <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.op_hash160-45"><a href="#StackScript.op_hash160-45"><span class="linenos">45</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">last_element</span><span class="p">,</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;sha256&quot;</span><span class="p">),</span> <span class="n">hash_function</span><span class="o">=</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">))</span>
+</span><span id="StackScript.op_hash160-46"><a href="#StackScript.op_hash160-46"><span class="linenos">46</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript.op_hash160-47"><a href="#StackScript.op_hash160-47"><span class="linenos">47</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript.op_hash160-48"><a href="#StackScript.op_hash160-48"><span class="linenos">48</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript.op_hash160-49"><a href="#StackScript.op_hash160-49"><span class="linenos">49</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_hash160 issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -540,12 +586,16 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_equal_verify"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_equal_verify-41"><a href="#StackScript.op_equal_verify-41"><span class="linenos">41</span></a>    <span class="k">def</span> <span class="nf">op_equal_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_equal_verify-42"><a href="#StackScript.op_equal_verify-42"><span class="linenos">42</span></a>        <span class="n">last_element_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.op_equal_verify-43"><a href="#StackScript.op_equal_verify-43"><span class="linenos">43</span></a>        <span class="n">last_element_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.op_equal_verify-44"><a href="#StackScript.op_equal_verify-44"><span class="linenos">44</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="StackScript.op_equal_verify-45"><a href="#StackScript.op_equal_verify-45"><span class="linenos">45</span></a>        <span class="c1">#logging.info(f&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; last_element_1: {last_element_1} last_element_2: {last_element_2} check:{last_element_1 == last_element_2}&quot;)</span>
-</span><span id="StackScript.op_equal_verify-46"><a href="#StackScript.op_equal_verify-46"><span class="linenos">46</span></a>        <span class="k">assert</span> <span class="n">last_element_1</span> <span class="o">==</span> <span class="n">last_element_2</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_equal_verify-51"><a href="#StackScript.op_equal_verify-51"><span class="linenos">51</span></a>    <span class="k">def</span> <span class="nf">op_equal_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_equal_verify-52"><a href="#StackScript.op_equal_verify-52"><span class="linenos">52</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript.op_equal_verify-53"><a href="#StackScript.op_equal_verify-53"><span class="linenos">53</span></a>            <span class="n">last_element_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.op_equal_verify-54"><a href="#StackScript.op_equal_verify-54"><span class="linenos">54</span></a>            <span class="n">last_element_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.op_equal_verify-55"><a href="#StackScript.op_equal_verify-55"><span class="linenos">55</span></a>            <span class="k">assert</span> <span class="n">last_element_1</span> <span class="o">==</span> <span class="n">last_element_2</span>
+</span><span id="StackScript.op_equal_verify-56"><a href="#StackScript.op_equal_verify-56"><span class="linenos">56</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript.op_equal_verify-57"><a href="#StackScript.op_equal_verify-57"><span class="linenos">57</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript.op_equal_verify-58"><a href="#StackScript.op_equal_verify-58"><span class="linenos">58</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript.op_equal_verify-59"><a href="#StackScript.op_equal_verify-59"><span class="linenos">59</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; last_element_1: </span><span class="si">{</span><span class="n">last_element_1</span><span class="si">}</span><span class="s2"> last_element_2: </span><span class="si">{</span><span class="n">last_element_2</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">last_element_1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">last_element_2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript.op_equal_verify-60"><a href="#StackScript.op_equal_verify-60"><span class="linenos">60</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_equal_verify issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -563,18 +613,22 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_checksig"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_checksig-48"><a href="#StackScript.op_checksig-48"><span class="linenos">48</span></a>    <span class="k">def</span> <span class="nf">op_checksig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_checksig-49"><a href="#StackScript.op_checksig-49"><span class="linenos">49</span></a>        <span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.op_checksig-50"><a href="#StackScript.op_checksig-50"><span class="linenos">50</span></a>        <span class="n">signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.op_checksig-51"><a href="#StackScript.op_checksig-51"><span class="linenos">51</span></a>        <span class="n">signature_decoded</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-</span><span id="StackScript.op_checksig-52"><a href="#StackScript.op_checksig-52"><span class="linenos">52</span></a>        <span class="n">public_key_bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-</span><span id="StackScript.op_checksig-53"><a href="#StackScript.op_checksig-53"><span class="linenos">53</span></a>        <span class="n">public_key_object</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">import_key</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">public_key_bytes</span><span class="p">))</span>
-</span><span id="StackScript.op_checksig-54"><a href="#StackScript.op_checksig-54"><span class="linenos">54</span></a>        <span class="n">transaction_bytes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-</span><span id="StackScript.op_checksig-55"><a href="#StackScript.op_checksig-55"><span class="linenos">55</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="StackScript.op_checksig-56"><a href="#StackScript.op_checksig-56"><span class="linenos">56</span></a>        <span class="c1">#logging.info(f&quot;======check signature: self.transaction_data {self.transaction_data}&quot;)</span>
-</span><span id="StackScript.op_checksig-57"><a href="#StackScript.op_checksig-57"><span class="linenos">57</span></a>        <span class="c1">#logging.info(f&quot;======check signature_decoded: self.transaction_data {signature}&quot;)</span>
-</span><span id="StackScript.op_checksig-58"><a href="#StackScript.op_checksig-58"><span class="linenos">58</span></a>        <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">transaction_bytes</span><span class="p">)</span>
-</span><span id="StackScript.op_checksig-59"><a href="#StackScript.op_checksig-59"><span class="linenos">59</span></a>        <span class="n">pkcs1_15</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">public_key_object</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">signature_decoded</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_checksig-62"><a href="#StackScript.op_checksig-62"><span class="linenos">62</span></a>    <span class="k">def</span> <span class="nf">op_checksig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_checksig-63"><a href="#StackScript.op_checksig-63"><span class="linenos">63</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="StackScript.op_checksig-64"><a href="#StackScript.op_checksig-64"><span class="linenos">64</span></a>            <span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.op_checksig-65"><a href="#StackScript.op_checksig-65"><span class="linenos">65</span></a>            <span class="n">signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.op_checksig-66"><a href="#StackScript.op_checksig-66"><span class="linenos">66</span></a>            <span class="n">signature_decoded</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+</span><span id="StackScript.op_checksig-67"><a href="#StackScript.op_checksig-67"><span class="linenos">67</span></a>            <span class="n">public_key_bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="StackScript.op_checksig-68"><a href="#StackScript.op_checksig-68"><span class="linenos">68</span></a>            <span class="n">public_key_object</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">import_key</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">public_key_bytes</span><span class="p">))</span>
+</span><span id="StackScript.op_checksig-69"><a href="#StackScript.op_checksig-69"><span class="linenos">69</span></a>            <span class="n">transaction_bytes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+</span><span id="StackScript.op_checksig-70"><a href="#StackScript.op_checksig-70"><span class="linenos">70</span></a>            <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript.op_checksig-71"><a href="#StackScript.op_checksig-71"><span class="linenos">71</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;======check signature: self.transaction_data </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript.op_checksig-72"><a href="#StackScript.op_checksig-72"><span class="linenos">72</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;======check signature_decoded: self.transaction_data </span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript.op_checksig-73"><a href="#StackScript.op_checksig-73"><span class="linenos">73</span></a>            <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">transaction_bytes</span><span class="p">)</span>
+</span><span id="StackScript.op_checksig-74"><a href="#StackScript.op_checksig-74"><span class="linenos">74</span></a>            <span class="n">pkcs1_15</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">public_key_object</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">signature_decoded</span><span class="p">)</span>
+</span><span id="StackScript.op_checksig-75"><a href="#StackScript.op_checksig-75"><span class="linenos">75</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="StackScript.op_checksig-76"><a href="#StackScript.op_checksig-76"><span class="linenos">76</span></a>            <span class="c1">#self.is_valid = True</span>
+</span><span id="StackScript.op_checksig-77"><a href="#StackScript.op_checksig-77"><span class="linenos">77</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op_checksig issue: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -592,9 +646,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_account_temp"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_account_temp-61"><a href="#StackScript.op_account_temp-61"><span class="linenos">61</span></a>    <span class="k">def</span> <span class="nf">op_account_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_account_temp-62"><a href="#StackScript.op_account_temp-62"><span class="linenos">62</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.op_account_temp-63"><a href="#StackScript.op_account_temp-63"><span class="linenos">63</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_account_temp-79"><a href="#StackScript.op_account_temp-79"><span class="linenos">79</span></a>    <span class="k">def</span> <span class="nf">op_account_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_account_temp-80"><a href="#StackScript.op_account_temp-80"><span class="linenos">80</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.op_account_temp-81"><a href="#StackScript.op_account_temp-81"><span class="linenos">81</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -612,9 +666,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_amount"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_amount-65"><a href="#StackScript.mp_amount-65"><span class="linenos">65</span></a>    <span class="k">def</span> <span class="nf">mp_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_amount-66"><a href="#StackScript.mp_amount-66"><span class="linenos">66</span></a>        <span class="c1">#removal of public_key_hash</span>
-</span><span id="StackScript.mp_amount-67"><a href="#StackScript.mp_amount-67"><span class="linenos">67</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_amount-83"><a href="#StackScript.mp_amount-83"><span class="linenos">83</span></a>    <span class="k">def</span> <span class="nf">mp_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_amount-84"><a href="#StackScript.mp_amount-84"><span class="linenos">84</span></a>        <span class="c1">#removal of public_key_hash</span>
+</span><span id="StackScript.mp_amount-85"><a href="#StackScript.mp_amount-85"><span class="linenos">85</span></a>        <span class="n">last_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -632,18 +686,18 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_payref"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_payref-69"><a href="#StackScript.mp_payref-69"><span class="linenos">69</span></a>    <span class="k">def</span> <span class="nf">mp_payref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_payref-70"><a href="#StackScript.mp_payref-70"><span class="linenos">70</span></a>        <span class="c1">#validation that the conversion rate of NIG in MP_CUR is valid</span>
-</span><span id="StackScript.mp_payref-71"><a href="#StackScript.mp_payref-71"><span class="linenos">71</span></a>        <span class="kn">from</span> <span class="nn">node.main</span> <span class="kn">import</span> <span class="n">calculate_nig_rate</span>
-</span><span id="StackScript.mp_payref-72"><a href="#StackScript.mp_payref-72"><span class="linenos">72</span></a>        <span class="n">MP_NIG_TIME</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="StackScript.mp_payref-73"><a href="#StackScript.mp_payref-73"><span class="linenos">73</span></a>        <span class="n">MP_NIG</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="StackScript.mp_payref-74"><a href="#StackScript.mp_payref-74"><span class="linenos">74</span></a>        <span class="n">MP_CUR</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</span><span id="StackScript.mp_payref-75"><a href="#StackScript.mp_payref-75"><span class="linenos">75</span></a>        <span class="n">MP_AMOUNT</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-</span><span id="StackScript.mp_payref-76"><a href="#StackScript.mp_payref-76"><span class="linenos">76</span></a>        <span class="n">nig_rate</span><span class="o">=</span><span class="n">calculate_nig_rate</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="n">MP_NIG_TIME</span><span class="p">,</span><span class="n">currency</span><span class="o">=</span><span class="n">MP_CUR</span><span class="p">)</span>
-</span><span id="StackScript.mp_payref-77"><a href="#StackScript.mp_payref-77"><span class="linenos">77</span></a>        <span class="n">requested_nig</span><span class="o">=</span><span class="n">normal_round</span><span class="p">(</span><span class="n">MP_AMOUNT</span><span class="o">/</span><span class="n">nig_rate</span><span class="p">,</span><span class="n">ROUND_VALUE_DIGIT</span><span class="p">)</span>
-</span><span id="StackScript.mp_payref-78"><a href="#StackScript.mp_payref-78"><span class="linenos">78</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="StackScript.mp_payref-79"><a href="#StackScript.mp_payref-79"><span class="linenos">79</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; nig_rate: </span><span class="si">{</span><span class="n">nig_rate</span><span class="si">}</span><span class="s2"> requested_nig: </span><span class="si">{</span><span class="n">requested_nig</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">requested_nig</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MP_NIG</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="StackScript.mp_payref-80"><a href="#StackScript.mp_payref-80"><span class="linenos">80</span></a>        <span class="k">assert</span> <span class="n">requested_nig</span> <span class="o">==</span> <span class="n">MP_NIG</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_payref-87"><a href="#StackScript.mp_payref-87"><span class="linenos">87</span></a>    <span class="k">def</span> <span class="nf">mp_payref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_payref-88"><a href="#StackScript.mp_payref-88"><span class="linenos">88</span></a>        <span class="c1">#validation that the conversion rate of NIG in MP_CUR is valid</span>
+</span><span id="StackScript.mp_payref-89"><a href="#StackScript.mp_payref-89"><span class="linenos">89</span></a>        <span class="kn">from</span> <span class="nn">node.main</span> <span class="kn">import</span> <span class="n">calculate_nig_rate</span>
+</span><span id="StackScript.mp_payref-90"><a href="#StackScript.mp_payref-90"><span class="linenos">90</span></a>        <span class="n">MP_NIG_TIME</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="StackScript.mp_payref-91"><a href="#StackScript.mp_payref-91"><span class="linenos">91</span></a>        <span class="n">MP_NIG</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="StackScript.mp_payref-92"><a href="#StackScript.mp_payref-92"><span class="linenos">92</span></a>        <span class="n">MP_CUR</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span id="StackScript.mp_payref-93"><a href="#StackScript.mp_payref-93"><span class="linenos">93</span></a>        <span class="n">MP_AMOUNT</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+</span><span id="StackScript.mp_payref-94"><a href="#StackScript.mp_payref-94"><span class="linenos">94</span></a>        <span class="n">nig_rate</span><span class="o">=</span><span class="n">calculate_nig_rate</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="n">MP_NIG_TIME</span><span class="p">,</span><span class="n">currency</span><span class="o">=</span><span class="n">MP_CUR</span><span class="p">)</span>
+</span><span id="StackScript.mp_payref-95"><a href="#StackScript.mp_payref-95"><span class="linenos">95</span></a>        <span class="n">requested_nig</span><span class="o">=</span><span class="n">normal_round</span><span class="p">(</span><span class="n">MP_AMOUNT</span><span class="o">/</span><span class="n">nig_rate</span><span class="p">,</span><span class="n">ROUND_VALUE_DIGIT</span><span class="p">)</span>
+</span><span id="StackScript.mp_payref-96"><a href="#StackScript.mp_payref-96"><span class="linenos">96</span></a>        <span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="StackScript.mp_payref-97"><a href="#StackScript.mp_payref-97"><span class="linenos">97</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&amp;&amp;&amp;&amp;&amp;&amp;&amp; nig_rate: </span><span class="si">{</span><span class="n">nig_rate</span><span class="si">}</span><span class="s2"> requested_nig: </span><span class="si">{</span><span class="n">requested_nig</span><span class="si">}</span><span class="s2"> check:</span><span class="si">{</span><span class="n">requested_nig</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MP_NIG</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="StackScript.mp_payref-98"><a href="#StackScript.mp_payref-98"><span class="linenos">98</span></a>        <span class="k">assert</span> <span class="n">requested_nig</span> <span class="o">==</span> <span class="n">MP_NIG</span>
 </span></pre></div>
 
 
@@ -661,9 +715,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_marketplace_genesis"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_genesis-82"><a href="#StackScript.mp_marketplace_genesis-82"><span class="linenos">82</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_genesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_marketplace_genesis-83"><a href="#StackScript.mp_marketplace_genesis-83"><span class="linenos">83</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_marketplace_genesis-84"><a href="#StackScript.mp_marketplace_genesis-84"><span class="linenos">84</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_genesis-100"><a href="#StackScript.mp_marketplace_genesis-100"><span class="linenos">100</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_genesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_marketplace_genesis-101"><a href="#StackScript.mp_marketplace_genesis-101"><span class="linenos">101</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_marketplace_genesis-102"><a href="#StackScript.mp_marketplace_genesis-102"><span class="linenos">102</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -681,9 +735,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_marketplace_step0"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step0-85"><a href="#StackScript.mp_marketplace_step0-85"><span class="linenos">85</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_marketplace_step0-86"><a href="#StackScript.mp_marketplace_step0-86"><span class="linenos">86</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_marketplace_step0-87"><a href="#StackScript.mp_marketplace_step0-87"><span class="linenos">87</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step0-103"><a href="#StackScript.mp_marketplace_step0-103"><span class="linenos">103</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_marketplace_step0-104"><a href="#StackScript.mp_marketplace_step0-104"><span class="linenos">104</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_marketplace_step0-105"><a href="#StackScript.mp_marketplace_step0-105"><span class="linenos">105</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -701,9 +755,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_marketplace_step1"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step1-88"><a href="#StackScript.mp_marketplace_step1-88"><span class="linenos">88</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_marketplace_step1-89"><a href="#StackScript.mp_marketplace_step1-89"><span class="linenos">89</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_marketplace_step1-90"><a href="#StackScript.mp_marketplace_step1-90"><span class="linenos">90</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step1-106"><a href="#StackScript.mp_marketplace_step1-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_marketplace_step1-107"><a href="#StackScript.mp_marketplace_step1-107"><span class="linenos">107</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_marketplace_step1-108"><a href="#StackScript.mp_marketplace_step1-108"><span class="linenos">108</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -721,9 +775,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_marketplace_step2"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step2-91"><a href="#StackScript.mp_marketplace_step2-91"><span class="linenos">91</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_marketplace_step2-92"><a href="#StackScript.mp_marketplace_step2-92"><span class="linenos">92</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_marketplace_step2-93"><a href="#StackScript.mp_marketplace_step2-93"><span class="linenos">93</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step2-109"><a href="#StackScript.mp_marketplace_step2-109"><span class="linenos">109</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_marketplace_step2-110"><a href="#StackScript.mp_marketplace_step2-110"><span class="linenos">110</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_marketplace_step2-111"><a href="#StackScript.mp_marketplace_step2-111"><span class="linenos">111</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -741,9 +795,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_marketplace_step3"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step3-94"><a href="#StackScript.mp_marketplace_step3-94"><span class="linenos">94</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_marketplace_step3-95"><a href="#StackScript.mp_marketplace_step3-95"><span class="linenos">95</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_marketplace_step3-96"><a href="#StackScript.mp_marketplace_step3-96"><span class="linenos">96</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step3-112"><a href="#StackScript.mp_marketplace_step3-112"><span class="linenos">112</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_marketplace_step3-113"><a href="#StackScript.mp_marketplace_step3-113"><span class="linenos">113</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_marketplace_step3-114"><a href="#StackScript.mp_marketplace_step3-114"><span class="linenos">114</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -761,9 +815,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_marketplace_step4"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step4-97"><a href="#StackScript.mp_marketplace_step4-97"><span class="linenos">97</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_marketplace_step4-98"><a href="#StackScript.mp_marketplace_step4-98"><span class="linenos">98</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_marketplace_step4-99"><a href="#StackScript.mp_marketplace_step4-99"><span class="linenos">99</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_marketplace_step4-115"><a href="#StackScript.mp_marketplace_step4-115"><span class="linenos">115</span></a>    <span class="k">def</span> <span class="nf">mp_marketplace_step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_marketplace_step4-116"><a href="#StackScript.mp_marketplace_step4-116"><span class="linenos">116</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_marketplace_step4-117"><a href="#StackScript.mp_marketplace_step4-117"><span class="linenos">117</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -781,9 +835,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_cur"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_cur-100"><a href="#StackScript.mp_cur-100"><span class="linenos">100</span></a>    <span class="k">def</span> <span class="nf">mp_cur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_cur-101"><a href="#StackScript.mp_cur-101"><span class="linenos">101</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_cur-102"><a href="#StackScript.mp_cur-102"><span class="linenos">102</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_cur-118"><a href="#StackScript.mp_cur-118"><span class="linenos">118</span></a>    <span class="k">def</span> <span class="nf">mp_cur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_cur-119"><a href="#StackScript.mp_cur-119"><span class="linenos">119</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_cur-120"><a href="#StackScript.mp_cur-120"><span class="linenos">120</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -801,9 +855,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_nig"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_nig-103"><a href="#StackScript.mp_nig-103"><span class="linenos">103</span></a>    <span class="k">def</span> <span class="nf">mp_nig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_nig-104"><a href="#StackScript.mp_nig-104"><span class="linenos">104</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_nig-105"><a href="#StackScript.mp_nig-105"><span class="linenos">105</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_nig-121"><a href="#StackScript.mp_nig-121"><span class="linenos">121</span></a>    <span class="k">def</span> <span class="nf">mp_nig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_nig-122"><a href="#StackScript.mp_nig-122"><span class="linenos">122</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_nig-123"><a href="#StackScript.mp_nig-123"><span class="linenos">123</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -821,9 +875,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_nig_time"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_nig_time-106"><a href="#StackScript.mp_nig_time-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">mp_nig_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_nig_time-107"><a href="#StackScript.mp_nig_time-107"><span class="linenos">107</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_nig_time-108"><a href="#StackScript.mp_nig_time-108"><span class="linenos">108</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_nig_time-124"><a href="#StackScript.mp_nig_time-124"><span class="linenos">124</span></a>    <span class="k">def</span> <span class="nf">mp_nig_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_nig_time-125"><a href="#StackScript.mp_nig_time-125"><span class="linenos">125</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_nig_time-126"><a href="#StackScript.mp_nig_time-126"><span class="linenos">126</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -841,9 +895,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.mp_public_key"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_public_key-109"><a href="#StackScript.mp_public_key-109"><span class="linenos">109</span></a>    <span class="k">def</span> <span class="nf">mp_public_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.mp_public_key-110"><a href="#StackScript.mp_public_key-110"><span class="linenos">110</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.mp_public_key-111"><a href="#StackScript.mp_public_key-111"><span class="linenos">111</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.mp_public_key-127"><a href="#StackScript.mp_public_key-127"><span class="linenos">127</span></a>    <span class="k">def</span> <span class="nf">mp_public_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.mp_public_key-128"><a href="#StackScript.mp_public_key-128"><span class="linenos">128</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.mp_public_key-129"><a href="#StackScript.mp_public_key-129"><span class="linenos">129</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -861,9 +915,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_sc"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_sc-113"><a href="#StackScript.op_sc-113"><span class="linenos">113</span></a>    <span class="k">def</span> <span class="nf">op_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_sc-114"><a href="#StackScript.op_sc-114"><span class="linenos">114</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.op_sc-115"><a href="#StackScript.op_sc-115"><span class="linenos">115</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_sc-131"><a href="#StackScript.op_sc-131"><span class="linenos">131</span></a>    <span class="k">def</span> <span class="nf">op_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_sc-132"><a href="#StackScript.op_sc-132"><span class="linenos">132</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.op_sc-133"><a href="#StackScript.op_sc-133"><span class="linenos">133</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -881,9 +935,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_del_sc"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_del_sc-117"><a href="#StackScript.op_del_sc-117"><span class="linenos">117</span></a>    <span class="k">def</span> <span class="nf">op_del_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_del_sc-118"><a href="#StackScript.op_del_sc-118"><span class="linenos">118</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.op_del_sc-119"><a href="#StackScript.op_del_sc-119"><span class="linenos">119</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_del_sc-135"><a href="#StackScript.op_del_sc-135"><span class="linenos">135</span></a>    <span class="k">def</span> <span class="nf">op_del_sc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_del_sc-136"><a href="#StackScript.op_del_sc-136"><span class="linenos">136</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.op_del_sc-137"><a href="#StackScript.op_del_sc-137"><span class="linenos">137</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -901,9 +955,9 @@
 
     </div>
     <a class="headerlink" href="#StackScript.op_re"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_re-121"><a href="#StackScript.op_re-121"><span class="linenos">121</span></a>    <span class="k">def</span> <span class="nf">op_re</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="StackScript.op_re-122"><a href="#StackScript.op_re-122"><span class="linenos">122</span></a>        <span class="c1">#nothing to do</span>
-</span><span id="StackScript.op_re-123"><a href="#StackScript.op_re-123"><span class="linenos">123</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="StackScript.op_re-139"><a href="#StackScript.op_re-139"><span class="linenos">139</span></a>    <span class="k">def</span> <span class="nf">op_re</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="StackScript.op_re-140"><a href="#StackScript.op_re-140"><span class="linenos">140</span></a>        <span class="c1">#nothing to do</span>
+</span><span id="StackScript.op_re-141"><a href="#StackScript.op_re-141"><span class="linenos">141</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 

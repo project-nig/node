@@ -13,6 +13,7 @@ class TransactionInput:
         self.unlocking_script = unlocking_script
         self.unlocking_public_key_hash = unlocking_public_key_hash
         self.network=kwargs.get('network',NETWORK_DEFAULT)
+        self.marketplace_flag=kwargs.get('marketplace_flag',False)
 
     def to_json(self, with_unlocking_script: bool = True) -> str:
         return json.dumps(self.to_dict(with_unlocking_script))

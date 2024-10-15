@@ -137,11 +137,18 @@ def extract_marketplace_account(outputs):
     return marketplace_place_account
 
 
-def check_marketplace_step1(outputs, *args, **kwargs):
+def check_marketplace_step1_sell(outputs, *args, **kwargs):
     """
-    Check if the output of a transaction is a MarketPlace 1 request
+    Check if the output of a transaction is a MarketPlace sell request (step = -1)
+    """
+    return check_marketplace_raw(outputs,-1, *args, **kwargs)
+
+def check_marketplace_step1_buy(outputs, *args, **kwargs):
+    """
+    Check if the output of a transaction is a MarketPlace buy request (step = 1)
     """
     return check_marketplace_raw(outputs,1, *args, **kwargs)
+
 
 def check_marketplace_step(step,outputs):
     """
@@ -183,7 +190,7 @@ def check_smart_contract_consistency(transaction):
         else:
             #check inputs
             #if 5==6:
-            if check_marketplace_step1(outputs,check_user_flag=False) is False and check_marketplace_step2(outputs) is False:
+            if check_marketplace_step1_buy(outputs,check_user_flag=False) is False and check_marketplace_step1_sell(outputs,check_user_flag=False) is False and check_marketplace_step2(outputs) is False:
                 if len(inputs)>1:
                     smart_contract_flag="error"
                     smart_contract_error_list.append(["More than 1 input"])
@@ -303,7 +310,7 @@ def check_marketplace_reputation_refresh(outputs):
 
 
 def get_carriage_transaction(mp_account,requested_amount,requested_gap,sc,next_mp):
-    '''SmartContract use to carriage a step 1 transaction in the Marketplace
+    '''SmartContract use to carriage a step 1 (buy request) or -1 (sell request) transaction in the Marketplace
     '''
     from common.smart_contract import SmartContract
     from common.transaction import Transaction
@@ -365,7 +372,7 @@ next_mp="{next_mp}"
     transaction_1.sign(marketplace_owner)
     return transaction_1
 
-def delete_carriage_transaction(sc_to_delete):
+def get_carriage_transaction_to_delete(sc_to_delete):
     '''Delete the SmartContract use to carriage a step 1 transaction in the Marketplace
     '''
     try:
@@ -378,82 +385,88 @@ def delete_carriage_transaction(sc_to_delete):
     from common.transaction_output import TransactionOutput
     from common.transaction_input import TransactionInput
     from node.main import marketplace_owner
-    from common.values import MARKETPLACE_BUY
+    carriage_transaction_list=[]
     master_state=MasterState()
-    mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(sc_to_delete)
-    if mp_account_to_update is not None:
+    action_list=["buy","sell"]
+    try:
+        for action in action_list:
+            mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(action,sc_to_delete)
+            if mp_account_to_update is not None:
 
-        from common.smart_contract import load_smart_contract_from_master_state
-        smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account_to_update)
-        if nb_transactions<=1:
-            payload=f'''
+                from common.smart_contract import load_smart_contract_from_master_state
+                smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account_to_update)
+                if nb_transactions<=1:
+                    payload=f'''
 memory_obj_2_load=['carriage_request']
 carriage_request.reset()
 memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
 '''
-        else:
-            if mp_first_account_to_update_data_flag is True:
-                requested_amount=mp_account_to_update_data["amount"]
-                requested_gap=mp_account_to_update_data["gap"]
-                sc=mp_account_to_update_data["sc"]
-                next_mp=mp_account_to_update_data["next_mp"]
-                payload=f'''
+                else:
+                    if mp_first_account_to_update_data_flag is True:
+                        requested_amount=mp_account_to_update_data["amount"]
+                        requested_gap=mp_account_to_update_data["gap"]
+                        sc=mp_account_to_update_data["sc"]
+                        next_mp=mp_account_to_update_data["next_mp"]
+                        payload=f'''
 memory_obj_2_load=['carriage_request']
 carriage_request.step=10
 carriage_request.requested_amount="{requested_amount}"
 carriage_request.requested_gap="{requested_gap}"
 carriage_request.sc="{sc}"
 carriage_request.next_mp="{next_mp}"
-
 memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
 '''
-            else:
-                payload=f'''
+                    else:
+                        payload=f'''
 memory_obj_2_load=['carriage_request']
 carriage_request.step=10
 carriage_request.next_mp="{new_next_mp}"
 memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
 '''
-        smart_contract_block=SmartContract(mp_account_to_update,
-                                    smart_contract_sender=marketplace_owner.public_key_hash,
-                                    smart_contract_new=False,
-                                    smart_contract_gas=1000000,
-                                    smart_contract_type="source",
-                                    payload=payload,
-                                    smart_contract_previous_transaction=smart_contract_transaction_hash)
-        smart_contract_block.process()
+                smart_contract_block=SmartContract(mp_account_to_update,
+                                            smart_contract_sender=marketplace_owner.public_key_hash,
+                                            smart_contract_new=False,
+                                            smart_contract_gas=1000000,
+                                            smart_contract_type="source",
+                                            payload=payload,
+                                            smart_contract_previous_transaction=smart_contract_transaction_hash)
+                smart_contract_block.process()
 
-        from common.io_blockchain import BlockchainMemory
-        blockchain_memory = BlockchainMemory()
-        blockchain_base = blockchain_memory.get_blockchain_from_memory()
-        utxo_dict=blockchain_base.get_user_utxos(mp_account_to_update)
+                from common.io_blockchain import BlockchainMemory
+                blockchain_memory = BlockchainMemory()
+                blockchain_base = blockchain_memory.get_blockchain_from_memory()
+                utxo_dict=blockchain_base.get_user_utxos(mp_account_to_update)
     
-        unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+mp_account_to_update
-    
-        for utxo in utxo_dict['utxos']:
-            #input value in case of existing carriage request
-            input_1 = TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash)
-            output_1 = TransactionOutput(list_public_key_hash=[mp_account_to_update], 
-                                                    amount=0,
-                                                    account_temp=True,
-                                                    smart_contract_transaction_flag=False,
-                                                    marketplace_transaction_flag=True,
-                                                    smart_contract_account=smart_contract_block.smart_contract_account,
-                                                    smart_contract_sender=smart_contract_block.smart_contract_sender,
-                                                    smart_contract_new=smart_contract_block.smart_contract_new,
-                                                    smart_contract_flag=True,
-                                                    smart_contract_gas=smart_contract_block.gas,
-                                                    smart_contract_memory=smart_contract_block.smart_contract_memory,
-                                                    smart_contract_memory_size=smart_contract_block.smart_contract_memory_size,
-                                                    smart_contract_type=smart_contract_block.smart_contract_type,
-                                                    smart_contract_payload=smart_contract_block.payload,
-                                                    smart_contract_result=smart_contract_block.result,
-                                                    smart_contract_previous_transaction=smart_contract_block.smart_contract_previous_transaction)
-            transaction_1 = Transaction([input_1], [output_1])
-            break
-
-        transaction_1.sign(marketplace_owner)
-        return transaction_1
+                unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+mp_account_to_update
+            
+                transaction_1=None
+                for utxo in utxo_dict['utxos']:
+                    #input value in case of existing carriage request
+                    input_1 = TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash)
+                    output_1 = TransactionOutput(list_public_key_hash=[mp_account_to_update], 
+                                                            amount=0,
+                                                            account_temp=True,
+                                                            smart_contract_transaction_flag=False,
+                                                            marketplace_transaction_flag=True,
+                                                            smart_contract_account=smart_contract_block.smart_contract_account,
+                                                            smart_contract_sender=smart_contract_block.smart_contract_sender,
+                                                            smart_contract_new=smart_contract_block.smart_contract_new,
+                                                            smart_contract_flag=True,
+                                                            smart_contract_gas=smart_contract_block.gas,
+                                                            smart_contract_memory=smart_contract_block.smart_contract_memory,
+                                                            smart_contract_memory_size=smart_contract_block.smart_contract_memory_size,
+                                                            smart_contract_type=smart_contract_block.smart_contract_type,
+                                                            smart_contract_payload=smart_contract_block.payload,
+                                                            smart_contract_result=smart_contract_block.result,
+                                                            smart_contract_previous_transaction=smart_contract_block.smart_contract_previous_transaction)
+                    transaction_1 = Transaction([input_1], [output_1])
+                    break
+                if transaction_1 is not None:
+                    transaction_1.sign(marketplace_owner)
+                    carriage_transaction_list.append(transaction_1)
+    except Exception as e:
+        logging.info(f"###ERROR get_carriage_transaction_to_delete  Exception: {e}")
+    return carriage_transaction_list
 
        
 def extract_marketplace_request(block):

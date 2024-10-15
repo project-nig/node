@@ -5,6 +5,7 @@ import logging
 from common.values import NETWORK_DEFAULT,DEFAULT_TRANSACTION_FEE_PERCENTAGE,INTERFACE_TRANSACTION_FEE_SHARE,NODE_TRANSACTION_FEE_SHARE,MINER_TRANSACTION_FEE_SHARE,ROUND_VALUE_DIGIT
 from common.utils import calculate_hash,normal_round
 from blockchain_users.node import public_key_hash as node_public_key_hash
+from blockchain_users.interface import public_key_hash as INTERFACE_PUBLIC_KEY_HASH
 
 
 
@@ -30,8 +31,8 @@ class TransactionOutput:
             self.locking_script = f"OP_DUP OP_HASH160 {marketplace_owner.public_key_hash} OP_EQUAL_VERIFY OP_CHECKSIG{public_key_hash_str}"
             if account_temp=="reputation_creation":self.locking_script+=" OP_RE"
 
-            if marketplace_step==2:
-                #in marketplace_step 2, the marketplace contract needs to be deassociated from the SmartContract
+            if marketplace_step==15 or marketplace_step==2:
+                #in marketplace_step 15 & 2, the marketplace contract needs to be deassociated from the SmartContract
                 self.locking_script+=" OP_DEL_SC "+marketplace_owner.public_key_hash
 
             if marketplace_step==99 or marketplace_step==98 or marketplace_step==66:
@@ -56,7 +57,7 @@ class TransactionOutput:
             self.transaction_fee_percentage=DEFAULT_TRANSACTION_FEE_PERCENTAGE
         else:
             self.transaction_fee_percentage=0
-        self.interface_public_key_hash=kwargs.get('interface_public_key_hash',None)
+        self.interface_public_key_hash=kwargs.get('interface_public_key_hash',INTERFACE_PUBLIC_KEY_HASH)
         self.node_public_key_hash=node_public_key_hash
         coinbase_transaction=kwargs.get('coinbase_transaction',False)
         remaing_transaction=kwargs.get('remaing_transaction',False)

@@ -2,8 +2,8 @@ import json
 import logging
 import os
 import copy
-from common.utils import normal_round,check_marketplace_step1,check_smart_contract_consistency,check_marketplace_step2,extract_marketplace_account,check_marketplace_step,check_carriage_request
-from common.values import ROUND_VALUE_DIGIT, DEFAULT_TRANSACTION_FEE_PERCENTAGE,MARKETPLACE_BUY
+from common.utils import normal_round,check_marketplace_step1_sell,check_marketplace_step1_buy,check_smart_contract_consistency,check_marketplace_step2,extract_marketplace_account,check_marketplace_step,check_carriage_request
+from common.values import ROUND_VALUE_DIGIT, DEFAULT_TRANSACTION_FEE_PERCENTAGE,MARKETPLACE_BUY,MARKETPLACE_SELL
 from common.io_storage_sharding import StorageSharding
 
 
@@ -151,18 +151,14 @@ class MasterState:
             #if self.store_block_in_blockchain_in_memory_flag is False:
             temporary_file_master_state_raw=self.temporary_storage_sharding.read(account)
             if temporary_file_master_state_raw is not None:
-                #logging.info(f"### check TempBlockPoH 0 block_PoH:{block_PoH}")
                 #Sanity check to ensure that old TempBlockPoH is well deleted
                 block_PoH_list = list(temporary_file_master_state_raw)
                 try:
                     TempBlockPoH_index=block_PoH_list.index('TempBlockPoH')
-                    logging.info(f"### check TempBlockPoH 2 {TempBlockPoH_index}")
                     if TempBlockPoH_index<len(block_PoH_list)-1:
-                        logging.info(f"### check TempBlockPoH 3")
                         #a previousTempBlockPoH needs to be deleted
                         # because a most recent BlockPoH is existing
                         try:
-                            logging.info(f"### check TempBlockPoH 4")
                             temporary_file_master_state_raw.pop("TempBlockPoH")
                             logging.info(f"****ERROR removal of old TempBlockPoH for account: {account}")
                         except:pass
@@ -181,8 +177,16 @@ class MasterState:
         except:
             pass
 
-    def get_buy_mp_account_from_memory(self,requested_gap) -> list:
-        mp_account=MARKETPLACE_BUY
+    def get_buy_mp_account_from_memory(self,requested_gap):
+        return self.get_raw_mp_account_from_memory("buy",requested_gap)
+
+    def get_sell_mp_account_from_memory(self,requested_gap):
+        return self.get_raw_mp_account_from_memory("sell",requested_gap)
+
+
+    def get_raw_mp_account_from_memory(self,action,requested_gap):
+        if action=="buy":mp_account=MARKETPLACE_BUY
+        if action=="sell":mp_account=MARKETPLACE_SELL
         mp_amount=None
         mp_gap=None
         next_mp=None
@@ -205,19 +209,30 @@ class MasterState:
                 next_mp=mp_account_data['next_mp']
                 sc=mp_account_data['sc']
                 
-                if float(requested_gap)>float(mp_account_data['gap']):
+                if action=="buy" and float(requested_gap)>float(mp_account_data['gap']):
+                    break
+                if action=="sell" and float(requested_gap)<float(mp_account_data['gap']):
                     break
 
                 mp_account=mp_account_data['next_mp']
                 
             except Exception as e:
                 break
-        if mp_account is None:mp_account=MARKETPLACE_BUY
+        if mp_account is None:
+            if action=="buy":mp_account=MARKETPLACE_BUY
+            if action=="sell":mp_account=MARKETPLACE_SELL
         return mp_account,mp_amount,mp_gap,next_mp,sc,last_flag
 
-    def get_delete_mp_account_from_memory(self,sc_to_delete) -> list:
-        mp_account=MARKETPLACE_BUY
-        mp_account_to_update=MARKETPLACE_BUY
+    def get_delete_mp_account_from_memory(self,action,sc_to_delete) -> list:
+        if action=="buy":
+            mp_account=MARKETPLACE_BUY
+            mp_account_to_update=MARKETPLACE_BUY
+            default_marketplace_transaction=MARKETPLACE_BUY
+        if action=="sell":
+            mp_account=MARKETPLACE_SELL
+            mp_account_to_update=MARKETPLACE_SELL
+            default_marketplace_transaction=MARKETPLACE_SELL
+        
         new_next_mp=None
         nb_transactions=0
         mp_account_to_update_data=None
@@ -237,7 +252,7 @@ class MasterState:
                 break
 
         #2nd loop to retrieve the right carriage request
-        mp_account=MARKETPLACE_BUY
+        mp_account=default_marketplace_transaction
         while True:
             try:
                 try:
@@ -253,7 +268,7 @@ class MasterState:
                 if sc_to_delete==mp_account_data['sc']:
                     #this is the carriage request to delete
                     new_next_mp=mp_account_data['next_mp']
-                    if mp_account==MARKETPLACE_BUY:
+                    if mp_account==default_marketplace_transaction:
                         #specific process as it's the first carriage request
                         mp_account=mp_account_data['next_mp']
 
@@ -261,7 +276,7 @@ class MasterState:
                         mp_account_utxo=self.current_master_state[mp_account]
                         mp_account_data=mp_account_utxo['marketplace']
 
-                        mp_account_to_update=MARKETPLACE_BUY
+                        mp_account_to_update=default_marketplace_transaction
                         mp_account_to_update_data=mp_account_data
                         mp_first_account_to_update_data_flag=True
                             
@@ -330,7 +345,7 @@ class MasterState:
 
         #if check_marketplace_step1(transaction['outputs']) is False and "BlockVote" not in str(transaction['outputs']):
         #if check_marketplace_step1(transaction['outputs']) is False and check_marketplace_step(98,transaction['outputs']) is False and check_marketplace_step(99,transaction['outputs']) is False:
-        if check_marketplace_step1(transaction['outputs']) is False:
+        if check_marketplace_step1_buy(transaction['outputs']) is False and check_marketplace_step1_sell(transaction['outputs']) is False:
             try:
                 for i in range(0, len(transaction['inputs'])):
                     if "_" in transaction['inputs'][i]['transaction_hash']:old_utxo_key=transaction['inputs'][i]['transaction_hash']
@@ -437,10 +452,7 @@ class MasterState:
                                 #step = 98 is used to archive the expired marketplace request 
                                 if smart_contract_memory[0][3][j]==98:marketplace_place_archiving_flag=True
                                 #logging.info(f"======> MarketPlace {smart_contract_memory[0][3][j]}: {transaction_hash}")
-                                #the carriage request needs to be cancelled for Marketplace step 1
-                                #logging.info("###INFO CARRIAGE cancellation request")
-                                #from common.utils import delete_carriage_transaction
-                                #delete_carriage_transaction(utxo['smart_contract_account'])
+
                         if smart_contract_memory[0][2][j]=='requested_amount':marketplace_place_step4_requested_amount=smart_contract_memory[0][3][j]
                         if smart_contract_memory[0][2][j]=='requested_currency':marketplace_place_step4_requested_currency=smart_contract_memory[0][3][j]
                         if smart_contract_memory[0][2][j]=='buyer_public_key_hash':marketplace_place_step4_buyer=smart_contract_memory[0][3][j]
@@ -576,9 +588,13 @@ return carriage_request.get_mp_info()
                                 if marketplace_place_archiving_flag is False:associated_account_dic_step4_list=[marketplace_place_step4_buyer,marketplace_place_step4_seller]
                                 else:
                                     #this is an expired request which needs to be archived
-                                    #marketplace_place_step4_seller can be None in that case (ex:if step = 1)
-                                    if marketplace_place_step4_seller is None or marketplace_place_step4_seller=='':associated_account_dic_step4_list=[marketplace_place_step4_buyer]
-                                    else:associated_account_dic_step4_list=[marketplace_place_step4_buyer,marketplace_place_step4_seller]
+                                    #marketplace_place_step4_seller can be None ('') in step = 1
+                                    #marketplace_place_step4_buyer can be None ('') in step = -1
+                                    associated_account_dic_step4_list=[marketplace_place_step4_buyer,marketplace_place_step4_seller]
+                                    try:associated_account_dic_step4_list.remove('')
+                                    except:pass
+                                    try:associated_account_dic_step4_list.remove(None)
+                                    except:pass
                                 logging.info(f"INFO ### associated_account_dic_step4_list:{associated_account_dic_step4_list}")
                                 step=0
                                 for associated_account_dic_step4 in associated_account_dic_step4_list:

@@ -40,11 +40,11 @@ return marketplace_request_code.code
     #step 3: Generate the payload for the purchase request
     marketplace_script="""
 mp_request_step2_done=MarketplaceRequest()
-mp_request_step2_done.step1("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,requested_gap,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
+mp_request_step2_done.step1_buy("mp_request_step2_done",requester_public_key_hash,requester_public_key_hex,requested_amount,requested_gap,smart_contract_ref,new_user_flag,reputation_0,reputation_1)
 mp_request_step2_done.account=sender
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','recurrency_flag','recurrency_duration','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','recurrency_flag','recurrency_duration','timestamp_nig','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 mp_request_step2_done.get_requested_deposit()
 

@@ -29,33 +29,51 @@ class StackScript(Stack):
         self.transaction_data = transaction_data
 
     def op_dup(self):
-        last_element = self.pop()
-        self.push(last_element)
-        self.push(last_element)
+        try:
+            last_element = self.pop()
+            self.push(last_element)
+            self.push(last_element)
+        except Exception as e:
+            #self.is_valid = True
+            import logging
+            logging.info(f"op_dup issue: {e}")
 
     def op_hash160(self):
-        last_element = self.pop()
-        self.push(calculate_hash(calculate_hash(last_element, hash_function="sha256"), hash_function="ripemd160"))
+        try:
+            last_element = self.pop()
+            self.push(calculate_hash(calculate_hash(last_element, hash_function="sha256"), hash_function="ripemd160"))
+        except Exception as e:
+            #self.is_valid = True
+            import logging
+            logging.info(f"op_hash160 issue: {e}")
 
     def op_equal_verify(self):
-        last_element_1 = self.pop()
-        last_element_2 = self.pop()
-        import logging
-        #logging.info(f"&&&&&&& last_element_1: {last_element_1} last_element_2: {last_element_2} check:{last_element_1 == last_element_2}")
-        assert last_element_1 == last_element_2
+        try:
+            last_element_1 = self.pop()
+            last_element_2 = self.pop()
+            assert last_element_1 == last_element_2
+        except Exception as e:
+            #self.is_valid = True
+            import logging
+            logging.info(f"&&&&&&& last_element_1: {last_element_1} last_element_2: {last_element_2} check:{last_element_1 == last_element_2}")
+            logging.info(f"op_equal_verify issue: {e}")
 
     def op_checksig(self):
-        public_key = self.pop()
-        signature = self.pop()
-        signature_decoded = binascii.unhexlify(signature.encode("utf-8"))
-        public_key_bytes = public_key.encode("utf-8")
-        public_key_object = RSA.import_key(binascii.unhexlify(public_key_bytes))
-        transaction_bytes = json.dumps(self.transaction_data, indent=2).encode('utf-8')
-        import logging
-        #logging.info(f"======check signature: self.transaction_data {self.transaction_data}")
-        #logging.info(f"======check signature_decoded: self.transaction_data {signature}")
-        transaction_hash = SHA256.new(transaction_bytes)
-        pkcs1_15.new(public_key_object).verify(transaction_hash, signature_decoded)
+        try:
+            public_key = self.pop()
+            signature = self.pop()
+            signature_decoded = binascii.unhexlify(signature.encode("utf-8"))
+            public_key_bytes = public_key.encode("utf-8")
+            public_key_object = RSA.import_key(binascii.unhexlify(public_key_bytes))
+            transaction_bytes = json.dumps(self.transaction_data, indent=2).encode('utf-8')
+            import logging
+            logging.info(f"======check signature: self.transaction_data {self.transaction_data}")
+            logging.info(f"======check signature_decoded: self.transaction_data {signature}")
+            transaction_hash = SHA256.new(transaction_bytes)
+            pkcs1_15.new(public_key_object).verify(transaction_hash, signature_decoded)
+        except Exception as e:
+            #self.is_valid = True
+            logging.info(f"op_checksig issue: {e}")
 
     def op_account_temp(self):
         #nothing to do

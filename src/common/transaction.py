@@ -53,6 +53,14 @@ class Transaction:
         signature_hex = binascii.hexlify(self.sign_transaction_data(owner)).decode("utf-8")
         for transaction_input in self.inputs:
             transaction_input.unlocking_script = f"{signature_hex} {owner.public_key_hex}"
+
+    def sign(self, owner):
+        signature_hex = binascii.hexlify(self.sign_transaction_data(owner)).decode("utf-8")
+        from node.main import marketplace_owner
+        marketplace_signature_hex = binascii.hexlify(self.sign_transaction_data(marketplace_owner)).decode("utf-8")
+        for transaction_input in self.inputs:
+            if transaction_input.marketplace_flag is False:transaction_input.unlocking_script = f"{signature_hex} {owner.public_key_hex}"
+            else:transaction_input.unlocking_script = f"{marketplace_signature_hex} {marketplace_owner.public_key_hex}"
     
     @property
     def transaction_data(self) -> dict:

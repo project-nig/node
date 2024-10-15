@@ -6,7 +6,7 @@ import binascii
 from datetime import datetime
 
 from common.utils import calculate_hash,normal_round,convert_str_2_bool
-from common.values import ROUND_VALUE_DIGIT,MARKETPLACE_STEP1_EXPIRATION,MARKETPLACE_STEP2_EXPIRATION,MARKETPLACE_STEP3_EXPIRATION,THRESHOLD0_TO_SALE_2_NEWUSER,THRESHOLD1_TO_SALE_2_NEWUSER,CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER,MARKETPLACE_STEP1_NB_ITEM_LIST
+from common.values import ROUND_VALUE_DIGIT,MARKETPLACE_STEP1_SELL_EXPIRATION,MARKETPLACE_STEP1_BUY_EXPIRATION,MARKETPLACE_STEP15_EXPIRATION,MARKETPLACE_STEP2_EXPIRATION,MARKETPLACE_STEP3_EXPIRATION,THRESHOLD0_TO_SALE_2_NEWUSER,THRESHOLD1_TO_SALE_2_NEWUSER,CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER,MARKETPLACE_STEP1_NB_ITEM_LIST
 
 from common.smart_contract_script import *
 
@@ -595,7 +595,7 @@ class Block:
         ####SMART CONTRACT
         try:marketplace_step=int(marketplace_step_raw)
         except:marketplace_step=0
-        from common.values import MY_HOSTNAME,MARKETPLACE_BUY
+        from common.values import MY_HOSTNAME,MARKETPLACE_BUY,MARKETPLACE_SELL
         from blockchain_users.marketplace import private_key as marketplace_private_key
         from blockchain_users.marketplace import public_key_hash as marketplace_public_key
         from common.node import Node
@@ -612,7 +612,7 @@ class Block:
 
         if CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER is True:sell_to_new_user_flag=False
         else:sell_to_new_user_flag=True
-        logging.info(f"### Check sell_to_new_user_flag:{sell_to_new_user_flag}")
+        #logging.info(f"### Check sell_to_new_user_flag:{sell_to_new_user_flag}")
         if marketplace_step==1:
             user_utxos=blockchain_base.get_user_utxos(MARKETPLACE_BUY)
             if CHECK_SELLER_REPUTATION_FLAG_FOR_NEW_BUYER is True:
@@ -639,9 +639,10 @@ reputation.get_reputation()
 
         else:user_utxos=blockchain_base.get_user_utxos(user_public_key_hash)
         #logging.info(f"### user_utxos:{user_utxos}")
-        #STEP 1 : Specific process for Marketplace step 1
-        if marketplace_step==1:
-            mp_request_account=MARKETPLACE_BUY
+        #STEP 1 : Specific process for Marketplace step 1 (buy request) and -1 (sell request)
+        if marketplace_step==-1 or marketplace_step==1:
+            if marketplace_step==1:mp_request_account=MARKETPLACE_BUY
+            if marketplace_step==-1:mp_request_account=MARKETPLACE_SELL
             mp_amount=None
             while True:
                 try:
@@ -689,14 +690,13 @@ reputation.get_reputation()
             #logging.info(f"### INFO marketplace_account {marketplace_account}")
             payload=f'''
 memory_obj_2_load=['mp_request_step2_done']
-mp_request_step2_done.get_mp_info_and_expiration({marketplace_step},'{user_public_key_hash}',{MARKETPLACE_STEP1_EXPIRATION},{MARKETPLACE_STEP2_EXPIRATION},{MARKETPLACE_STEP3_EXPIRATION})
+mp_request_step2_done.get_mp_info_and_expiration({marketplace_step},'{user_public_key_hash}',{MARKETPLACE_STEP1_SELL_EXPIRATION},{MARKETPLACE_STEP1_BUY_EXPIRATION},{MARKETPLACE_STEP15_EXPIRATION},{MARKETPLACE_STEP2_EXPIRATION},{MARKETPLACE_STEP3_EXPIRATION})
 '''
             smart_contract=SmartContract(marketplace_account,
                                             smart_contract_sender='sender_public_key_hash',
                                             smart_contract_type="api",
                                             payload=payload)
             smart_contract.process()
-            #logging.info(f"### marketplace_account:{marketplace_account} marketplace_step:{marketplace_step} MARKETPLACE_STEP1_EXPIRATION:{MARKETPLACE_STEP1_EXPIRATION} MARKETPLACE_STEP2_EXPIRATION:{MARKETPLACE_STEP2_EXPIRATION} MARKETPLACE_STEP3_EXPIRATION:{MARKETPLACE_STEP3_EXPIRATION}")
             if smart_contract.error_flag is False:
                 locals()['smart_contract']
                 mp_info,expiration,requested_amount,step=smart_contract.result
@@ -758,7 +758,6 @@ mp_request_step2_done.get_mp_info_archive({marketplace_step})
                                                 smart_contract_type="api",
                                                 payload=payload)
                 smart_contract.process()
-                #logging.info(f"### marketplace_account:{marketplace_account} marketplace_step:{marketplace_step} MARKETPLACE_STEP1_EXPIRATION:{MARKETPLACE_STEP1_EXPIRATION} MARKETPLACE_STEP2_EXPIRATION:{MARKETPLACE_STEP2_EXPIRATION} MARKETPLACE_STEP3_EXPIRATION:{MARKETPLACE_STEP3_EXPIRATION}")
                 if smart_contract.error_flag is False:
                     if smart_contract.result is not None:
                         locals()['smart_contract']

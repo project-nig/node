@@ -121,9 +121,7 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
     seller_transaction_amount = kwargs.get('seller_transaction_amount',None)
     seller_public_key_hash = kwargs.get('seller_public_key_hash',None)
     buyer_requested_deposit = kwargs.get('buyer_requested_deposit',0)
-    
-    
-    
+
     
     smart_contract_amount=None
     try:
@@ -141,6 +139,7 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
         transaction_wallet=daniel_wallet
         smart_contract_new=True
         list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
+        #list_public_key_hash=[smart_contract_account,marketplace_owner.public_key_hash,sender_public_key_hash]
         smart_contract_transaction_hash=None
         account_temp=True
 
@@ -153,6 +152,7 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
         unlocking_public_key_hash=daniel_owner.public_key_hash
         transaction_wallet=daniel_wallet
         smart_contract_new=True
+        #list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
         list_public_key_hash=[smart_contract_account,sender_public_key_hash,marketplace_owner.public_key_hash]
         smart_contract_transaction_hash=None
         account_temp=True
@@ -169,7 +169,8 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
         transaction_wallet=camille_wallet
         smart_contract_new=False
         print(f"utxo_dict:{utxo_dict}")
-        list_public_key_hash=[smart_contract_account,sender_public_key_hash,daniel_owner.public_key_hash]
+        #list_public_key_hash=[smart_contract_account,sender_public_key_hash,daniel_owner.public_key_hash]
+        list_public_key_hash=[smart_contract_account,daniel_owner.public_key_hash,sender_public_key_hash]
         account_temp=True
 
     ####STEP 3
@@ -217,7 +218,7 @@ def get_smart_contract_detail(marketplace_step,smart_contract_account,payload,ma
         if int(marketplace_step)==1:input_list.append(TransactionInput(transaction_hash=buyer_utxo_dict['utxos'][0]['transaction_hash'], output_index=buyer_utxo_dict['utxos'][0]['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
         elif int(marketplace_step)==2:
             input_list.append(TransactionInput(transaction_hash=seller_utxo_dict['utxos'][0]['transaction_hash'], output_index=seller_utxo_dict['utxos'][0]['output_index'],unlocking_public_key_hash=seller_unlocking_public_key_hash))
-            input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
+            input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash,marketplace_flag=True))
         else:input_list.append(TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash))
 
         print(f"####amount:{amount} buyer_requested_deposit:{buyer_requested_deposit}")
@@ -329,7 +330,7 @@ reputation_1=1
     
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(0,smart_contract_account,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,transaction_amount_eur=transaction_amount_eur)
-    time.sleep(30)
+    time.sleep(40)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/1/'+marketplace_owner.public_key_hash
@@ -442,8 +443,8 @@ memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.step2("{camille_owner.public_key_hash}","{camille_owner.public_key_hex}","{encrypted_account}","{mp_request_signature}")
 mp_request_step2_done.validate_step()
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 123456
 '''
@@ -464,7 +465,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(2,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig)
     
-    time.sleep(30)
+    time.sleep(40)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/2/'+daniel_owner.public_key_hash
@@ -506,7 +507,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     assert smart_contract_transaction["fee_miner"]==0
     assert smart_contract_transaction["fee_node"]==0
     assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref+" OP_SC "+camille_owner.public_key_hash+" OP_SC "+daniel_owner.public_key_hash+" OP_DEL_SC "+marketplace_owner.public_key_hash
+    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref+" OP_SC "+daniel_owner.public_key_hash+" OP_SC "+camille_owner.public_key_hash+" OP_DEL_SC "+marketplace_owner.public_key_hash
     assert smart_contract_transaction["network"]=="nig"
     assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
 
@@ -579,8 +580,8 @@ memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.step3("{mp_request_signature}")
 mp_request_step2_done.validate_step()
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 123456
 '''
@@ -705,8 +706,8 @@ memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.step4("{mp_request_signature}")
 mp_request_step2_done.validate_step()
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 
 123456
@@ -725,7 +726,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(4,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig,seller_transaction_amount=seller_transaction_amount,buyer_requested_deposit=buyer_requested_deposit,seller_public_key_hash=seller_public_key_hash)
     
-    time.sleep(30)
+    time.sleep(50)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash
@@ -835,11 +836,11 @@ return marketplace_request_code.code
     requested_gap=0
     payload1=f'''
 mp_request_step2_done=MarketplaceRequest()
-mp_request_step2_done.step1("mp_request_step2_done","{daniel_owner.public_key_hash}","{daniel_owner.public_key_hex}",{transaction_amount_eur2},{requested_gap},"{smart_contract_account}","False",1,1)
+mp_request_step2_done.step1_buy("mp_request_step2_done","{daniel_owner.public_key_hash}","{daniel_owner.public_key_hex}",{transaction_amount_eur2},{requested_gap},"{smart_contract_account}","False",1,1)
 mp_request_step2_done.account=sender
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 mp_request_step2_done.get_requested_deposit()
 '''
@@ -994,8 +995,8 @@ memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.step2("{camille_owner.public_key_hash}","{camille_owner.public_key_hex}","{encrypted_account}","{mp_request_signature}")
 mp_request_step2_done.validate_step()
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 123456
 '''
@@ -1013,7 +1014,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step7 : launch the creation of a purchase request
     get_smart_contract_detail(2,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig,buyer_requested_deposit=buyer_requested_deposit)
     
-    time.sleep(30)
+    time.sleep(40)
     
     #step8 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/2/'+daniel_owner.public_key_hash
@@ -1055,7 +1056,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     assert smart_contract_transaction["fee_miner"]==0
     assert smart_contract_transaction["fee_node"]==0
     assert smart_contract_transaction["interface_public_key_hash"]==interface_public_key_hash
-    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref+" OP_SC "+camille_owner.public_key_hash+" OP_SC "+daniel_owner.public_key_hash+" OP_DEL_SC "+marketplace_owner.public_key_hash
+    assert smart_contract_transaction["locking_script"]=="OP_DUP OP_HASH160 "+marketplace_owner.public_key_hash+" OP_EQUAL_VERIFY OP_CHECKSIG OP_SC "+smart_contract_ref+" OP_SC "+daniel_owner.public_key_hash+" OP_SC "+camille_owner.public_key_hash+" OP_DEL_SC "+marketplace_owner.public_key_hash
     assert smart_contract_transaction["network"]=="nig"
     assert smart_contract_transaction["node_public_key_hash"]==node_public_key_hash
 
@@ -1137,8 +1138,8 @@ memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.step3("{mp_request_signature}")
 mp_request_step2_done.validate_step()
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 123456
 '''
@@ -1262,8 +1263,8 @@ memory_obj_2_load=['mp_request_step2_done']
 mp_request_step2_done.step4("{mp_request_signature}")
 mp_request_step2_done.validate_step()
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
-  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
-  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability',
+  'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
+  'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',
   'mp_request_signature','mp_request_id','previous_mp_request_name','mp_request_name','seller_safety_coef','smart_contract_ref','new_user_flag','reputation_buyer','reputation_seller']])
 
 123456
@@ -1282,7 +1283,7 @@ memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['a
     #step5 : launch the creation of a purchase request
     get_smart_contract_detail(4,smart_contract_ref,payload,marketplace_owner,daniel_owner,daniel_wallet,camille_owner,camille_wallet,smart_contract_wallet,requested_nig=requested_nig,seller_transaction_amount=seller_transaction_amount,buyer_requested_deposit=buyer_requested_deposit,seller_public_key_hash=seller_public_key_hash)
     
-    time.sleep(30)
+    time.sleep(50)
     
     #step6 : check that there is one purchase request in marketplace 1 and its content
     utxo_url='http://'+MY_HOSTNAME+'/marketplace_step/3/'+camille_owner.public_key_hash

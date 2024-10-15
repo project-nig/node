@@ -85,10 +85,12 @@ def NIG_RATE(*args, **kwargs):
     from node.main import calculate_nig_rate
     return calculate_nig_rate(*args, **kwargs)
 
-def CANCEL_SC(marketplace_account,marketplace_step,mp_request_signature):
+def CANCEL_SC(marketplace_account,marketplace_step,mp_request_signature,user_type):
     from node.main import MarketplaceRequestArchivingProcessing
     marketplace_request_archiving_processing=MarketplaceRequestArchivingProcessing()
-    marketplace_request_archiving_processing.launch(request_type="cancellation",marketplace_account=marketplace_account,marketplace_step=marketplace_step,mp_request_signature=mp_request_signature)
+    if user_type=="buyer":request_type="cancellation_by_buyer"
+    if user_type=="seller":request_type="cancellation_by_seller"
+    marketplace_request_archiving_processing.launch(request_type=request_type,marketplace_account=marketplace_account,marketplace_step=marketplace_step,mp_request_signature=mp_request_signature)
 
 def PAYMENT_DEFAULT_SC(marketplace_account,marketplace_step,mp_request_signature):
     from node.main import MarketplaceRequestArchivingProcessing
