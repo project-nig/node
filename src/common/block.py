@@ -572,12 +572,12 @@ class Block:
 
 
 
-    def get_followup_step4_pin(self,user_public_key_hash,payment_ref):
+    def get_followup_step4_pin(self,user_public_key_hash,smart_contract_ref):
         return_list=self.get_marketplace_step_raw(3,user_public_key_hash,followup_step4_pin_flag=True)
         pin_encrypted=None
         logging.info(f"return_list: {return_list}")
         for elem in return_list:
-            if elem['payment_ref']==payment_ref:
+            if elem['smart_contract_ref']==smart_contract_ref:
                 pin_encrypted=elem["encrypted_account"].split(" ")[2]
                 break
         return pin_encrypted

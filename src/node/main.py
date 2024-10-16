@@ -1083,12 +1083,12 @@ def PoH_reset():
     return "PoH_reset success", 200
 
 
-@app.route("/sell_followup_step4_pin/<user>/<payment_ref>", methods=['GET'])
-def sell_followup_step4_pin(user,payment_ref):
+@app.route("/sell_followup_step4_pin/<user>/<smart_contract_ref>", methods=['GET'])
+def sell_followup_step4_pin(user,smart_contract_ref):
     """
     check if the pin code provide in step 4 in the marketplace is valid.
     """
-    logging.info(f"sell_followup_step4_pin user:{user} payment_ref:{payment_ref}")
+    logging.info(f"sell_followup_step4_pin user:{user} smart_contract_ref:{smart_contract_ref}")
     pin_encrypted=None
     blockchain_memory = BlockchainMemory()
     try:
@@ -1096,14 +1096,14 @@ def sell_followup_step4_pin(user,payment_ref):
     except Exception as e:
         logging.info(f"exception: {e}")
     
-    pin_encrypted=blockchain_base.get_followup_step4_pin(user,payment_ref)
+    pin_encrypted=blockchain_base.get_followup_step4_pin(user,smart_contract_ref)
 
 
     if pin_encrypted is not None:
         response={'pin_encrypted':pin_encrypted}
         return jsonify(response)
     else:
-        logging.info(f"not pin found for payment_ref: {payment_ref}")
+        logging.info(f"###ERROR pin not found for user:{user} smart_contract_ref: {smart_contract_ref}")
         response={'pin_encrypted':'not found'}
         return jsonify(response)
     return "Restart success", 200
