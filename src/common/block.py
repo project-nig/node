@@ -678,7 +678,7 @@ reputation.get_reputation()
         if archive_flag is True:self.check_archive_marketplace_account(user_utxos,marketplace_step)
 
         #sorting of the list by request_gap
-        if marketplace_step==1:new_return_list = sorted(self.return_list, key=itemgetter('requested_gap'), reverse=True)
+        new_return_list = sorted(self.return_list, key=itemgetter('requested_gap'), reverse=True)
         if marketplace_step==-1:new_return_list = sorted(self.return_list, key=itemgetter('requested_gap'), reverse=False)
         
         return new_return_list
