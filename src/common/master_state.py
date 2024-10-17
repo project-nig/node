@@ -503,7 +503,7 @@ return carriage_request.get_mp_info()
                             requested_amount=mp_account_data['requested_amount']
                             requested_gap=mp_account_data['requested_gap']
                     except Exception as e:
-                        logging.info(f"### ISSUE master_state get mp_account_data account:{account} {e}")
+                        logging.info(f"### ISSUE master_state get mp_account_data account:{account_list[0]} {e}")
                         logging.exception(e)
                         
                     #Step 2 : retrieve the marketplace_data

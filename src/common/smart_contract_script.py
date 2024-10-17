@@ -645,7 +645,7 @@ application_version_script="""
 class Application:
     def __init__(self):
         self.version="23"
-        self.url="https://drive.google.com/file/d/17T3yQvPwHpelY_Ymq5r2M72VZjZ_mPEd/view?usp=drive_link"
+        self.url="https://drive.google.com/file/d/17qPvDDITi7OBmiVOpN3E85gYdPyldJu-/view?usp=drive_link"
 
     def get_version_data(self):
         return {"version":self.version,"url":self.url}

@@ -330,10 +330,7 @@ next_mp="{next_mp}"
                                 smart_contract_type="source",
                                 payload=payload)
     smart_contract_block.process()
-
-    from common.smart_contract import load_smart_contract_from_master_state
-    smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account)
-
+    
     from common.io_blockchain import BlockchainMemory
     blockchain_memory = BlockchainMemory()
     blockchain_base = blockchain_memory.get_blockchain_from_memory()
