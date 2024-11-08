@@ -16,6 +16,7 @@ The NIG project aims to remunerate the money lying dormant in current bank accou
 
 ## Authors
 
+- [@Guillaume Belanger](https://github.com/gruyaume) for his first release of the blockchain https://github.com/gruyaume/my-blockchain
 - [@Crypto_NIG](https://github.com/nigcrypto)
 
 
