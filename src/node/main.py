@@ -1016,22 +1016,28 @@ def restart():
     from common.consensus_blockchain import consensus_blockchain
     consensus_blockchain.refresh()
     
+
     
     #full reset of the network
     shutil.rmtree(STORAGE_DIR)
     os.makedirs(STORAGE_DIR)
     #ask all the node to rejoin the reseted network
     for node in new_node_list:
-        logging.info(f"node: {node} my_node:{my_node}")
         if node!= my_node:
-            node.restart_request()
+            try:
+                node.restart_request()
+            except Exception as e:
+                logging.info(f"### ERRROR restart_request issue:{e}")
     
     network.known_nodes_memory = KnownNodesMemory()
     network.join_network(reset_network=True)
     for node in new_node_list:
-        logging.info(f"node: {node} my_node:{my_node}")
         if node!= my_node:
-            node.restart_join()
+            time.sleep(5)
+            try:
+                node.restart_join()
+            except Exception as e:
+                logging.info(f"### ERRROR restart_join issue:{e}")
 
     response = app.response_class(
         response=json.dumps("Network Restart success"),
