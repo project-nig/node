@@ -551,10 +551,7 @@ class Block:
                          return self.master_state.current_master_state[utxo_unlocking_public_key_hash]['utxos_data'][utxo_key3]
                     except:
                         #there is no Transaction for this utxo_unlocking_public_key_hash
-                        logging.info(f"ERROR no Transaction for utxo_unlocking_public_key_hash: {utxo_unlocking_public_key_hash} utxo_hash:{utxo_hash}")
-
-       
-       
+                        logging.info(f"ERROR no Transaction for utxo_unlocking_public_key_hash: {utxo_unlocking_public_key_hash} utxo_hash:{utxo_hash}")          
 
     def get_locking_script_from_utxo_new(self,utxo_unlocking_public_key_hash:str, utxo_hash: str):
         #utxo_key=str(utxo_hash)+'_'+str(utxo_index)
@@ -568,9 +565,6 @@ class Block:
         else:utxo_key=str(utxo_hash)+'_'+str(utxo_index)
         self.master_state.get_master_state_from_memory_from_user(utxo_unlocking_public_key_hash,leader_node_flag=True,NIGthreading_flag=NIGthreading_flag)
         return self.master_state.current_master_state[utxo_unlocking_public_key_hash]['utxos_data'][utxo_key]['output']['locking_script']
-
-
-
 
     def get_followup_step4_pin(self,user_public_key_hash,smart_contract_ref):
         return_list=self.get_marketplace_step_raw(3,user_public_key_hash,followup_step4_pin_flag=True)
@@ -668,6 +662,7 @@ reputation.get_reputation()
                         if len(self.return_list)>=MARKETPLACE_STEP1_NB_ITEM_LIST:break
     
                     mp_request_account=mp_account_data['next_mp']
+                    if mp_request_account=="None":break
                 except Exception as e:
                     break
         else:
@@ -702,7 +697,7 @@ mp_request_step2_done.get_mp_info_and_expiration({marketplace_step},'{user_publi
                 locals()['smart_contract']
                 mp_info,expiration,requested_amount,step=smart_contract.result
                 #Step 1: Check if the request has expired
-                #logging.info(f"### marketplace_account:{marketplace_account} expiration:{expiration}")
+                logging.info(f"### marketplace_account:{marketplace_account} expiration:{expiration}")
                 if expiration is True or expiration=="True":
                     #this request needs to be archived
                     #logging.info(f"###INFO marketplace request: {marketplace_account} in step:{step} has expired")

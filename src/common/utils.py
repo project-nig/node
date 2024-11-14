@@ -385,8 +385,8 @@ def get_carriage_transaction_to_delete(sc_to_delete):
     carriage_transaction_list=[]
     master_state=MasterState()
     action_list=["buy","sell"]
-    try:
-        for action in action_list:
+    for action in action_list:
+        try:
             mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(action,sc_to_delete)
             if mp_account_to_update is not None:
 
@@ -428,7 +428,6 @@ memory_list.add([carriage_request,'carriage_request',['step','requested_amount',
                                             payload=payload,
                                             smart_contract_previous_transaction=smart_contract_transaction_hash)
                 smart_contract_block.process()
-
                 from common.io_blockchain import BlockchainMemory
                 blockchain_memory = BlockchainMemory()
                 blockchain_base = blockchain_memory.get_blockchain_from_memory()
@@ -461,8 +460,8 @@ memory_list.add([carriage_request,'carriage_request',['step','requested_amount',
                 if transaction_1 is not None:
                     transaction_1.sign(marketplace_owner)
                     carriage_transaction_list.append(transaction_1)
-    except Exception as e:
-        logging.info(f"###ERROR get_carriage_transaction_to_delete  Exception: {e}")
+        except Exception as e:
+            logging.info(f"###ERROR get_carriage_transaction_to_delete  Exception: {e}")
     return carriage_transaction_list
 
        

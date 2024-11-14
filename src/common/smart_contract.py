@@ -588,14 +588,12 @@ def load_smart_contract_from_master_state_leader_node(public_key_hash,*args, **k
         if key.startswith('smart_contract') is True:
             new_smart_contract_content[key]=smart_contract_content[key]
     #logging.info(f"CHECK smart_contract_content: {smart_contract_content}")
-    try:
-        new_smart_contract_content['output_index']=smart_contract_content['output_index']
-    except:
-        pass
-    try:
-        new_smart_contract_content['total']=smart_contract_content['amount']
-    except:
-        pass
+    
+    try:new_smart_contract_content['output_index']=smart_contract_content['output_index']
+    except:pass
+    
+    try:new_smart_contract_content['total']=smart_contract_content['amount']
+    except:pass
 
     #logging.info(f"CHECK smart_contract_data: {public_key_hash} {smart_contract_content}")
     return new_smart_contract_content

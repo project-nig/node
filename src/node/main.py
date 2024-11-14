@@ -1529,7 +1529,7 @@ def marketplace_request_archiving(*args, **kwargs):
     request_type = kwargs.get('request_type',None)
     mp_request_signature = kwargs.get('mp_request_signature',None)
     
-    user_type:None
+    user_type=None
     if request_type=="cancellation_by_buyer":user_type="buyer"
     if request_type=="cancellation_by_seller":user_type="seller"
     

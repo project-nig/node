@@ -629,7 +629,7 @@ return [mp_request_step2_done.buyer_public_key_hash,mp_request_step2_done.seller
 
 marketplace_expiration_script=f"""
 memory_obj_2_load=['mp_request_step2_done']
-mp_request_step2_done.validate_expiration({MARKETPLACE_STEP1_SELL_EXPIRATION},{MARKETPLACE_STEP1_BUY_EXPIRATION},{MARKETPLACE_STEP2_EXPIRATION},{MARKETPLACE_STEP3_EXPIRATION})
+mp_request_step2_done.validate_expiration({MARKETPLACE_STEP1_SELL_EXPIRATION},{MARKETPLACE_STEP1_BUY_EXPIRATION},{MARKETPLACE_STEP15_EXPIRATION},{MARKETPLACE_STEP2_EXPIRATION},{MARKETPLACE_STEP3_EXPIRATION})
 memory_list.add([mp_request_step2_done,mp_request_step2_done.mp_request_name,['account','step','timestamp','requested_amount',
   'requested_currency','requested_deposit','buyer_public_key_hash','timestamp_step1_sell','timestamp_step1_buy','timestamp_step15','timestamp_step2','timestamp_step3','timestamp_step4','requested_gap',
   'buyer_public_key_hex','requested_nig','timestamp_nig','recurrency_flag','recurrency_duration','seller_public_key_hex','seller_public_key_hash','encrypted_account','buyer_reput_trans','buyer_reput_reliability','seller_reput_trans','seller_reput_reliability',

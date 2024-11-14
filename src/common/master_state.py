@@ -160,7 +160,7 @@ class MasterState:
                         # because a most recent BlockPoH is existing
                         try:
                             temporary_file_master_state_raw.pop("TempBlockPoH")
-                            logging.info(f"****ERROR removal of old TempBlockPoH for account: {account}")
+                            logging.info(f"****INFO issue with removal of old TempBlockPoH for account: {account}")
                         except:pass
                 except:pass
 
