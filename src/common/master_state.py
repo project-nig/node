@@ -208,6 +208,11 @@ class MasterState:
                 mp_gap=mp_account_data['gap']
                 next_mp=mp_account_data['next_mp']
                 sc=mp_account_data['sc']
+
+                if mp_gap is None:
+                    #this is the last transaction following a carriage request reset
+                    last_flag=True
+                    break
                 
                 if action=="buy" and float(requested_gap)>float(mp_account_data['gap']):
                     break

@@ -710,7 +710,7 @@ class CarriageRequest:
     def reset(self):
         self.step=60
         self.requested_amount=0
-        self.requested_gap=0
+        self.requested_gap=None
         self.sc=None
         self.next_mp=None
 
