@@ -436,25 +436,27 @@ def delete_carriage_transaction(transaction,blockchain_base,master_state_temp):
     master_state=MasterState()
     for utxo in transaction.outputs:
         account_list=master_state.extract_account_list_from_locking_script("OP_SC",utxo)
-        from common.utils import get_carriage_transaction_to_delete
-        carriage_transaction_list=get_carriage_transaction_to_delete(account_list[0])
-        for carriage_transaction in carriage_transaction_list:
-            #update of temporay master state and storage with the carriage_transaction
-            carriage_transaction_2_save = Transaction(blockchain_base, MY_HOSTNAME)
-            carriage_transaction_2_save.receive(transaction=carriage_transaction.transaction_data)
-            carriage_transaction_2_save.is_funds_sufficient=True
-            carriage_transaction_2_save.is_valid=True
+        if len(account_list)>1:
+            #NIG output transaction, where len(account_list)=1  can be associated to a markerplace request
+            from common.utils import get_carriage_transaction_to_delete
+            carriage_transaction_list=get_carriage_transaction_to_delete(account_list[0])
+            for carriage_transaction in carriage_transaction_list:
+                #update of temporay master state and storage with the carriage_transaction
+                carriage_transaction_2_save = Transaction(blockchain_base, MY_HOSTNAME)
+                carriage_transaction_2_save.receive(transaction=carriage_transaction.transaction_data)
+                carriage_transaction_2_save.is_funds_sufficient=True
+                carriage_transaction_2_save.is_valid=True
                             
-            try:
-                master_state_temp.update_master_state(carriage_transaction.transaction_data,"TempBlockPoH",leader_node_flag=True,NIGthreading_flag=True)
-                master_state_temp.store_master_state_in_memory("TempBlockPoH")
-                carriage_transaction_2_save.store()
-                carriage_transaction_2_save.add_to_PoH(PoH_memory)
-            except Exception as e:
-                #issue with the SmartContract
-                #carriage_transaction.is_smart_contract_valid=False
-                logging.info(f"ERROR with update_master_state of carriage_transaction Exception: {e}")
-                logging.exception(e)
+                try:
+                    master_state_temp.update_master_state(carriage_transaction.transaction_data,"TempBlockPoH",leader_node_flag=True,NIGthreading_flag=True)
+                    master_state_temp.store_master_state_in_memory("TempBlockPoH")
+                    carriage_transaction_2_save.store()
+                    carriage_transaction_2_save.add_to_PoH(PoH_memory)
+                except Exception as e:
+                    #issue with the SmartContract
+                    #carriage_transaction.is_smart_contract_valid=False
+                    logging.info(f"ERROR with update_master_state of carriage_transaction Exception: {e}")
+                    logging.exception(e)
 
 
 def leader_node_advance_purge_backlog():

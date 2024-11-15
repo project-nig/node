@@ -289,6 +289,8 @@ class MasterState:
 
                 mp_account_to_update=mp_account
                 mp_account=mp_account_data['next_mp']
+
+                if mp_account=="None":break
                 
             except Exception as e:
                 break

@@ -388,7 +388,13 @@ def get_carriage_transaction_to_delete(sc_to_delete):
     for action in action_list:
         try:
             mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(action,sc_to_delete)
-            if mp_account_to_update is not None:
+            mp_account_to_update_flag=False
+            try:
+                if mp_account_to_update_data['sc'] is not None and mp_account_to_update_data['sc']!='None':mp_account_to_update_flag=True
+            except:
+                pass
+            
+            if mp_account_to_update_flag is True:
 
                 from common.smart_contract import load_smart_contract_from_master_state
                 smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account_to_update)
