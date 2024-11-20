@@ -242,6 +242,8 @@ class MasterState:
         nb_transactions=0
         mp_account_to_update_data=None
         mp_first_account_to_update_data_flag=False
+        mp_2_delete_flag=False
+
         
         #1st loop to ensure that there is more than 1 transaction
         while True:
@@ -273,6 +275,7 @@ class MasterState:
                 if sc_to_delete==mp_account_data['sc']:
                     #this is the carriage request to delete
                     new_next_mp=mp_account_data['next_mp']
+                    mp_2_delete_flag=True
                     if mp_account==default_marketplace_transaction:
                         #specific process as it's the first carriage request
                         mp_account=mp_account_data['next_mp']
@@ -294,7 +297,7 @@ class MasterState:
                 
             except Exception as e:
                 break
-        return mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag
+        return mp_2_delete_flag,mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag
 
     def update_master_state(self, transaction: list,block_PoH,*args, **kwargs):
         previous_PoH_hash = kwargs.get('previous_PoH_hash',None)

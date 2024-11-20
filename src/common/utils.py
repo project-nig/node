@@ -376,6 +376,7 @@ def get_carriage_transaction_to_delete(sc_to_delete):
         locals()['smart_contract']
     except:
         pass
+    logging.info(f"### INFO get_carriage_transaction_to_delete sc:{sc_to_delete}")
     from common.master_state import MasterState
     from common.smart_contract import SmartContract
     from common.transaction import Transaction
@@ -387,30 +388,32 @@ def get_carriage_transaction_to_delete(sc_to_delete):
     action_list=["buy","sell"]
     for action in action_list:
         try:
-            mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(action,sc_to_delete)
-            mp_account_to_update_flag=False
-            try:
-                if mp_account_to_update_data['sc'] is not None and mp_account_to_update_data['sc']!='None':mp_account_to_update_flag=True
-            except:
-                pass
+            mp_2_delete_flag,mp_account_to_update,new_next_mp,nb_transactions,mp_account_to_update_data,mp_first_account_to_update_data_flag=master_state.get_delete_mp_account_from_memory(action,sc_to_delete)
+            if mp_2_delete_flag is True:
+                #a carriage request to be deleted has been found
+                mp_account_to_update_flag=False
+                try:
+                    if mp_account_to_update_data['sc'] is not None and mp_account_to_update_data['sc']!='None':mp_account_to_update_flag=True
+                except:
+                    pass
             
-            if mp_account_to_update_flag is True:
+                if mp_account_to_update_flag is True:
 
-                from common.smart_contract import load_smart_contract_from_master_state
-                smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account_to_update)
-                if nb_transactions<=1:
-                    payload=f'''
+                    from common.smart_contract import load_smart_contract_from_master_state
+                    smart_contract_previous_transaction,smart_contract_transaction_hash,smart_contract_transaction_output_index=load_smart_contract_from_master_state(mp_account_to_update)
+                    if nb_transactions<=1:
+                        payload=f'''
 memory_obj_2_load=['carriage_request']
 carriage_request.reset()
 memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
 '''
-                else:
-                    if mp_first_account_to_update_data_flag is True:
-                        requested_amount=mp_account_to_update_data["amount"]
-                        requested_gap=mp_account_to_update_data["gap"]
-                        sc=mp_account_to_update_data["sc"]
-                        next_mp=mp_account_to_update_data["next_mp"]
-                        payload=f'''
+                    else:
+                        if mp_first_account_to_update_data_flag is True:
+                            requested_amount=mp_account_to_update_data["amount"]
+                            requested_gap=mp_account_to_update_data["gap"]
+                            sc=mp_account_to_update_data["sc"]
+                            next_mp=mp_account_to_update_data["next_mp"]
+                            payload=f'''
 memory_obj_2_load=['carriage_request']
 carriage_request.step=10
 carriage_request.requested_amount="{requested_amount}"
@@ -419,53 +422,53 @@ carriage_request.sc="{sc}"
 carriage_request.next_mp="{next_mp}"
 memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
 '''
-                    else:
-                        payload=f'''
+                        else:
+                            payload=f'''
 memory_obj_2_load=['carriage_request']
 carriage_request.step=10
 carriage_request.next_mp="{new_next_mp}"
 memory_list.add([carriage_request,'carriage_request',['step','requested_amount','requested_gap','requested_currency','sc','next_mp']])
 '''
-                smart_contract_block=SmartContract(mp_account_to_update,
-                                            smart_contract_sender=marketplace_owner.public_key_hash,
-                                            smart_contract_new=False,
-                                            smart_contract_gas=1000000,
-                                            smart_contract_type="source",
-                                            payload=payload,
-                                            smart_contract_previous_transaction=smart_contract_transaction_hash)
-                smart_contract_block.process()
-                from common.io_blockchain import BlockchainMemory
-                blockchain_memory = BlockchainMemory()
-                blockchain_base = blockchain_memory.get_blockchain_from_memory()
-                utxo_dict=blockchain_base.get_user_utxos(mp_account_to_update)
+                    smart_contract_block=SmartContract(mp_account_to_update,
+                                                smart_contract_sender=marketplace_owner.public_key_hash,
+                                                smart_contract_new=False,
+                                                smart_contract_gas=1000000,
+                                                smart_contract_type="source",
+                                                payload=payload,
+                                                smart_contract_previous_transaction=smart_contract_transaction_hash)
+                    smart_contract_block.process()
+                    from common.io_blockchain import BlockchainMemory
+                    blockchain_memory = BlockchainMemory()
+                    blockchain_base = blockchain_memory.get_blockchain_from_memory()
+                    utxo_dict=blockchain_base.get_user_utxos(mp_account_to_update)
     
-                unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+mp_account_to_update
+                    unlocking_public_key_hash=marketplace_owner.public_key_hash+" SC "+mp_account_to_update
             
-                transaction_1=None
-                for utxo in utxo_dict['utxos']:
-                    #input value in case of existing carriage request
-                    input_1 = TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash)
-                    output_1 = TransactionOutput(list_public_key_hash=[mp_account_to_update], 
-                                                            amount=0,
-                                                            account_temp=True,
-                                                            smart_contract_transaction_flag=False,
-                                                            marketplace_transaction_flag=True,
-                                                            smart_contract_account=smart_contract_block.smart_contract_account,
-                                                            smart_contract_sender=smart_contract_block.smart_contract_sender,
-                                                            smart_contract_new=smart_contract_block.smart_contract_new,
-                                                            smart_contract_flag=True,
-                                                            smart_contract_gas=smart_contract_block.gas,
-                                                            smart_contract_memory=smart_contract_block.smart_contract_memory,
-                                                            smart_contract_memory_size=smart_contract_block.smart_contract_memory_size,
-                                                            smart_contract_type=smart_contract_block.smart_contract_type,
-                                                            smart_contract_payload=smart_contract_block.payload,
-                                                            smart_contract_result=smart_contract_block.result,
-                                                            smart_contract_previous_transaction=smart_contract_block.smart_contract_previous_transaction)
-                    transaction_1 = Transaction([input_1], [output_1])
-                    break
-                if transaction_1 is not None:
-                    transaction_1.sign(marketplace_owner)
-                    carriage_transaction_list.append(transaction_1)
+                    transaction_1=None
+                    for utxo in utxo_dict['utxos']:
+                        #input value in case of existing carriage request
+                        input_1 = TransactionInput(transaction_hash=utxo['transaction_hash'], output_index=utxo['output_index'],unlocking_public_key_hash=unlocking_public_key_hash)
+                        output_1 = TransactionOutput(list_public_key_hash=[mp_account_to_update], 
+                                                                amount=0,
+                                                                account_temp=True,
+                                                                smart_contract_transaction_flag=False,
+                                                                marketplace_transaction_flag=True,
+                                                                smart_contract_account=smart_contract_block.smart_contract_account,
+                                                                smart_contract_sender=smart_contract_block.smart_contract_sender,
+                                                                smart_contract_new=smart_contract_block.smart_contract_new,
+                                                                smart_contract_flag=True,
+                                                                smart_contract_gas=smart_contract_block.gas,
+                                                                smart_contract_memory=smart_contract_block.smart_contract_memory,
+                                                                smart_contract_memory_size=smart_contract_block.smart_contract_memory_size,
+                                                                smart_contract_type=smart_contract_block.smart_contract_type,
+                                                                smart_contract_payload=smart_contract_block.payload,
+                                                                smart_contract_result=smart_contract_block.result,
+                                                                smart_contract_previous_transaction=smart_contract_block.smart_contract_previous_transaction)
+                        transaction_1 = Transaction([input_1], [output_1])
+                        break
+                    if transaction_1 is not None:
+                        transaction_1.sign(marketplace_owner)
+                        carriage_transaction_list.append(transaction_1)
         except Exception as e:
             logging.info(f"###ERROR get_carriage_transaction_to_delete  Exception: {e}")
     return carriage_transaction_list
