@@ -333,8 +333,6 @@ class Transaction:
                             raise TransactionException(f"smart_contract.result ({smart_contract.result})",
                                                             "Smart Contract validation failed due to smart_contract_memory issue")
 
-                        #if "NIGthreading" in str(self.outputs[i]):
-                        #if 5==5:
                         if leader_node_flag is True and "BlockVote" in str(self.outputs[i]):
                             self.outputs[i]['smart_contract_memory']=smart_contract.smart_contract_memory
                             if transaction_out_temp is not None:setattr(transaction_out_temp,'smart_contract_memory',smart_contract.smart_contract_memory)
