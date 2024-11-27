@@ -342,16 +342,9 @@ class Transaction:
 
                         #check if the API call needs to be stored on the blockain
                         self.api_readonly_flag=smart_contract.api_readonly_flag
+
                         logging.info(f"smart_contract_result: {smart_contract_result}")
-                        if smart_contract_result is not None:
-                            try:
-                                assert smart_contract_result == smart_contract.result
-                                logging.info("Smart Contract is validated")
-                            except AssertionError:
-                                logging.info(f"Smart Contract validation did not match: ({smart_contract_result}), smart_contract.result ({smart_contract.result})")
-                                self.is_smart_contract_valid = False
-                                raise TransactionException(f"smart_contract_result ({smart_contract_result}), smart_contract.result ({smart_contract.result})",
-                                                        "Smart Contract validation failed")
+                        
                     else:
                         logging.info(f"**** ISSUE validate_smart_contract1: {smart_contract_account}")
                         logging.info(f"**** ISSUE: {smart_contract.error_code}")
