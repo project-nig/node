@@ -81,6 +81,7 @@ mp_request_step2_done.get_requested_deposit()
 	* <i>smart_contract_ref</i> = the address of the smart contract.
 	*  <i>new_user_flag</i> = True as it's a new user on the NIG network.
 	* <i>reputation_0</i> and <i>reputation_1</i>= 0 as it's a new user.
+	* <i>requested_gap</i>= 0 meaning that the price of the transaction will be at the reference price.
 ```bash
   parameters=f'''requester_public_key_hash="{daniel_owner.public_key_hash}"
 requester_public_key_hex="{daniel_owner.public_key_hex}"
@@ -89,6 +90,7 @@ smart_contract_ref="{smart_contract_account}"
 new_user_flag=True
 reputation_0=0
 reputation_1=1
+requested_gap=0
 '''+marketplace_script
 ```
 * This final payload is the concatenation of the default payload <i>marketplace_request_default_code</i> for a marketplace request and the payload <i>parameters</i>that we have just generated.

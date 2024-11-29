@@ -57,6 +57,7 @@ smart_contract_ref="{smart_contract_account}"
 new_user_flag=True
 reputation_0=0
 reputation_1=1
+requested_gap=0
 '''+marketplace_script
     payload=marketplace_request_default_code+parameters
     
