@@ -156,6 +156,12 @@ def check_marketplace_step(step,outputs):
     """
     return check_marketplace_raw(outputs,step)
 
+def check_marketplace_step15(outputs):
+    """
+    Check if the output of a transaction is a MarketPlace 15 request
+    """
+    return check_marketplace_raw(outputs,15)
+
 def check_marketplace_step2(outputs):
     """
     Check if the output of a transaction is a MarketPlace 2 request
@@ -189,8 +195,7 @@ def check_smart_contract_consistency(transaction):
             pass
         else:
             #check inputs
-            #if 5==6:
-            if check_marketplace_step1_buy(outputs,check_user_flag=False) is False and check_marketplace_step1_sell(outputs,check_user_flag=False) is False and check_marketplace_step2(outputs) is False:
+            if check_marketplace_step1_buy(outputs,check_user_flag=False) is False and check_marketplace_step1_sell(outputs,check_user_flag=False) is False and check_marketplace_step15(outputs) is False and check_marketplace_step2(outputs) is False:
                 if len(inputs)>1:
                     smart_contract_flag="error"
                     smart_contract_error_list.append(["More than 1 input"])

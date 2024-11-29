@@ -159,8 +159,8 @@ class MarketplaceRequest:
                 self.requested_nig=CONVERT_2_NIG(requested_amount*(1-self.requested_gap/100),self.timestamp_nig,self.requested_currency)
                 self.step=15
                 self.timestamp_step15=datetime.timestamp(datetime.utcnow())
-                if new_user_flag=="true" or new_user_flag=="True":new_user_flag=True
-                if new_user_flag=="false" or new_user_flag=="False":
+                if new_user_flag=="True":new_user_flag=True
+                if new_user_flag=="False":
                     new_user_flag=False
                     self.requested_deposit=CONVERT_2_NIG(requested_amount*GET_BUYER_SAFETY_COEF()*(1-self.requested_gap/100),self.timestamp_nig,self.requested_currency)
                 self.new_user_flag=new_user_flag
@@ -644,8 +644,8 @@ application_version_script="""
 ###END
 class Application:
     def __init__(self):
-        self.version="23"
-        self.url="https://drive.google.com/file/d/17qPvDDITi7OBmiVOpN3E85gYdPyldJu-/view?usp=drive_link"
+        self.version="24"
+        self.url="https://drive.google.com/file/d/1PaihVGFEcSsyCgB33KZYabCWOnzVqiep/view?usp=drive_link"
 
     def get_version_data(self):
         return {"version":self.version,"url":self.url}
