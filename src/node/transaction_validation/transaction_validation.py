@@ -326,13 +326,7 @@ class Transaction:
                     logging.info(f"check smart_contract_previous_transaction: {smart_contract_previous_transaction}")
                     smart_contract.process()
                     if smart_contract.error_flag is False:
-                        if smart_contract.smart_contract_memory==[] or smart_contract.smart_contract_memory is None:
-                            logging.info(f"smart_contract_memory: {smart_contract_memory}")
-                            logging.info(f"smart_contract_payload: {smart_contract_payload}")
-                            self.is_smart_contract_valid = False
-                            raise TransactionException(f"smart_contract.result ({smart_contract.result})",
-                                                            "Smart Contract validation failed due to smart_contract_memory issue")
-
+                        
                         if leader_node_flag is True and "BlockVote" in str(self.outputs[i]):
                             self.outputs[i]['smart_contract_memory']=smart_contract.smart_contract_memory
                             if transaction_out_temp is not None:setattr(transaction_out_temp,'smart_contract_memory',smart_contract.smart_contract_memory)

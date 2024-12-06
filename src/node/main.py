@@ -1404,6 +1404,7 @@ def get_smart_contract_creation():
     create and validate a new smart contract based on its provided payload. Use by Mobile App (interface).
     """
     content = request.json
+    #logging.info(f"####smart_contract_creation:{content}")
     #fix for boolean
     content=clean_request(content)
     smart_contract_public_key_hash=content['smart_contract_public_key_hash']

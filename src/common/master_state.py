@@ -452,23 +452,25 @@ class MasterState:
                     new_utxo_value_output['smart_contract_memory']=utxo['smart_contract_memory']
                     #check if the transaction is in step 4 or 45 (partial payment) or 66 (payment default) or 98 (expiration) or 99 (cancellation) to put in Marketplace_archive if needed
                     smart_contract_memory=utxo['smart_contract_memory']
-                    for j in range(0,len(smart_contract_memory[0][2])):
-                        if smart_contract_memory[0][2][j]=='step':
-                            if smart_contract_memory[0][3][j]==4 or smart_contract_memory[0][3][j]==45 or smart_contract_memory[0][3][j]==66 or smart_contract_memory[0][3][j]==98 or smart_contract_memory[0][3][j]==99:
-                                marketplace_place_step4=smart_contract_memory[0][3][j]
-                                marketplace_place_step4_flag=True
-                                #step = 99 is used to archive the cancelled marketplace request 
-                                if smart_contract_memory[0][3][j]==99:marketplace_place_archiving_flag=True
-                                #step = 98 is used to archive the expired marketplace request 
-                                if smart_contract_memory[0][3][j]==98:marketplace_place_archiving_flag=True
-                                #logging.info(f"======> MarketPlace {smart_contract_memory[0][3][j]}: {transaction_hash}")
+                    try:
+                        for j in range(0,len(smart_contract_memory[0][2])):
+                            if smart_contract_memory[0][2][j]=='step':
+                                if smart_contract_memory[0][3][j]==4 or smart_contract_memory[0][3][j]==45 or smart_contract_memory[0][3][j]==66 or smart_contract_memory[0][3][j]==98 or smart_contract_memory[0][3][j]==99:
+                                    marketplace_place_step4=smart_contract_memory[0][3][j]
+                                    marketplace_place_step4_flag=True
+                                    #step = 99 is used to archive the cancelled marketplace request 
+                                    if smart_contract_memory[0][3][j]==99:marketplace_place_archiving_flag=True
+                                    #step = 98 is used to archive the expired marketplace request 
+                                    if smart_contract_memory[0][3][j]==98:marketplace_place_archiving_flag=True
+                                    #logging.info(f"======> MarketPlace {smart_contract_memory[0][3][j]}: {transaction_hash}")
 
-                        if smart_contract_memory[0][2][j]=='requested_amount':marketplace_place_step4_requested_amount=smart_contract_memory[0][3][j]
-                        if smart_contract_memory[0][2][j]=='requested_currency':marketplace_place_step4_requested_currency=smart_contract_memory[0][3][j]
-                        if smart_contract_memory[0][2][j]=='buyer_public_key_hash':marketplace_place_step4_buyer=smart_contract_memory[0][3][j]
-                        if smart_contract_memory[0][2][j]=='seller_public_key_hash':marketplace_place_step4_seller=smart_contract_memory[0][3][j]
-                        if smart_contract_memory[0][2][j]=='requested_nig':marketplace_place_step4_requested_nig=smart_contract_memory[0][3][j]
-                        
+                            if smart_contract_memory[0][2][j]=='requested_amount':marketplace_place_step4_requested_amount=smart_contract_memory[0][3][j]
+                            if smart_contract_memory[0][2][j]=='requested_currency':marketplace_place_step4_requested_currency=smart_contract_memory[0][3][j]
+                            if smart_contract_memory[0][2][j]=='buyer_public_key_hash':marketplace_place_step4_buyer=smart_contract_memory[0][3][j]
+                            if smart_contract_memory[0][2][j]=='seller_public_key_hash':marketplace_place_step4_seller=smart_contract_memory[0][3][j]
+                            if smart_contract_memory[0][2][j]=='requested_nig':marketplace_place_step4_requested_nig=smart_contract_memory[0][3][j]
+                    except Exception as e:
+                        logging.info(f"###INFO smart_contract_memory:{e}")
                         
 
                     new_utxo_value_output['smart_contract_memory_size']=utxo['smart_contract_memory_size']
@@ -483,7 +485,8 @@ class MasterState:
                     else:
                         #smart_contract_previous_transaction is not updated with API call
                         new_utxo_value_output['smart_contract_previous_transaction']=utxo['smart_contract_previous_transaction']
-                except:
+                except Exception as e:
+                    logging.info(f"###INFO smart_contract new_utxo_value_output:{e}")
                     pass
 
                 from common.smart_contract import SmartContract

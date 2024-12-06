@@ -89,6 +89,7 @@ class SmartContract:
         self.payload=kwargs.get('payload',"")
         self.smart_contract_account=smart_contract_account
         self.smart_contract_new=kwargs.get('smart_contract_new',False)
+        if self.smart_contract_new=="False" or self.smart_contract_new=="false":self.smart_contract_new=False
         #if self.smart_contract_account is None:self.gas=1000000
         self.gas=1000000
         self.result = None
@@ -109,7 +110,7 @@ class SmartContract:
         
         self.smart_contract_previous_transaction=kwargs.get('smart_contract_previous_transaction',None)
         self.smart_contract_transaction_hash=kwargs.get('smart_contract_transaction_hash',None)
-        #if self.smart_contract_new is False or self.smart_contract_new=='false':
+        
 
         self.leader_node_flag=kwargs.get('leader_node_flag',False)
         self.block_PoH=kwargs.get('block_PoH',None)
@@ -129,7 +130,7 @@ class SmartContract:
 globals()['local_var']=locals()
 memory_list=MemoryList("common.smart_contract")
 sender="{self.smart_contract_sender}"
-'''
+''' 
 
         if self.smart_contract_new is False:
             logging.info(f"loading of code source")
@@ -246,7 +247,7 @@ for obj_list in memory_obj_list:
         for i in range(len(obj_list[2])):
             setattr(obj_list[1],obj_list[2][i],obj_list[3][i])
         globals()[obj_name]=obj_list[1]
-    """)                
+""")                
                     check_obj_dic="""
 check_obj_dic={}
 def get_obj_by_name(obj_name):
@@ -353,7 +354,8 @@ globals()['get_obj_by_name']=locals()['get_obj_by_name']
         #logging.info(f"=====self.payload:{self.payload}")
         #a procedure is added as last line to read the object to be stored
         #process_memory="""memory_list.get_memory_obj_list()"""
-        process_memory=f"""memory_list.get_memory_obj_list({self.smart_contract_memory_init})"""
+        process_memory=f"""
+memory_list.get_memory_obj_list({self.smart_contract_memory_init})"""
         if self.smart_contract_type == "source":self.run_source(self.cleaned_payload+process_memory)
         if self.smart_contract_type == "api":self.run_api(self.payload+process_memory)
         smart_contract_memory_full={}
