@@ -2,7 +2,7 @@
 
 
 # What is NIG ?
-The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in this [document ](https://docs.google.com/document/u/1/d/e/2PACX-1vQxiyzQCp9qEkBbHT5wjt_YTXvRXycus77Z4M8pxd5Lp6JpI3ZjSq5bJMlRCUAx-3pRjr6kkByBG4HN/pub?urp=gmail_link) (in French).
+The NIG project aims to remunerate the money lying dormant in current bank accounts through the regular use of a cryptocurrency. Discover how in the [white paper](https://docs.google.com/document/u/1/d/e/2PACX-1vSh4FMQEXK8D37f8YCpkb1hrOo9pKU7UY2gU5cjfeSYZuQUn9y-_OGPeMrVGIaCYICTIczS4ngG8ny7/pub) (in French).
 
 ## Table of content
  - [Process to run Nodes of NIG network](/#process-to-run-nodes-of-nig-network)
